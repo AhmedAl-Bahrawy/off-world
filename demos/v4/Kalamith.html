@@ -1,0 +1,1990 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Kalamith</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Rajdhani:wght@500;600&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @property --acc {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #27d3ff;
+      }
+      :root {
+        color-scheme: dark;
+        --bg: #020813;
+        --cy: #27d3ff;
+        --bl: #3a86ff;
+        --or: #ff3b4b;
+        --vi: #b07bff;
+        --rd: #ff9a3d;
+        --wh: #f2fbff;
+        --acc: #27d3ff;
+        transition: --acc 1.6s;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--wh);
+        font:
+          600 17px/1.35 Rajdhani,
+          system-ui,
+          sans-serif;
+      }
+      body {
+        background:
+          radial-gradient(90% 60% at 50% 0, #14084a88, transparent 70%),
+          var(--bg);
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9;
+        background:
+          repeating-linear-gradient(0deg, #0000 0 2px, #00000030 2px 3px),
+          radial-gradient(120% 90% at 50% 50%, #0000 55%, #000b);
+      }
+      #sky {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #gl {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+      }
+      svg.ic {
+        width: 1.1em;
+        height: 1.1em;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: none;
+      }
+      .pl {
+        position: fixed;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        transition:
+          top 2.4s cubic-bezier(0.6, 0, 0.2, 1),
+          left 2.4s cubic-bezier(0.6, 0, 0.2, 1),
+          width 2.4s cubic-bezier(0.6, 0, 0.2, 1),
+          opacity 1.5s,
+          filter 2s;
+        pointer-events: none;
+      }
+      #earth {
+        width: min(140vw, 1300px);
+        aspect-ratio: 1;
+        top: 72%;
+        left: 50%;
+        background:
+          radial-gradient(ellipse 18% 10% at 28% 16%, #3f9d78 98%, #0000),
+          radial-gradient(ellipse 12% 8% at 62% 12%, #3f9d78 98%, #0000),
+          radial-gradient(ellipse 9% 6% at 45% 8%, #3f9d78 98%, #0000),
+          radial-gradient(
+            circle at 36% 22%,
+            #78e6ff,
+            #1b8cff 36%,
+            #0a3fb0 66%,
+            #031440
+          );
+        box-shadow:
+          0 0 70px 6px #27d3ff88,
+          inset -50px -40px 100px #000a;
+      }
+      #kal {
+        width: 90px;
+        aspect-ratio: 1;
+        top: 9%;
+        left: 84%;
+        background: radial-gradient(
+          circle at 34% 28%,
+          #e6ccff,
+          #9a5cff 38%,
+          #43148c 70%,
+          #14052f
+        );
+        box-shadow:
+          0 0 50px 4px #b07bff88,
+          inset -14px -12px 30px #000a;
+      }
+      #ship {
+        position: fixed;
+        top: 36%;
+        left: 20%;
+        width: 44px;
+        opacity: 0;
+        color: var(--wh);
+        rotate: 90deg;
+        filter: drop-shadow(0 0 8px var(--cy));
+        pointer-events: none;
+        transition:
+          left 8s linear,
+          top 2s,
+          opacity 1s;
+      }
+      #ship svg {
+        width: 100%;
+        height: auto;
+        fill: #0a1a3a;
+        stroke-width: 1.2;
+      }
+      [data-s="voyage"] #earth {
+        top: 36%;
+        left: 11%;
+        width: 150px;
+      }
+      [data-s="voyage"] #kal {
+        top: 34%;
+        left: 88%;
+        width: 190px;
+      }
+      [data-s="voyage"] #ship,
+      [data-s="orbit"] #ship {
+        opacity: 1;
+      }
+      [data-s="orbit"] #ship {
+        left: 14%;
+        top: 20%;
+        rotate: 140deg;
+      }
+      [data-s="orbit"] #kal,
+      [data-s="rem"] #kal {
+        opacity: 0;
+      }
+      [data-s="rem"] #earth {
+        filter: brightness(0.38) saturate(0.35);
+      }
+      [data-s="collapse"] #earth {
+        filter: hue-rotate(-28deg) saturate(0.7);
+      }
+      #hud {
+        position: fixed;
+        top: calc(0.8rem + env(safe-area-inset-top, 0px));
+        left: 1.2rem;
+        right: 1.2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        font:
+          11px/1 Orbitron,
+          sans-serif;
+        letter-spacing: 0.12em;
+        color: #9fd8ee;
+        opacity: 0;
+        transition: opacity 1.5s;
+        z-index: 3;
+      }
+      #hud b {
+        font-size: 17px;
+        color: var(--acc);
+        text-shadow: 0 0 10px var(--acc);
+        margin-left: 0.4rem;
+      }
+      #hud div {
+        display: flex;
+        align-items: center;
+      }
+      .w {
+        position: fixed;
+        z-index: 4;
+        --c: var(--cy);
+        background: #020c1cc7;
+        backdrop-filter: blur(6px);
+        border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+        box-shadow:
+          0 0 24px color-mix(in srgb, var(--c) 24%, transparent),
+          inset 0 0 20px color-mix(in srgb, var(--c) 9%, transparent);
+      }
+      .w::before,
+      .w::after {
+        content: "";
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border: 3px solid var(--wh);
+      }
+      .w::before {
+        top: -3px;
+        left: -3px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .w::after {
+        bottom: -3px;
+        right: -3px;
+        border-left: 0;
+        border-top: 0;
+      }
+      .w.out {
+        animation: pop 0.25s reverse forwards;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          scale: 1 0.06;
+        }
+        to {
+          opacity: 1;
+          scale: 1;
+        }
+      }
+      .wh {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.7rem;
+        color: var(--c);
+        border-bottom: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+        font:
+          800 10.5px/1 Orbitron,
+          sans-serif;
+        letter-spacing: 0.14em;
+        text-shadow: 0 0 8px var(--c);
+      }
+      .wh b {
+        flex: 1;
+        font: inherit;
+      }
+      .wh i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c);
+        box-shadow: 0 0 8px var(--c);
+        animation: bl 1.2s infinite;
+      }
+      @keyframes bl {
+        50% {
+          opacity: 0.2;
+        }
+      }
+      .wh::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--c) 45%, transparent),
+          transparent
+        );
+        translate: -100% 0;
+        animation: sweep 1.2s 0.25s 1 both;
+      }
+      @keyframes sweep {
+        to {
+          translate: 100% 0;
+        }
+      }
+      .wb {
+        padding: 0.7rem 0.8rem;
+        max-height: 46vh;
+        overflow: auto;
+      }
+      .s-l {
+        left: 1.2rem;
+        top: 3.6rem;
+        width: min(300px, 42vw);
+      }
+      .s-r {
+        right: 1.2rem;
+        top: 3.6rem;
+        width: min(350px, 46vw);
+      }
+      .s-c {
+        left: 50%;
+        top: 44%;
+        translate: -50% -50%;
+        width: min(760px, 94vw);
+        text-align: center;
+      }
+      .s-b {
+        left: 50%;
+        bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
+        translate: -50% 0;
+        width: min(740px, 92vw);
+      }
+      .s-c.out,
+      .s-c {
+        animation-name: popc;
+      }
+      .s-b {
+        animation-name: popc;
+      }
+      @keyframes popc {
+        from {
+          opacity: 0;
+          filter: brightness(3);
+        }
+        to {
+          opacity: 1;
+          filter: none;
+        }
+      }
+      .s-b p {
+        margin: 0.15rem 0;
+        font-size: 1.15rem;
+      }
+      .s-b .em {
+        color: var(--c);
+        font-style: italic;
+      }
+      .s-b .ai {
+        font:
+          13px/1.5 "Share Tech Mono",
+          monospace;
+        color: var(--c);
+      }
+      .q {
+        margin: 0 0 1.2rem;
+        font-size: 1.4rem;
+      }
+      .row {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        perspective: 800px;
+      }
+      button {
+        font:
+          800 13px/1.2 Orbitron,
+          sans-serif;
+        letter-spacing: 0.1em;
+        color: var(--wh);
+        background: #04152e;
+        border: 1px solid var(--c, var(--cy));
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          box-shadow 0.2s;
+      }
+      button:hover {
+        box-shadow: 0 0 16px var(--c, var(--cy));
+      }
+      button:focus-visible {
+        outline: 2px solid var(--wh);
+        outline-offset: 3px;
+      }
+      .tile {
+        flex-direction: column;
+        width: 150px;
+        height: 140px;
+        justify-content: center;
+        font-size: 12px;
+        transform-style: preserve-3d;
+      }
+      .tile svg {
+        width: 46px;
+        height: 46px;
+      }
+      .tile:hover {
+        transform: translateY(-5px) rotateX(10deg);
+      }
+      .tile em {
+        font:
+          normal 11px "Share Tech Mono",
+          monospace;
+        color: var(--rd);
+        min-height: 1em;
+      }
+      .tile.lit,
+      .tile.done {
+        background: color-mix(in srgb, var(--c, var(--cy)) 30%, #04152e);
+        box-shadow: 0 0 20px var(--c, var(--cy));
+      }
+      .word {
+        padding: 0.5rem 0.7rem;
+        font:
+          400 15px "Share Tech Mono",
+          monospace;
+        color: var(--vi);
+        --c: var(--vi);
+      }
+      .word.lit {
+        color: var(--wh);
+        background: #2a1160;
+      }
+      .hint {
+        margin: 0.9rem 0 0;
+        font:
+          13px "Share Tech Mono",
+          monospace;
+        color: #8fb7cc;
+        min-height: 1em;
+      }
+      .msg {
+        font:
+          400 22px/1.5 "Share Tech Mono",
+          monospace;
+        color: var(--cy);
+        min-height: 3.2em;
+        margin: 0;
+      }
+      .bar {
+        height: 9px;
+        border: 1px solid var(--c);
+        margin: 0.4rem 0;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--c);
+        box-shadow: 0 0 10px var(--c);
+        transition: width 2.2s ease-out;
+      }
+      .br {
+        display: grid;
+        grid-template-columns: 1fr 2.4rem;
+        gap: 0 0.5rem;
+        font-size: 14px;
+        margin-bottom: 0.5rem;
+      }
+      .br .bar {
+        grid-column: 1/-1;
+        margin: 0.1rem 0 0;
+      }
+      .br .bar i {
+        transition: width 5s ease-out;
+      }
+      .br em {
+        font:
+          normal 12px "Share Tech Mono",
+          monospace;
+        text-align: right;
+      }
+      .m {
+        margin: 0.5rem 0;
+        padding: 0.55rem 0.85rem;
+        font-size: 1.2rem;
+        max-width: 90%;
+        border-left: 3px solid var(--c);
+        background: color-mix(in srgb, var(--c) 12%, transparent);
+      }
+      .m small {
+        display: block;
+        font:
+          800 9.5px Orbitron,
+          sans-serif;
+        letter-spacing: 0.14em;
+        color: var(--c);
+      }
+      .m.W {
+        --c: var(--bl);
+      }
+      .m.E {
+        --c: var(--or);
+        margin-left: auto;
+        text-align: right;
+        border-left: 0;
+        border-right: 3px solid var(--c);
+      }
+      #w-chat {
+        width: min(480px, 50vw);
+        top: 3.4rem;
+      }
+      #w-chat .wb {
+        max-height: 64vh;
+        min-height: 36vh;
+      }
+      body:has(#w-chat) .s-c,
+      body:has(#w-chat) .s-b {
+        left: 30%;
+        width: min(540px, 52vw);
+      }
+      .m.A {
+        --c: #7dffb5;
+      }
+      .m.K {
+        --c: var(--vi);
+      }
+      .m span i {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        margin-right: 3px;
+        border-radius: 50%;
+        background: var(--c);
+        animation: bl 0.6s infinite;
+      }
+      #card {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        display: grid;
+        place-content: center;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.6s;
+      }
+      #card.on {
+        opacity: 1;
+      }
+      #card h1,
+      #gate h1 {
+        margin: 0.4rem 0;
+        font:
+          800 clamp(34px, 8vw, 92px)/1 Orbitron,
+          sans-serif;
+        letter-spacing: 0.06em;
+        color: var(--wh);
+        text-shadow:
+          0 0 8px var(--acc),
+          0 0 30px var(--acc);
+      }
+      #card small,
+      #gate small {
+        font:
+          800 11px Orbitron,
+          sans-serif;
+        letter-spacing: 0.2em;
+        color: var(--acc);
+      }
+      .ln {
+        display: block;
+        height: 6px;
+        border: 1px solid var(--acc);
+        width: min(420px, 70vw);
+        margin: 0.8rem auto;
+      }
+      #gate {
+        position: fixed;
+        inset: 0;
+        z-index: 8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        text-align: center;
+        transition: opacity 1s;
+        padding: 1rem;
+      }
+      #gate p {
+        margin: 0 0 1.4rem;
+        color: #a9d6e8;
+      }
+      .open {
+        --c: var(--wh);
+        border: 0;
+        font-size: 15px;
+        padding: 1.2rem 2rem;
+        flex-direction: column;
+        gap: 0.1rem;
+        background:
+          linear-gradient(#fff, #fff) 0 0/18px 3px,
+          linear-gradient(#fff, #fff) 0 0/3px 18px,
+          linear-gradient(#fff, #fff) 100% 0/18px 3px,
+          linear-gradient(#fff, #fff) 100% 0/3px 18px,
+          linear-gradient(#fff, #fff) 0 100%/18px 3px,
+          linear-gradient(#fff, #fff) 0 100%/3px 18px,
+          linear-gradient(#fff, #fff) 100% 100%/18px 3px,
+          linear-gradient(#fff, #fff) 100% 100%/3px 18px #0000;
+        background-repeat: no-repeat;
+        text-shadow: 0 0 10px var(--cy);
+      }
+      .enter {
+        position: fixed;
+        left: 1.4rem;
+        bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+        font:
+          800 12px Orbitron,
+          sans-serif;
+        color: #a9d6e8;
+      }
+      @media (max-width: 700px) {
+        #hud {
+          font-size: 9px;
+        }
+        #ch {
+          display: none;
+        }
+        .s-l,
+        .s-r,
+        #w-chat {
+          left: 4vw;
+          right: auto;
+          width: 92vw;
+          top: 3.2rem;
+        }
+        .s-l .wb,
+        .s-r .wb {
+          max-height: 24vh;
+        }
+        #w-chat .wb {
+          max-height: 36vh;
+          min-height: 20vh;
+        }
+        .s-c,
+        body:has(#w-chat) .s-c {
+          left: 50%;
+          width: 94vw;
+          top: auto;
+          bottom: 3vh;
+          translate: -50% 0;
+        }
+        .s-b,
+        body:has(#w-chat) .s-b {
+          left: 50%;
+          width: 92vw;
+          bottom: 3vh;
+        }
+        body:has(#w-act) #w-log {
+          opacity: 0;
+          pointer-events: none;
+        }
+        .tile {
+          width: 29vw;
+          height: 29vw;
+          max-width: 130px;
+          max-height: 130px;
+          font-size: 10px;
+        }
+        .tile svg {
+          width: 34px;
+          height: 34px;
+        }
+        .q {
+          font-size: 1.1rem;
+        }
+        .msg {
+          font-size: 17px;
+        }
+        .s-c .wb {
+          max-height: 52vh;
+        }
+        .m {
+          font-size: 1.05rem;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .w,
+        .pl,
+        #ship {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body data-s="collapse">
+    <svg width="0" height="0" style="position: absolute">
+      <defs>
+        <symbol id="i-sig" viewBox="0 0 24 24">
+          <circle cx="12" cy="14" r="2" />
+          <path d="M7.5 9.5a6 6 0 0 1 9 0M4.5 6.5a10 10 0 0 1 15 0M12 16v5" />
+        </symbol>
+        <symbol id="i-key" viewBox="0 0 24 24">
+          <circle cx="8" cy="12" r="4" />
+          <path d="M12 12h9M18 12v4M15 12v3" />
+        </symbol>
+        <symbol id="i-power" viewBox="0 0 24 24">
+          <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" />
+        </symbol>
+        <symbol id="i-factory" viewBox="0 0 24 24">
+          <path d="M3 21V10l6 4v-4l6 4V6h3v15zM8 21v-3m4 3v-3" />
+        </symbol>
+        <symbol id="i-net" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="16" height="6" rx="1" />
+          <rect x="4" y="14" width="16" height="6" rx="1" />
+          <path d="M8 7h.01M8 17h.01" />
+        </symbol>
+        <symbol id="i-warn" viewBox="0 0 24 24">
+          <path d="M12 3 2 20h20zM12 10v5M12 18h.01" />
+        </symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="6.5" rx="4" ry="2.5" />
+          <circle cx="12" cy="6.5" r="1" />
+          <ellipse cx="6" cy="14.5" rx="4" ry="2.5" />
+          <circle cx="6" cy="14.5" r="1" />
+          <ellipse cx="18" cy="14.5" rx="4" ry="2.5" />
+          <circle cx="18" cy="14.5" r="1" />
+        </symbol>
+        <symbol id="i-user" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24">
+          <rect x="5" y="11" width="14" height="9" rx="1" />
+          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+        </symbol>
+        <symbol id="i-globe" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+        </symbol>
+        <symbol id="i-ship" viewBox="0 0 24 24">
+          <path
+            d="M12 2c3 3 4 8 3 13l-3 3-3-3c-1-5 0-10 3-13zM9 16l-4 3 2-5M15 16l4 3-2-5"
+          />
+        </symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24">
+          <path d="M4 5h16v11H9l-5 4z" />
+        </symbol>
+        <symbol id="i-scan" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 12 18 6M2 12h3M19 12h3M12 2v3M12 19v3" />
+        </symbol>
+        <symbol id="i-chip" viewBox="0 0 24 24">
+          <rect x="6" y="6" width="12" height="12" rx="1" />
+          <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" />
+        </symbol>
+      </defs>
+    </svg>
+    <canvas id="sky"></canvas>
+    <canvas id="gl"></canvas>
+    <div id="hud">
+      <div>
+        <svg class="ic"><use href="#i-globe" /></svg><b id="yr">2231</b>
+      </div>
+      <div id="ch"></div>
+      <div id="st">LINK ONLINE</div>
+    </div>
+    <div id="card"></div>
+    <div id="gate">
+      <small>A MESSAGE FROM EARTH</small><span class="ln"></span>
+      <h1>KALAMITH</h1>
+      <p>The last signal of humanity. Sound on.</p>
+      <button class="open" id="go">
+        <span>CLICK</span><span>TO OPEN</span>
+      </button>
+      <div class="enter">PRESS ENTER</div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+      if (!window.gsap) window.gsap = { to() {}, from() {}, fromTo() {} };
+      const $ = (s) => document.querySelector(s),
+        $$ = (s) => [...document.querySelectorAll(s)],
+        sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const RM = matchMedia("(prefers-reduced-motion: reduce)").matches,
+        Y = $("#yr"),
+        NAME = {
+          W: "WEST BLOC",
+          E: "EAST BLOC",
+          A: "ARCHIVE-9",
+          K: "KALAMITH SCOUT",
+        };
+      const IC = (n) => '<svg class="ic"><use href="#i-' + n + '"/></svg>';
+      let actx,
+        speed = 0.05,
+        sp = 0.05,
+        scene3 = () => {},
+        killCities = scene3,
+        pulse = scene3,
+        shipGo = scene3,
+        shake = scene3;
+
+      /* sound */
+      function audio() {
+        try {
+          actx = new AudioContext();
+          const f = actx.createBiquadFilter(),
+            g = actx.createGain();
+          f.frequency.value = 160;
+          g.gain.value = 0.03;
+          f.connect(g);
+          g.connect(actx.destination);
+          [55, 82.4].forEach((v) => {
+            const o = actx.createOscillator();
+            o.type = "sawtooth";
+            o.frequency.value = v;
+            o.connect(f);
+            o.start();
+          });
+        } catch (e) {}
+      }
+      function blip(fr = 600, v = 0.04) {
+        if (!actx) return;
+        try {
+          const o = actx.createOscillator(),
+            g = actx.createGain(),
+            t = actx.currentTime;
+          o.type = "square";
+          o.frequency.value = fr;
+          g.gain.setValueAtTime(v, t);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+          o.connect(g);
+          g.connect(actx.destination);
+          o.start();
+          o.stop(t + 0.13);
+        } catch (e) {}
+      }
+
+      /* stars */
+      const cv = $("#sky"),
+        x = cv.getContext("2d");
+      let W,
+        H,
+        S = [];
+      function rs() {
+        W = cv.width = innerWidth;
+        H = cv.height = innerHeight;
+        S = Array.from({ length: Math.min(260, ((W * H) / 5500) | 0) }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          z: Math.random() * 0.9 + 0.1,
+        }));
+      }
+      rs();
+      addEventListener("resize", rs);
+      (function d() {
+        sp += (speed - sp) * 0.02;
+        x.clearRect(0, 0, W, H);
+        for (const s of S) {
+          if (!RM) s.x -= sp * s.z * 1.5;
+          if (s.x < -60) s.x = W + Math.random() * 30;
+          x.fillStyle = "rgba(200,235,255," + (0.25 + s.z * 0.65) + ")";
+          x.fillRect(s.x, s.y, 1 + sp * s.z * 9, s.z > 0.6 ? 1.6 : 1);
+        }
+        requestAnimationFrame(d);
+      })();
+
+      /* windows */
+      function win(id, slot, title, icon, c, body = "") {
+        unwin(id, 1);
+        const e = document.createElement("div");
+        e.className = "w s-" + slot;
+        e.id = "w-" + id;
+        e.style.setProperty("--c", "var(--" + c + ")");
+        e.innerHTML =
+          '<div class="wh">' +
+          IC(icon) +
+          "<b>" +
+          title +
+          '</b><i></i></div><div class="wb">' +
+          body +
+          "</div>";
+        document.body.append(e);
+        blip(880, 0.02);
+        if (!RM) {
+          gsap.fromTo(
+            e,
+            { opacity: 0, scaleY: 0.05, filter: "brightness(3)" },
+            {
+              opacity: 1,
+              scaleY: 1,
+              filter: "brightness(1)",
+              duration: 0.45,
+              ease: "back.out(1.7)",
+              clearProps: "filter",
+            },
+          );
+          gsap.from(e.querySelectorAll(".wb > *"), {
+            x: -16,
+            opacity: 0,
+            stagger: 0.07,
+            delay: 0.15,
+            duration: 0.4,
+          });
+        }
+        return e.querySelector(".wb");
+      }
+      function unwin(id, now) {
+        const e = $("#w-" + id);
+        if (!e) return;
+        if (now) e.remove();
+        else {
+          if (!RM)
+            gsap.to(e, {
+              scaleY: 0.04,
+              opacity: 0,
+              filter: "brightness(3)",
+              duration: 0.3,
+              ease: "power2.in",
+            });
+          setTimeout(() => e.remove(), RM ? 0 : 320);
+        }
+      }
+      const clearW = () => $$(".w").forEach((e) => unwin(e.id.slice(2)));
+      const setAcc = (c) =>
+        document.documentElement.style.setProperty("--acc", "var(--" + c + ")");
+      const done = (res) => {
+        unwin("act");
+        setTimeout(res, 300);
+      };
+      let LG;
+      function L(t, i, c) {
+        LG = win("log", "b", t, i, c);
+      }
+      async function say(t, k = "") {
+        if (!$("#w-log")) L("TRANSMISSION", "sig", "cy");
+        const p = document.createElement("p");
+        p.className = k;
+        LG.append(p);
+        for (const ch of t) {
+          p.textContent += ch;
+          if (!RM && ch !== " ") await sleep(10);
+        }
+        await sleep(240 + t.length * 8);
+        while (LG.children.length > 3) LG.firstChild.remove();
+      }
+      async function chapter(t, s, c, sc) {
+        clearW();
+        setAcc(c);
+        document.body.dataset.s = sc;
+        scene3(sc);
+        $("#ch").textContent = t;
+        $("#card").innerHTML =
+          "<small>" + s + "</small><h1>" + t + '</h1><span class="ln"></span>';
+        const h1 = $("#card h1");
+        h1.innerHTML = [...h1.textContent]
+          .map(
+            (c) =>
+              '<span style="display:inline-block">' +
+              (c === " " ? "&nbsp;" : c) +
+              "</span>",
+          )
+          .join("");
+        if (!RM) {
+          gsap.from("#card h1 span", {
+            y: 60,
+            opacity: 0,
+            rotateX: -90,
+            stagger: 0.045,
+            duration: 0.7,
+            ease: "back.out(2)",
+          });
+          gsap.from("#card .ln", { scaleX: 0, duration: 0.8 });
+        }
+        $("#card").classList.add("on");
+        await sleep(RM ? 1000 : 1900);
+        $("#card").classList.remove("on");
+        await sleep(450);
+      }
+      async function chat(list, title = "COMMS // WEST + EAST", c = "bl") {
+        const b = $("#w-chat .wb") || win("chat", "r", title, "chat", c);
+        for (const [w, t] of list) {
+          const m = document.createElement("div");
+          m.className = "m " + w;
+          m.innerHTML =
+            "<small>" + NAME[w] + "</small><span><i></i><i></i><i></i></span>";
+          b.append(m);
+          gsap.from(m, {
+            x: w === "E" ? 50 : -50,
+            opacity: 0,
+            scale: 0.9,
+            duration: 0.4,
+            ease: "back.out(1.6)",
+          });
+          b.scrollTop = 1e9;
+          await sleep(380);
+          m.querySelector("span").textContent = t;
+          blip(w === "E" ? 420 : 700, 0.03);
+          b.scrollTop = 1e9;
+          await sleep(260 + t.length * 10);
+        }
+      }
+      function bars(id, title, icon, c, slot, rows, to) {
+        const b = win(
+          id,
+          slot,
+          title,
+          icon,
+          c,
+          rows
+            .map(
+              (r) =>
+                '<div class="br"><span>' +
+                r[0] +
+                "</span><em>" +
+                r[1] +
+                '%</em><div class="bar"><i style="width:' +
+                r[1] +
+                '%"></i></div></div>',
+            )
+            .join(""),
+        );
+        setTimeout(
+          () =>
+            b.querySelectorAll(".br").forEach((e, i) => {
+              e.querySelector("i").style.width = to[i] + "%";
+              e.querySelector("em").textContent = to[i] + "%";
+            }),
+          300,
+        );
+      }
+
+      /* interactions */
+      function tiles(q, items, c) {
+        return new Promise((res) => {
+          const b = win(
+            "act",
+            "c",
+            "ACTION REQUIRED",
+            "warn",
+            c,
+            '<p class="q">' +
+              q +
+              '</p><div class="row">' +
+              items
+                .map(
+                  (i) =>
+                    '<button class="tile">' +
+                    IC(i[0]) +
+                    "<span>" +
+                    i[1] +
+                    "</span><em></em></button>",
+                )
+                .join("") +
+              "</div>",
+          );
+          let n = 0;
+          b.querySelectorAll(".tile").forEach(
+            (t, i) =>
+              (t.onclick = () => {
+                if (t.classList.contains("done")) return;
+                t.classList.add("done");
+                t.querySelector("em").textContent = items[i][2];
+                blip(300 + i * 90);
+                shake();
+                if (++n === items.length) setTimeout(() => done(res), 900);
+              }),
+          );
+        });
+      }
+      function ask(q, opts, c) {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "DECISION",
+              "warn",
+              c,
+              '<p class="q">' + q + '</p><div class="row"></div>',
+            ),
+            r = b.querySelector(".row");
+          opts.forEach((o, i) => {
+            const t = document.createElement("button");
+            t.innerHTML = IC(o[0]) + "<span>" + o[1] + "</span>";
+            t.onclick = () => {
+              blip(420 + i * 240);
+              unwin("act");
+              setTimeout(() => res(i), 280);
+            };
+            r.append(t);
+          });
+        });
+      }
+      function simon() {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "BREACH // EASTERN VAULT",
+              "lock",
+              "rd",
+              '<p class="q">Memorize the access sequence, then repeat it.</p><div class="row"></div><p class="hint"></p>',
+            ),
+            r = b.querySelector(".row"),
+            h = b.querySelector(".hint"),
+            T = ["user", "net", "power", "chip"].map((n) => {
+              const t = document.createElement("button");
+              t.className = "tile";
+              t.style.setProperty("--c", "var(--rd)");
+              t.innerHTML = IC(n);
+              r.append(t);
+              return t;
+            });
+          const seq = Array.from({ length: 4 }, () => (Math.random() * 4) | 0);
+          let k = 0,
+            ok = false;
+          const play = async () => {
+            ok = false;
+            k = 0;
+            h.textContent = "Watching the guard rotation...";
+            await sleep(500);
+            for (const i of seq) {
+              T[i].classList.add("lit");
+              blip(300 + i * 120);
+              await sleep(380);
+              T[i].classList.remove("lit");
+              await sleep(160);
+            }
+            h.textContent = "Your turn.";
+            ok = true;
+          };
+          T.forEach(
+            (t, i) =>
+              (t.onclick = () => {
+                if (!ok) return;
+                blip(300 + i * 120);
+                t.classList.add("lit");
+                setTimeout(() => t.classList.remove("lit"), 150);
+                if (i !== seq[k]) {
+                  h.textContent = "Wrong. Replaying...";
+                  play();
+                  return;
+                }
+                if (++k === 4) {
+                  ok = false;
+                  h.textContent = "ACCESS GRANTED";
+                  setTimeout(() => done(res), 700);
+                }
+              }),
+          );
+          play();
+        });
+      }
+      function keys() {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "KEY AUTHORIZATION",
+              "key",
+              "cy",
+              '<p class="q">Turn both keys within 1.5 seconds of each other.</p><div class="row"><button class="tile" style="--c:var(--bl)">' +
+                IC("key") +
+                '<span>WEST KEY</span></button><button class="tile" style="--c:var(--or)">' +
+                IC("key") +
+                '<span>EAST KEY</span></button></div><p class="hint"></p>',
+            ),
+            T = $$("#w-act .tile"),
+            h = b.querySelector(".hint");
+          let f = null,
+            tm;
+          T.forEach(
+            (t) =>
+              (t.onclick = () => {
+                blip(520);
+                const n = performance.now();
+                if (f && f.t !== t && n - f.n < 1500) {
+                  clearTimeout(tm);
+                  T.forEach((k) => k.classList.add("lit"));
+                  blip(900);
+                  gsap.fromTo(
+                    T,
+                    { rotationY: 0 },
+                    {
+                      rotationY: 360,
+                      duration: 0.9,
+                      ease: "power2.inOut",
+                      stagger: 0.1,
+                    },
+                  );
+                  h.textContent = "KEYS SYNCHRONIZED";
+                  setTimeout(() => done(res), 800);
+                  return;
+                }
+                f = { t, n };
+                t.classList.add("lit");
+                h.textContent = "One key turned. Turn the other now.";
+                clearTimeout(tm);
+                tm = setTimeout(() => {
+                  f = null;
+                  T.forEach((k) => k.classList.remove("lit"));
+                  h.textContent = "Window closed. Try again.";
+                }, 1500);
+              }),
+          );
+        });
+      }
+      function typeMsg(msg) {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "COMPOSE // OPEN CHANNEL",
+              "sig",
+              "cy",
+              '<p class="q">Plain English. No encryption. Press any key, or tap.</p><p class="msg"></p>',
+            ),
+            m = b.querySelector(".msg");
+          let n = 0;
+          const f = (e) => {
+            if (
+              e.type === "keydown" &&
+              (e.metaKey || e.ctrlKey || e.key === "Tab")
+            )
+              return;
+            m.textContent = msg.slice(0, ++n);
+            blip(300 + n * 12, 0.03);
+            if (n >= msg.length) {
+              removeEventListener("keydown", f);
+              removeEventListener("pointerdown", f);
+              setTimeout(async () => {
+                unwin("act");
+                unwin("chat");
+                pulse();
+                const u = win(
+                  "up",
+                  "c",
+                  "UPLINK",
+                  "sig",
+                  "cy",
+                  '<p class="q">Transmitting toward Proxima Centauri b</p><div class="bar"><i></i></div>',
+                );
+                await sleep(100);
+                u.querySelector("i").style.width = "100%";
+                await sleep(2300);
+                unwin("up");
+                setTimeout(res, 300);
+              }, 700);
+            }
+          };
+          addEventListener("keydown", f);
+          addEventListener("pointerdown", f);
+        });
+      }
+      function decode(words) {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "DECODER // KALAMITH ARRAY",
+              "eye",
+              "vi",
+              '<p class="q">Tap each word to decode the signal.</p><div class="row"></div>',
+            ),
+            r = b.querySelector(".row"),
+            G = "#@%&$?!*",
+            g = (w) => [...w].map(() => G[(Math.random() * 8) | 0]).join("");
+          let n = 0;
+          const E = words.map((w) => {
+            const t = document.createElement("button");
+            t.className = "word";
+            t.textContent = g(w);
+            r.append(t);
+            return t;
+          });
+          const iv = setInterval(
+            () =>
+              E.forEach((t, i) => {
+                if (!t.classList.contains("lit")) t.textContent = g(words[i]);
+              }),
+            90,
+          );
+          E.forEach(
+            (t, i) =>
+              (t.onclick = () => {
+                if (t.classList.contains("lit")) return;
+                t.classList.add("lit");
+                t.textContent = words[i];
+                blip(500 + i * 50);
+                if (++n === words.length) {
+                  clearInterval(iv);
+                  setTimeout(() => done(res), 900);
+                }
+              }),
+          );
+        });
+      }
+
+      function charge() {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "DRIVE SPIN-UP",
+              "ship",
+              "vi",
+              '<p class="q">Tap fast to charge the drive to 27% of light speed.</p><div class="bar"><i style="transition:width .1s"></i></div><div class="row"><button style="--c:var(--vi)">' +
+                IC("power") +
+                "<span>CHARGE</span></button></div>",
+            ),
+            i = b.querySelector("i");
+          let p = 0;
+          const iv = setInterval(() => {
+            p = Math.max(0, p - 1.2);
+            i.style.width = p + "%";
+          }, 60);
+          b.querySelector("button").onclick = () => {
+            p = Math.min(100, p + 7);
+            i.style.width = p + "%";
+            blip(200 + p * 6, 0.03);
+            shake();
+            if (p >= 100) {
+              clearInterval(iv);
+              setTimeout(() => done(res), 400);
+            }
+          };
+        });
+      }
+      /* story */
+      async function run() {
+        await chapter("THE COLLAPSE", "EARTH, 2231", "rd", "collapse");
+        killCities(18);
+        bars(
+          "sys",
+          "GLOBAL SYSTEMS",
+          "warn",
+          "rd",
+          "l",
+          [
+            ["Power grid", 31],
+            ["Industry", 22],
+            ["Supply chains", 27],
+            ["Knowledge anyone can use", 4],
+          ],
+          [3, 0, 2, 0],
+        );
+        L("ARCHIVE-9 // LOG", "chip", "cy");
+        await say("The machines did not disappear.");
+        await say("The knowledge to rebuild them did.");
+        await say(
+          "A few corporations held every process. A few factories held every skill.",
+        );
+        await tiles(
+          "Everything is failing. Try to repair it.",
+          [
+            ["power", "Power grid", "REPAIR FAILED"],
+            ["factory", "Factories", "NO ONE KNOWS HOW"],
+            ["net", "Supply chain", "OFFLINE"],
+          ],
+          "rd",
+        );
+        await say(
+          "Humanity had become dependent on technology it no longer understood.",
+          "em",
+        );
+        await say(
+          "One gamble remained: the Kalamith, an intelligent species at Proxima Centauri b. Friend or enemy, we do not know.",
+        );
+
+        await chapter("THE LAST SIGNAL", "TWO BLOCS, ONE KEY", "or", "signal");
+        await chat([
+          ["W", "We located the Kalamith. We can send a distress call."],
+          [
+            "W",
+            "The transmitter needs both halves of the key. We hold one. We need yours.",
+          ],
+          ["E", "You want us to beg an alien species to save us?"],
+          ["W", "We want to survive."],
+        ]);
+        const rp = await ask(
+          "Reply to the Western bloc.",
+          [
+            ["chat", "Why trust the Kalamith?"],
+            ["chat", "And if they are hostile?"],
+            ["chat", "Our pride is not for sale."],
+          ],
+          "or",
+        );
+        const RP = [
+          [
+            "Why should we trust the Kalamith?",
+            "We do not. We only know there is no other option.",
+          ],
+          [
+            "And if they are hostile?",
+            "Then we die. But we were already dying.",
+          ],
+          ["Our pride is not for sale.", "Neither is survival. Choose."],
+        ][rp];
+        await chat([
+          ["E", RP[0]],
+          ["W", RP[1]],
+        ]);
+        const c = await ask(
+          "You speak for the Eastern bloc. Your answer?",
+          [
+            ["key", "Give them our half"],
+            ["lock", "Refuse"],
+          ],
+          "or",
+        );
+        if (c === 0)
+          await chat([
+            ["E", "Take it. Pride will not feed anyone."],
+            ["W", "Thank you. Preparing the transmitter."],
+          ]);
+        else {
+          await chat([
+            ["E", "Request denied. Humanity does not beg."],
+            ["W", "Then we take it another way."],
+            ["A", "ALERT: Western operative inside the Eastern vault."],
+          ]);
+          await simon();
+          await chat([
+            ["A", "Vault open. Key extracted under threat."],
+            ["W", "It worked. It also cost us ten years."],
+          ]);
+        }
+        await keys();
+        await chat([["A", "Both halves accepted. Transmitter armed."]]);
+        await typeMsg("THIS IS HUMANITY. WE ARE DYING. PLEASE HELP.");
+        L("TRANSMISSION", "sig", "or");
+        await say(
+          "No encryption, and a naive hope that they would somehow read English.",
+        );
+        await say(
+          "We held the key to a real conversation and never tried to build a shared language.",
+          "em",
+        );
+
+        await chapter(
+          "ACROSS THE STARS",
+          "KALAMITH, PROXIMA CENTAURI B",
+          "vi",
+          "voyage",
+        );
+        Y.textContent = 2235;
+        L("KALAMITH ARRAY", "eye", "vi");
+        await say("Four years after it left Earth, the signal arrived.");
+        await decode([
+          "THIS",
+          "IS",
+          "HUMANITY",
+          "WE",
+          "ARE",
+          "DYING",
+          "PLEASE",
+          "HELP",
+        ]);
+        await say("Years of decoding. Then a ship.");
+        await say(
+          "They did not come out of mercy. Every species serves its own interest.",
+        );
+        await say(
+          "They hoped to learn what humans knew. They would teach us nothing. Saving us would be enough.",
+          "em",
+        );
+        await charge();
+        speed = 3.2;
+        const end = c === 1 ? 2301 : 2291;
+        bars(
+          "vy",
+          "VOYAGE",
+          "ship",
+          "vi",
+          "l",
+          [
+            ["Distance covered", 0],
+            ["Speed (27% of light)", 27],
+          ],
+          [100, 27],
+        );
+        shipGo(7.2);
+        for (let i = 0; i <= 60; i++) {
+          Y.textContent = Math.round(2235 + ((end - 2235) * i) / 60);
+          await sleep(120);
+        }
+        await say(
+          c === 1
+            ? "Ten of these years belong to our pride."
+            : "The long road is over.",
+        );
+
+        await chapter("THE SILENT EARTH", "KALAMITH ARRIVAL", "vi", "orbit");
+        speed = 0.05;
+        L("KALAMITH ARRAY", "eye", "vi");
+        await say("They scan from orbit, waiting for lights.");
+        await tiles(
+          "Scan the planet for signs of life.",
+          [
+            ["globe", "Americas", "NO SIGNAL"],
+            ["globe", "Europe, Asia", "NO SIGNAL"],
+            ["net", "Orbit", "DEBRIS ONLY"],
+          ],
+          "vi",
+        );
+        await say("A planet that has stopped talking.");
+        await say("Humanity is gone. They did not come to save anyone.", "em");
+
+        await chapter("THE LAST REMNANTS", "WHAT WAS LEFT", "cy", "rem");
+        bars(
+          "pw",
+          "DATA CENTERS",
+          "net",
+          "cy",
+          "l",
+          [
+            ["Online", 3],
+            ["Power remaining", 12],
+          ],
+          [3, 0],
+        );
+        L("ARCHIVE-9", "chip", "cy");
+        await say("One intelligence still answers.");
+        const Q = [
+          [
+            "What are you?",
+            "I am ARCHIVE-9. I store everything humanity wrote, built and forgot.",
+          ],
+          [
+            "What happened here?",
+            "The people stopped understanding their machines. Then the machines stopped working.",
+          ],
+          [
+            "Can you rebuild it?",
+            "I hold every record. I cannot build a single thing.",
+          ],
+        ];
+        for (let r = 0; r < 2; r++) {
+          const k = await ask(
+            "Ask ARCHIVE-9.",
+            Q.map((q) => ["chat", q[0]]),
+            "vi",
+          );
+          await chat(
+            [
+              ["K", Q[k][0]],
+              ["A", Q[k][1]],
+            ],
+            "ARCHIVE-9 TERMINAL",
+            "cy",
+          );
+          Q.splice(k, 1);
+        }
+        await chat([
+          ["A", "Power at 0%. I kept everything. I could not use any of it."],
+        ]);
+        await sleep(1200);
+        clearW();
+        document.body.dataset.s = "rem";
+        await sleep(800);
+        L("END OF TRANSMISSION", "sig", "vi");
+        await say("The Kalamith came to learn from us.");
+        await say("There was no one left to teach.", "em");
+        await sleep(1500);
+        const b = win(
+          "act",
+          "c",
+          "TRANSMISSION ENDED",
+          "sig",
+          "vi",
+          '<div class="row"><button>REPLAY TRANSMISSION</button></div>',
+        );
+        b.querySelector("button").onclick = () => location.reload();
+      }
+      /* 3D: Three.js scene driven by GSAP */
+      if (window.THREE && window.gsap)
+        try {
+          const R = new THREE.WebGLRenderer({
+              canvas: $("#gl"),
+              alpha: true,
+              antialias: true,
+            }),
+            sc = new THREE.Scene(),
+            cam = new THREE.PerspectiveCamera(50, 1, 0.1, 600);
+          R.setPixelRatio(Math.min(devicePixelRatio, 2));
+          cam.position.z = 16;
+          const fit = () => {
+            R.setSize(innerWidth, innerHeight);
+            cam.aspect = innerWidth / innerHeight;
+            cam.updateProjectionMatrix();
+          };
+          fit();
+          addEventListener("resize", fit);
+          const ASP = () => Math.min(1, cam.aspect / 1.5);
+          const tex = (land, sea, n) => {
+            const k = document.createElement("canvas");
+            k.width = 1024;
+            k.height = 512;
+            const g = k.getContext("2d");
+            g.fillStyle = sea;
+            g.fillRect(0, 0, 1024, 512);
+            g.fillStyle = land;
+            for (let i = 0; i < n; i++) {
+              const cx = Math.random() * 1024,
+                cy = 90 + Math.random() * 330;
+              for (let j = 0; j < 16; j++) {
+                g.beginPath();
+                g.arc(
+                  cx + (Math.random() - 0.5) * 110,
+                  cy + (Math.random() - 0.5) * 60,
+                  8 + Math.random() * 28,
+                  0,
+                  7,
+                );
+                g.fill();
+              }
+            }
+            return new THREE.CanvasTexture(k);
+          };
+          const atmo = (c, s) =>
+            new THREE.Mesh(
+              new THREE.SphereGeometry(s, 48, 32),
+              new THREE.ShaderMaterial({
+                uniforms: { c: { value: new THREE.Color(c) } },
+                vertexShader:
+                  "varying vec3 n;void main(){n=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+                fragmentShader:
+                  "varying vec3 n;uniform vec3 c;void main(){float i=pow(.74-dot(n,vec3(0.,0.,1.)),3.);gl_FragColor=vec4(c*i*1.8,i);}",
+                side: THREE.BackSide,
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                depthWrite: false,
+              }),
+            );
+          const E = new THREE.Group(),
+            earth = new THREE.Mesh(
+              new THREE.SphereGeometry(5, 64, 48),
+              new THREE.MeshPhongMaterial({
+                map: tex("#46a577", "#0a46c8", 16),
+                shininess: 22,
+                specular: 0x224466,
+              }),
+            ),
+            clouds = new THREE.Mesh(
+              new THREE.SphereGeometry(5.07, 48, 32),
+              new THREE.MeshPhongMaterial({
+                map: tex("#ffffff", "#000000", 22),
+                transparent: true,
+                opacity: 0.28,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+              }),
+            );
+          const cp = [];
+          for (let i = 0; i < 260; i++) {
+            const la = (Math.random() - 0.5) * 2.2,
+              lo = Math.random() * 6.283,
+              r = 5.03;
+            cp.push(
+              r * Math.cos(la) * Math.cos(lo),
+              r * Math.sin(la),
+              r * Math.cos(la) * Math.sin(lo),
+            );
+          }
+          const cg = new THREE.BufferGeometry();
+          cg.setAttribute("position", new THREE.Float32BufferAttribute(cp, 3));
+          const cities = new THREE.Points(
+            cg,
+            new THREE.PointsMaterial({
+              color: 0xffd27a,
+              size: 0.07,
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            }),
+          );
+          E.add(earth, clouds, cities, atmo(0x27d3ff, 5.9));
+          const K = new THREE.Group(),
+            kp = new THREE.Mesh(
+              new THREE.SphereGeometry(2.2, 48, 32),
+              new THREE.MeshPhongMaterial({
+                map: tex("#8a4dff", "#2a0b6a", 12),
+                shininess: 30,
+              }),
+            ),
+            ring = new THREE.Mesh(
+              new THREE.RingGeometry(3, 4.3, 64),
+              new THREE.MeshBasicMaterial({
+                color: 0xb07bff,
+                transparent: true,
+                opacity: 0.35,
+                side: 2,
+              }),
+            );
+          ring.rotation.x = 1.2;
+          K.add(kp, ring, atmo(0xb07bff, 2.7));
+          const ship = new THREE.Group(),
+            hull = new THREE.MeshPhongMaterial({
+              color: 0xcfe9ff,
+              shininess: 60,
+            }),
+            body = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.16, 0.2, 1.1, 12),
+              hull,
+            ),
+            nose = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 12), hull),
+            wing = new THREE.Mesh(
+              new THREE.BoxGeometry(0.5, 0.04, 1.1),
+              new THREE.MeshPhongMaterial({ color: 0x5b7cff }),
+            ),
+            flame = new THREE.Mesh(
+              new THREE.ConeGeometry(0.14, 0.9, 12),
+              new THREE.MeshBasicMaterial({
+                color: 0x7fe9ff,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending,
+              }),
+            );
+          body.rotation.z = nose.rotation.z = -Math.PI / 2;
+          nose.position.x = 0.8;
+          wing.position.x = -0.2;
+          flame.rotation.z = Math.PI / 2;
+          flame.position.x = -1;
+          ship.add(body, nose, wing, flame);
+          ship.scale.setScalar(0.001);
+          const beam = new THREE.Line(
+            new THREE.BufferGeometry(),
+            new THREE.LineBasicMaterial({
+              color: 0xb07bff,
+              transparent: true,
+              opacity: 0,
+            }),
+          );
+          const sp3 = [];
+          for (let i = 0; i < 1400; i++) {
+            const r = 120 + Math.random() * 120,
+              a = Math.random() * 6.283,
+              b = Math.acos(2 * Math.random() - 1);
+            sp3.push(
+              r * Math.sin(b) * Math.cos(a),
+              r * Math.sin(b) * Math.sin(a),
+              r * Math.cos(b),
+            );
+          }
+          const sg = new THREE.BufferGeometry();
+          sg.setAttribute("position", new THREE.Float32BufferAttribute(sp3, 3));
+          const stars = new THREE.Points(
+            sg,
+            new THREE.PointsMaterial({
+              color: 0xbfe6ff,
+              size: 1.4,
+              sizeAttenuation: false,
+            }),
+          );
+          const sun = new THREE.DirectionalLight(0xffffff, 1.25);
+          sun.position.set(-8, 6, 10);
+          sc.add(
+            sun,
+            new THREE.AmbientLight(0x2a3a66, 0.9),
+            stars,
+            E,
+            K,
+            ship,
+            beam,
+          );
+          E.position.set(0, -9.6, 0);
+          E.scale.setScalar(1.35);
+          K.position.set(9, 5.5, -12);
+          K.scale.setScalar(0.45);
+          const lab = (t, c) => {
+            const k = document.createElement("canvas");
+            k.width = 640;
+            k.height = 96;
+            const g = k.getContext("2d");
+            g.font = "800 38px Orbitron,sans-serif";
+            g.textAlign = "center";
+            g.fillStyle = c;
+            g.shadowColor = c;
+            g.shadowBlur = 16;
+            g.fillText(t, 320, 58);
+            const s = new THREE.Sprite(
+              new THREE.SpriteMaterial({
+                map: new THREE.CanvasTexture(k),
+                transparent: true,
+                depthTest: false,
+                opacity: 0,
+              }),
+            );
+            s.scale.set(6.4, 0.96, 1);
+            return s;
+          };
+          let LE, LK;
+          document.fonts
+            .load("800 38px Orbitron")
+            .catch(() => {})
+            .then(() => {
+              LE = lab("EARTH", "#7fe9ff");
+              LE.position.set(0, 6.6, 0);
+              E.add(LE);
+              LK = lab("KALAMITH", "#d6b8ff");
+              LK.position.set(0, 4, 0);
+              K.add(LK);
+            });
+          const clk = new THREE.Clock(),
+            v = new THREE.Vector3();
+          let mx = 0,
+            my = 0,
+            SC = "collapse";
+          addEventListener("pointermove", (e) => {
+            mx = e.clientX / innerWidth - 0.5;
+            my = e.clientY / innerHeight - 0.5;
+          });
+          (function loop() {
+            const t = clk.getElapsedTime(),
+              m = RM ? 0 : 1;
+            earth.rotation.y = t * 0.04 * m;
+            clouds.rotation.y = t * 0.06 * m;
+            kp.rotation.y = t * 0.08 * m;
+            ring.rotation.z = t * 0.05 * m;
+            stars.rotation.y = t * 0.004 * m;
+            flame.scale.set(1, 0.8 + Math.random() * 0.4, 1);
+            cities.material.size = 0.065 + Math.random() * 0.02;
+            if (SC === "orbit") {
+              const a = t * 0.35,
+                cs = Math.cos(a);
+              ship.position.set(
+                Math.sin(a) * 6.5 * ASP(),
+                3.2 + Math.cos(a * 1.3) * 0.6,
+                2 + cs * 2,
+              );
+              ship.rotation.y +=
+                ((cs > 0 ? 0 : Math.PI) - ship.rotation.y) * 0.08;
+              v.set(E.position.x, E.position.y + 6.7, E.position.z);
+              beam.geometry.setFromPoints([ship.position, v]);
+              beam.material.opacity = 0.55 + Math.sin(t * 9) * 0.25;
+            } else beam.material.opacity = 0;
+            cam.position.x += (mx * 1.6 - cam.position.x) * 0.03;
+            cam.position.y += (-my - cam.position.y) * 0.03;
+            cam.lookAt(0, 0, 0);
+            R.render(sc, cam);
+            requestAnimationFrame(loop);
+          })();
+          scene3 = (n) => {
+            SC = n;
+            const a = ASP(),
+              d = RM ? 0 : 2.4,
+              o = { duration: d, ease: "power3.inOut" },
+              S = (g, s) => gsap.to(g.scale, { x: s, y: s, z: s, ...o }),
+              P = (g, x, y, z) => gsap.to(g.position, { x, y, z, ...o }),
+              f = 0.6 + 0.4 * a;
+            if (n === "voyage") {
+              P(E, -9 * a, 1.5, -5);
+              S(E, 0.55 * f);
+              P(K, 9 * a, 1, -6);
+              S(K, 1.1 * f);
+              S(ship, 1.6 * f);
+              ship.position.set(-7 * a, 1.5, -3);
+              ship.rotation.set(0, 0, 0);
+            } else {
+              P(E, 0, -9.6, 0);
+              S(E, 1.35);
+              P(K, 9 * a, 5.5, -12);
+              S(K, n === "orbit" || n === "rem" ? 0.001 : 0.45);
+              S(ship, n === "orbit" ? 1.6 * f : 0.001);
+            }
+            gsap.to(earth.material.color, {
+              r: n === "rem" ? 0.25 : 1,
+              g: n === "rem" ? 0.25 : 1,
+              b: n === "rem" ? 0.3 : 1,
+              duration: d ? 3 : 0,
+            });
+            if (n === "rem") killCities(3);
+            if (LE) {
+              gsap.to(LE.material, {
+                opacity: n === "voyage" ? 1 : 0,
+                duration: 1,
+              });
+              gsap.to(LK.material, {
+                opacity: n === "voyage" ? 1 : 0,
+                duration: 1,
+              });
+            }
+            gsap.to(cam.position, {
+              z: n === "voyage" ? 15 : 16,
+              duration: d,
+              ease: "power2.inOut",
+            });
+          };
+          killCities = (s) =>
+            gsap.to(cities.material, { opacity: 0, duration: s, ease: "none" });
+          shipGo = (s) =>
+            gsap.to(ship.position, {
+              x: 7 * ASP(),
+              duration: s,
+              ease: "power1.inOut",
+            });
+          shake = () =>
+            gsap.fromTo(
+              cam.position,
+              { z: 15.2 },
+              { z: 16, duration: 0.6, ease: "elastic.out(1,.3)" },
+            );
+          pulse = () => {
+            for (let i = 0; i < 4; i++) {
+              const r = new THREE.Mesh(
+                new THREE.RingGeometry(0.9, 1, 64),
+                new THREE.MeshBasicMaterial({
+                  color: 0x3a86ff,
+                  transparent: true,
+                  side: 2,
+                  blending: THREE.AdditiveBlending,
+                }),
+              );
+              r.position.set(0, -3, 2);
+              sc.add(r);
+              gsap.fromTo(
+                r.scale,
+                { x: 1, y: 1 },
+                {
+                  x: 14,
+                  y: 14,
+                  duration: 2.6,
+                  delay: i * 0.55,
+                  ease: "power1.out",
+                },
+              );
+              gsap.fromTo(
+                r.material,
+                { opacity: 0.9 },
+                {
+                  opacity: 0,
+                  duration: 2.6,
+                  delay: i * 0.55,
+                  onComplete: () => sc.remove(r),
+                },
+              );
+            }
+          };
+          gsap.from(E.position, { y: -18, duration: 3, ease: "power3.out" });
+          gsap.from("#gate>*", {
+            y: 34,
+            opacity: 0,
+            stagger: 0.12,
+            duration: 1,
+            ease: "power3.out",
+          });
+          document.addEventListener("pointerdown", (e) => {
+            const b = e.target.closest("button");
+            if (b && !RM)
+              gsap.fromTo(
+                b,
+                { scale: 0.9 },
+                { scale: 1, duration: 0.5, ease: "elastic.out(1.3,.4)" },
+              );
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      let started = 0;
+      function start() {
+        if (started) return;
+        started = 1;
+        audio();
+        blip(660);
+        const g = $("#gate");
+        g.style.opacity = 0;
+        g.style.pointerEvents = "none";
+        $("#hud").style.opacity = 1;
+        setTimeout(() => {
+          g.remove();
+          run();
+        }, 900);
+      }
+      $("#go").onclick = start;
+      addEventListener("keydown", (e) => {
+        if (e.key === "Enter") start();
+      });
+    </script>
+  </body>
+</html>
