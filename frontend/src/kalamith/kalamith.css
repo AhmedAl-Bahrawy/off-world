@@ -17,7 +17,7 @@
   --bl: #3a86ff;
   --or: #ff3b4b;
   --vi: #b07bff;
-  --rd: #ff9a3d;
+  --rd: #ffb400;
   --wh: #f2fbff;
   --acc: #27d3ff;
   transition: --acc 1.6s;
@@ -30,11 +30,25 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overflow: hidden;
   background:
-    radial-gradient(90% 60% at 50% 0, #14084a88, transparent 70%),
+    radial-gradient(90% 60% at 50% 0, #14084acc, transparent 70%),
+    linear-gradient(145deg, #020813 0%, #06012b 48%, #130019 100%),
     var(--bg);
   color: var(--wh);
   font: 600 17px/1.35 Rajdhani, system-ui, sans-serif;
   transition: --acc 1.6s;
+}
+
+/* Supplied space/earth artwork: one shared visual language for every scene. */
+.kx-art-direction {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.38;
+  background: url('/visuals/Group.svg') center / cover no-repeat;
+  mix-blend-mode: screen;
+  filter: saturate(1.12) contrast(1.06);
+  mask-image: linear-gradient(to bottom, #000 0%, #000b 62%, transparent 100%);
 }
 
 /* CRT scanlines + vignette overlay */
@@ -92,7 +106,7 @@ svg.ic {
   gap: 1rem;
   font: 11px/1 Orbitron, sans-serif;
   letter-spacing: 0.12em;
-  color: #9fd8ee;
+  color: #b8eaf2;
   opacity: 0;
   transition: opacity 1.5s;
   z-index: 3;
@@ -119,8 +133,8 @@ svg.ic {
   position: fixed;
   z-index: 4;
   --c: var(--cy);
-  background: #020c1cc7;
-  backdrop-filter: blur(6px);
+  background: linear-gradient(145deg, #07152bd9, #12052ad1);
+  backdrop-filter: blur(10px) saturate(1.15);
   border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
   box-shadow:
     0 0 24px color-mix(in srgb, var(--c) 24%, transparent),
@@ -481,6 +495,15 @@ svg.ic {
 .kx-gate p {
   margin: 0 0 1.4rem;
   color: #a9d6e8;
+  letter-spacing: 0.03em;
+}
+.kx-gate p span {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: var(--acc);
+  font: 700 0.72rem/1.2 'Share Tech Mono', monospace;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 .open {

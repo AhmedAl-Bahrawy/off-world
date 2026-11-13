@@ -60,6 +60,7 @@ export default function KalamithExperience() {
       style={{ '--acc': `var(--${accent})` } as CSSProperties}
     >
       <IconDefs />
+      <div className="kx-art-direction" aria-hidden="true" />
       <Starfield2D />
       {/* Keyed per-generation so a replay remounts both fresh — prefixes keep
           the sibling keys unique (two bare `key={generation}` collide on "0"). */}

@@ -54,7 +54,7 @@ export function Gate() {
       <small>A MESSAGE FROM EARTH</small>
       <span className="ln" />
       <h1>KALAMITH</h1>
-      <p>The last signal of humanity. Sound on.</p>
+      <p>The last signal of humanity.<br /><span>Sound on · transmission ready</span></p>
       <button className="open" onClick={start}>
         <span>CLICK</span>
         <span>TO OPEN</span>
