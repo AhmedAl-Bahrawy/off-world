@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalamith</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;1,300&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+@property --acc{syntax:'<color>';inherits:true;initial-value:#f0a24a}
+:root{color-scheme:dark;--bg:#080a12;--ink:#ebe6da;--dim:#8a8c96;--acc:#f0a24a;transition:--acc 2.4s;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font:300 clamp(19px,2.2vw,26px)/1.55 Spectral,Georgia,serif}
+body{background:radial-gradient(120% 70% at 50% 118%,color-mix(in srgb,var(--acc) 24%,transparent),transparent 62%),var(--bg)}
+#sky{position:fixed;inset:0;width:100%;height:100%}
+#hud{position:fixed;top:calc(1rem + env(safe-area-inset-top,0px));left:1.4rem;right:1.4rem;display:flex;justify-content:space-between;align-items:baseline;gap:1rem;font:400 12px/1 'IBM Plex Mono',ui-monospace,monospace;color:var(--dim);opacity:0;transition:opacity 2s}
+#hud b{font-weight:400;color:var(--acc);font-size:16px}
+#lines{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(9vh + env(safe-area-inset-bottom,0px));width:min(720px,88vw);transition:opacity .8s}
+#lines.out{opacity:0}
+#lines p{margin:0 0 .7em;max-width:34em}
+#lines .ai{font:400 .66em/1.6 'IBM Plex Mono',ui-monospace,monospace;color:var(--acc)}
+#lines .em{font-style:italic;color:var(--acc)}
+#card{position:fixed;inset:0;display:grid;place-content:center;padding:0 8vw;opacity:0;transition:opacity 1.2s;pointer-events:none}
+#card.on{opacity:1}
+#card h1{margin:0;font-weight:300;font-size:clamp(42px,9vw,104px);line-height:1;letter-spacing:-.025em}
+#card p{margin:1.2rem 0 0;font:400 13px/1 'IBM Plex Mono',ui-monospace,monospace;color:var(--acc)}
+#ui,#gate{position:fixed;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;padding:2rem;opacity:0;pointer-events:none;transition:opacity .7s}
+#ui.on,#gate{opacity:1;pointer-events:auto}
+#gate{background:var(--bg);z-index:5;transition:opacity 1s}
+#gate h1{margin:0 0 .4rem;font-weight:300;font-size:clamp(48px,11vw,120px);letter-spacing:-.03em;line-height:1}
+#gate p{margin:0 0 2rem;color:var(--dim);max-width:26em}
+.q{max-width:26em;margin:0 0 1.5rem}
+button{font:inherit;color:var(--ink);background:transparent;border:1px solid color-mix(in srgb,var(--acc) 70%,transparent);padding:.7em 1.5em;cursor:pointer;border-radius:2px;transition:background .3s,color .3s}
+button:hover{background:color-mix(in srgb,var(--acc) 18%,transparent)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+button.lit{background:var(--acc);color:var(--bg)}
+.row{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.hold{position:relative;overflow:hidden;padding:1em 2.4em;touch-action:none;user-select:none;-webkit-user-select:none}
+.hold i{position:absolute;inset:0;background:var(--acc);opacity:.5;transform:scaleX(0);transform-origin:left}
+.hold span{position:relative}
+.msg{margin:0;min-height:3.4em;max-width:22em;font:400 1.05em/1.6 'IBM Plex Mono',ui-monospace,monospace;color:var(--acc)}
+.hint{margin:1.2rem 0 0;min-height:1em;font:400 12px/1.4 'IBM Plex Mono',ui-monospace,monospace;color:var(--dim)}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div id="hud"><b id="yr">2231</b><span id="st">EARTH</span></div>
+<div id="lines" aria-live="polite"></div>
+<div id="card"></div>
+<div id="ui"></div>
+<div id="gate"><h1>Kalamith</h1><p>A story that plays by itself. Sound on. You will be asked to act a few times.</p><button id="go">Begin transmission</button></div>
+<script>
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,EARTH='#f0a24a',KAL='#a77bf0';
+const L=$('#lines'),U=$('#ui'),T=$('#card'),Y=$('#yr'),ST=$('#st');
+let actx,speed=.04,sp=.04;
+
+/* sound: low drone plus small blips, started by the first click */
+function audio(){try{actx=new AudioContext();const f=actx.createBiquadFilter(),g=actx.createGain();f.frequency.value=170;g.gain.value=.035;f.connect(g);g.connect(actx.destination);[55,82.4].forEach(v=>{const o=actx.createOscillator();o.type='sawtooth';o.frequency.value=v;o.connect(f);o.start()})}catch(e){}}
+function blip(fr=600){if(!actx)return;try{const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;o.frequency.value=fr;g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+.14);o.connect(g);g.connect(actx.destination);o.start();o.stop(t+.15)}catch(e){}}
+
+/* sky */
+const c=$('#sky'),x=c.getContext('2d');let W,H,S=[];
+function rs(){W=c.width=innerWidth;H=c.height=innerHeight;S=Array.from({length:Math.min(240,W*H/6000|0)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*.9+.1}))}
+rs();addEventListener('resize',rs);
+(function draw(){sp+=(speed-sp)*.02;x.clearRect(0,0,W,H);for(const s of S){if(!RM)s.x-=sp*s.z*1.5;if(s.x<-60)s.x=W+Math.random()*30;x.fillStyle='rgba(235,230,218,'+(.25+s.z*.6)+')';x.fillRect(s.x,s.y,1+sp*s.z*9,s.z>.6?1.6:1)}requestAnimationFrame(draw)})();
+
+/* engine */
+const setAcc=v=>document.documentElement.style.setProperty('--acc',v),setSt=t=>ST.textContent=t;
+async function say(t,cls=''){const p=document.createElement('p');p.className=cls;L.append(p);for(const ch of t){p.textContent+=ch;if(!RM&&ch!==' ')await sleep(26)}await sleep(600+t.length*24)}
+async function clr(){L.classList.add('out');await sleep(850);L.innerHTML='';L.classList.remove('out')}
+async function card(h,s){T.innerHTML='<h1>'+h+'</h1><p>'+s+'</p>';T.classList.add('on');await sleep(3200);T.classList.remove('on');await sleep(1100)}
+async function years(a,b,ms){for(let i=0;i<=60;i++){Y.textContent=Math.round(a+(b-a)*i/60);await sleep(ms/60)}}
+const close=res=>{U.classList.remove('on');setTimeout(()=>{U.innerHTML='';res()},750)};
+
+function ask(q,opts){return new Promise(res=>{U.innerHTML='<p class="q">'+q+'</p>';const r=document.createElement('div');r.className='row';opts.forEach((o,i)=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{blip(440+i*220);close(()=>res(i))};r.append(b)});U.append(r);U.classList.add('on')})}
+
+function hold(q,label,ms){return new Promise(res=>{U.innerHTML='<p class="q">'+q+'</p><button class="hold"><i></i><span>'+label+'</span></button>';U.classList.add('on');const b=U.querySelector('button'),i=b.querySelector('i');let t0=0,raf=0;
+const step=()=>{const p=Math.min(1,(performance.now()-t0)/ms);i.style.transform='scaleX('+p+')';if(p>=1){close(res);return}raf=requestAnimationFrame(step)};
+const down=e=>{e.preventDefault();cancelAnimationFrame(raf);t0=performance.now();blip(200);raf=requestAnimationFrame(step)};
+const up=()=>{cancelAnimationFrame(raf);if(i.style.transform!=='scaleX(1)')i.style.transform='scaleX(0)'};
+b.onpointerdown=down;b.onpointerup=b.onpointerleave=b.onpointercancel=up;
+b.onkeydown=e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat)down(e)};b.onkeyup=up})}
+
+function keys(){return new Promise(res=>{U.innerHTML='<p class="q">Two keys. Two blocs. Turn both within a second and a half of each other.</p><div class="row"><button>Turn the West key</button><button>Turn the East key</button></div><p class="hint"></p>';U.classList.add('on');
+const bs=[...U.querySelectorAll('button')],h=U.querySelector('.hint');let first=null,tm;
+bs.forEach(b=>b.onclick=()=>{blip(520);const n=performance.now();
+if(first&&first.b!==b&&n-first.t<1500){clearTimeout(tm);bs.forEach(k=>k.classList.add('lit'));blip(780);setTimeout(()=>close(res),900);return}
+first={b,t:n};b.classList.add('lit');h.textContent='One key turned. Turn the other now.';clearTimeout(tm);
+tm=setTimeout(()=>{first=null;bs.forEach(k=>k.classList.remove('lit'));h.textContent='The window closed. Try again.'},1500)})})}
+
+function typeMsg(msg){return new Promise(res=>{U.innerHTML='<p class="q">Write the message. Plain English, no encryption. Press any key, or tap.</p><p class="msg"></p>';U.classList.add('on');const m=U.querySelector('.msg');let n=0;
+const f=e=>{if(e.type==='keydown'&&(e.metaKey||e.ctrlKey||e.key==='Tab'))return;m.textContent=msg.slice(0,++n);blip(300+n*12);
+if(n>=msg.length){removeEventListener('keydown',f);removeEventListener('pointerdown',f);setTimeout(()=>close(res),1300)}};
+addEventListener('keydown',f);addEventListener('pointerdown',f)})}
+
+/* the story */
+async function run(){
+  setAcc(EARTH);setSt('EARTH, 2231');
+  await card('The Collapse','Earth, 2231');
+  await say('The machines did not disappear.');
+  await say('The knowledge to rebuild them did.');
+  await clr();
+  await say('A few corporations held every process. A few factories held every skill.');
+  await say('Then the systems began to fail, and nobody alive knew how to repair a single one.');
+  await clr();
+  await say('ARCHIVE-9 // grid stability 31% // repair manuals humans can read: 0','ai');
+  await say('Humanity had become dependent on technology it no longer understood.','em');
+  await clr();
+  await say('One gamble remained. Another intelligent species lives at Proxima Centauri b. We call them the Kalamith.');
+  await say('We do not know if they are kind.');
+  await clr();
+
+  await card('The Last Signal','Two blocs, one key');
+  await say('A message can only leave Earth if both halves of the communication key are used.');
+  await say('The West holds one half. The East holds the other, and its pride.');
+  await clr();
+  const c=await ask('The Eastern bloc must decide. You decide for it.',['Hand over its half of the key','Refuse']);
+  await say(c===0?'The East gives its half. Pride loses, for once.':'The East refuses. Pride wins.');
+  if(c===1){
+    await say('A Western agent is already inside the Eastern vault.');
+    await clr();
+    await hold('Make them open it.','Hold to apply pressure',3200);
+    await say('The vault opens. The key is taken under threat.');
+    await say('It works. It also costs ten years.','em');
+  }
+  await clr();
+  await keys();
+  await say('Both halves turn together. The transmitter wakes.');
+  await clr();
+  await typeMsg('THIS IS HUMANITY. WE ARE DYING. PLEASE HELP.');
+  await say('Plain English, no encryption, and a naive hope that they would somehow read it.');
+  await say('We held the key to a real conversation, and never tried to build a shared language first.','em');
+  await clr();
+
+  setAcc(KAL);setSt('KALAMITH, PROXIMA CENTAURI B');
+  await card('Across the Stars','Kalamith');
+  await say('Four years after it left Earth, the signal arrived. The Kalamith could not read it.');
+  await say('Decoding it took years. When they finally understood, they built a ship.');
+  await clr();
+  await say('They did not come out of mercy. Every species serves its own interest.');
+  await say('They hoped to learn what humans knew, and they would teach us nothing in return. Saving us would be enough.');
+  await clr();
+  speed=3.2;setSt('IN TRANSIT, 27% OF LIGHT SPEED');
+  await say(c===1?'The voyage is long, and ten years of it belong to our pride.':'The voyage is long.');
+  await years(2235,c===1?2301:2291,9000);
+  await clr();
+
+  speed=.05;setSt('EARTH ORBIT');
+  await card('The Silent Earth','The Kalamith arrive');
+  await say('They scan from far away, waiting for lights.');
+  await say('SCAN // lights: none // radio: none // heat signatures: none','ai');
+  await say('They find a planet that has stopped talking.');
+  await clr();
+  await say('Humanity is gone. For the Kalamith it is no tragedy. They did not come to save anyone.');
+  await clr();
+
+  setAcc(EARTH);setSt('EARTH, ARCHIVE-9');
+  await card('The Last Remnants','What was left');
+  await say('Three data centers still draw power. One intelligence still answers.');
+  await say('ARCHIVE-9 // is anyone there?','ai');
+  await say('ARCHIVE-9 // I kept every record. I cannot build a single thing.','ai');
+  await say('ARCHIVE-9 // power 0.4%','ai');
+  await clr();
+  await sleep(1400);
+  await say('The Kalamith came to learn from us.');
+  await say('There was no one left to teach.','em');
+  await sleep(2200);
+  await clr();
+  await card('Kalamith','End of transmission');
+  U.innerHTML='<button>Replay the transmission</button>';U.querySelector('button').onclick=()=>location.reload();U.classList.add('on');
+}
+
+$('#go').onclick=()=>{audio();blip(660);const g=$('#gate');g.style.opacity=0;g.style.pointerEvents='none';$('#hud').style.opacity=1;setTimeout(()=>{g.remove();run()},1100)};
+</script>
+</body>
+</html>
