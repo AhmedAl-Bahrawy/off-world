@@ -19,4 +19,14 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // R3F is imperative by design (three.js objects are mutated in useFrame,
+    // procedural textures are generated once). The React Compiler's purity
+    // rules cannot express this, so they are relaxed for the Kalamith code.
+    files: ['src/kalamith/**/*.{ts,tsx}'],
+    rules: {
+      'react-hooks/immutability': 'off',
+      'react-hooks/purity': 'off',
+    },
+  },
 ])

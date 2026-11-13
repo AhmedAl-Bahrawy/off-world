@@ -1,0 +1,590 @@
+/* ====================================================================
+   Kalamith — ported from demos/v4/Kalamith.html, scoped under `.kx`
+   (the DOM planet/ship overlay CSS from the original was dead code and
+   is not ported; planets live entirely in the R3F scene).
+   ==================================================================== */
+
+@property --acc {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #27d3ff;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #020813;
+  --cy: #27d3ff;
+  --bl: #3a86ff;
+  --or: #ff3b4b;
+  --vi: #b07bff;
+  --rd: #ff9a3d;
+  --wh: #f2fbff;
+  --acc: #27d3ff;
+  transition: --acc 1.6s;
+}
+
+.kx {
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: hidden;
+  background:
+    radial-gradient(90% 60% at 50% 0, #14084a88, transparent 70%),
+    var(--bg);
+  color: var(--wh);
+  font: 600 17px/1.35 Rajdhani, system-ui, sans-serif;
+  transition: --acc 1.6s;
+}
+
+/* CRT scanlines + vignette overlay */
+.kx::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background:
+    repeating-linear-gradient(0deg, #0000 0 2px, #00000030 2px 3px),
+    radial-gradient(120% 90% at 50% 50%, #0000 55%, #000b);
+}
+
+/* Layer canvases */
+.kx-sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.kx-gl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Icons */
+svg.ic {
+  width: 1.1em;
+  height: 1.1em;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* HUD                                                                 */
+/* ------------------------------------------------------------------ */
+
+.kx-hud {
+  position: fixed;
+  top: calc(0.8rem + env(safe-area-inset-top, 0px));
+  left: 1.2rem;
+  right: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font: 11px/1 Orbitron, sans-serif;
+  letter-spacing: 0.12em;
+  color: #9fd8ee;
+  opacity: 0;
+  transition: opacity 1.5s;
+  z-index: 3;
+}
+.kx-hud.on {
+  opacity: 1;
+}
+.kx-hud b {
+  font-size: 17px;
+  color: var(--acc);
+  text-shadow: 0 0 10px var(--acc);
+  margin-left: 0.4rem;
+}
+.kx-hud div {
+  display: flex;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Windows                                                             */
+/* ------------------------------------------------------------------ */
+
+.w {
+  position: fixed;
+  z-index: 4;
+  --c: var(--cy);
+  background: #020c1cc7;
+  backdrop-filter: blur(6px);
+  border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--c) 24%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--c) 9%, transparent);
+}
+.w::before,
+.w::after {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border: 3px solid var(--wh);
+}
+.w::before {
+  top: -3px;
+  left: -3px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.w::after {
+  bottom: -3px;
+  right: -3px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.wh {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--c);
+  border-bottom: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  font: 800 10.5px/1 Orbitron, sans-serif;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 8px var(--c);
+}
+.wh b {
+  flex: 1;
+  font: inherit;
+}
+.wh i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 8px var(--c);
+  animation: bl 1.2s infinite;
+}
+@keyframes bl {
+  50% {
+    opacity: 0.2;
+  }
+}
+.wh::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--c) 45%, transparent),
+    transparent
+  );
+  translate: -100% 0;
+  animation: sweep 1.2s 0.25s 1 both;
+}
+@keyframes sweep {
+  to {
+    translate: 100% 0;
+  }
+}
+
+.wb {
+  padding: 0.7rem 0.8rem;
+  max-height: 46vh;
+  overflow: auto;
+}
+
+/* Window slots */
+.s-l {
+  left: 1.2rem;
+  top: 3.6rem;
+  width: min(300px, 42vw);
+}
+.s-r {
+  right: 1.2rem;
+  top: 3.6rem;
+  width: min(350px, 46vw);
+}
+.s-c {
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
+  width: min(760px, 94vw);
+  text-align: center;
+}
+.s-b {
+  left: 50%;
+  bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
+  translate: -50% 0;
+  width: min(740px, 92vw);
+}
+
+/* Bottom log typography */
+.s-b p {
+  margin: 0.15rem 0;
+  font-size: 1.15rem;
+}
+.s-b .em {
+  color: var(--c);
+  font-style: italic;
+}
+
+/* Comms window overrides */
+.w-chat {
+  width: min(480px, 50vw);
+  top: 3.4rem;
+}
+.w-chat .wb {
+  max-height: 64vh;
+  min-height: 36vh;
+}
+.kx:has(.w-chat) .s-c,
+.kx:has(.w-chat) .s-b {
+  left: 30%;
+  width: min(540px, 52vw);
+}
+
+/* Chat messages */
+.m {
+  margin: 0.5rem 0;
+  padding: 0.55rem 0.85rem;
+  font-size: 1.2rem;
+  max-width: 90%;
+  border-left: 3px solid var(--c);
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+}
+.m small {
+  display: block;
+  font: 800 9.5px Orbitron, sans-serif;
+  letter-spacing: 0.14em;
+  color: var(--c);
+}
+.m.W {
+  --c: var(--bl);
+}
+.m.E {
+  --c: var(--or);
+  margin-left: auto;
+  text-align: right;
+  border-left: 0;
+  border-right: 3px solid var(--c);
+}
+.m.A {
+  --c: #7dffb5;
+}
+.m.K {
+  --c: var(--vi);
+}
+.m span i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 3px;
+  border-radius: 50%;
+  background: var(--c);
+  animation: bl 0.6s infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons / interactions                                              */
+/* ------------------------------------------------------------------ */
+
+.kx button {
+  font: 800 13px/1.2 Orbitron, sans-serif;
+  letter-spacing: 0.1em;
+  color: var(--wh);
+  background: #04152e;
+  border: 1px solid var(--c, var(--cy));
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+}
+.kx button:hover {
+  box-shadow: 0 0 16px var(--c, var(--cy));
+}
+.kx button:focus-visible {
+  outline: 2px solid var(--wh);
+  outline-offset: 3px;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  perspective: 800px;
+}
+
+.tile {
+  flex-direction: column;
+  width: 150px;
+  height: 140px;
+  justify-content: center;
+  font-size: 12px;
+  transform-style: preserve-3d;
+}
+.tile svg {
+  width: 46px;
+  height: 46px;
+}
+.tile:hover {
+  transform: translateY(-5px) rotateX(10deg);
+}
+.tile em {
+  font: normal 11px 'Share Tech Mono', monospace;
+  color: var(--rd);
+  min-height: 1em;
+}
+.tile.lit,
+.tile.done {
+  background: color-mix(in srgb, var(--c, var(--cy)) 30%, #04152e);
+  box-shadow: 0 0 20px var(--c, var(--cy));
+}
+
+.word {
+  padding: 0.5rem 0.7rem;
+  font: 400 15px 'Share Tech Mono', monospace;
+  color: var(--vi);
+  --c: var(--vi);
+}
+.word.lit {
+  color: var(--wh);
+  background: #2a1160;
+}
+
+.hint {
+  margin: 0.9rem 0 0;
+  font: 13px 'Share Tech Mono', monospace;
+  color: #8fb7cc;
+  min-height: 1em;
+}
+
+.msg {
+  font: 400 22px/1.5 'Share Tech Mono', monospace;
+  color: var(--cy);
+  min-height: 3.2em;
+  margin: 0;
+}
+
+.q {
+  margin: 0 0 1.2rem;
+  font-size: 1.4rem;
+}
+
+/* Progress bars */
+.bar {
+  height: 9px;
+  border: 1px solid var(--c);
+  margin: 0.4rem 0;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--c);
+  box-shadow: 0 0 10px var(--c);
+  transition: width 2.2s ease-out;
+}
+
+/* Telemetry rows (slower bars) */
+.br {
+  display: grid;
+  grid-template-columns: 1fr 2.4rem;
+  gap: 0 0.5rem;
+  font-size: 14px;
+  margin-bottom: 0.5rem;
+}
+.br .bar {
+  grid-column: 1/-1;
+  margin: 0.1rem 0 0;
+}
+.br .bar i {
+  transition: width 5s ease-out;
+}
+.br em {
+  font: normal 12px 'Share Tech Mono', monospace;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ */
+/* Chapter card + gate                                                 */
+/* ------------------------------------------------------------------ */
+
+.kx-card {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s;
+}
+.kx-card.on {
+  opacity: 1;
+}
+
+.kx-card h1,
+.kx-gate h1 {
+  margin: 0.4rem 0;
+  font: 800 clamp(34px, 8vw, 92px) / 1 Orbitron, sans-serif;
+  letter-spacing: 0.06em;
+  color: var(--wh);
+  text-shadow:
+    0 0 8px var(--acc),
+    0 0 30px var(--acc);
+}
+.kx-card small,
+.kx-gate small {
+  font: 800 11px Orbitron, sans-serif;
+  letter-spacing: 0.2em;
+  color: var(--acc);
+}
+
+.ln {
+  display: block;
+  height: 6px;
+  border: 1px solid var(--acc);
+  width: min(420px, 70vw);
+  margin: 0.8rem auto;
+}
+
+.kx-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  transition: opacity 1s;
+  padding: 1rem;
+}
+.kx-gate p {
+  margin: 0 0 1.4rem;
+  color: #a9d6e8;
+}
+
+.open {
+  --c: var(--wh);
+  border: 0;
+  font-size: 15px;
+  padding: 1.2rem 2rem;
+  flex-direction: column;
+  gap: 0.1rem;
+  background:
+    linear-gradient(#fff, #fff) 0 0/18px 3px,
+    linear-gradient(#fff, #fff) 0 0/3px 18px,
+    linear-gradient(#fff, #fff) 100% 0/18px 3px,
+    linear-gradient(#fff, #fff) 100% 0/3px 18px,
+    linear-gradient(#fff, #fff) 0 100%/18px 3px,
+    linear-gradient(#fff, #fff) 0 100%/3px 18px,
+    linear-gradient(#fff, #fff) 100% 100%/18px 3px,
+    linear-gradient(#fff, #fff) 100% 100%/3px 18px #0000;
+  background-repeat: no-repeat;
+  text-shadow: 0 0 10px var(--cy);
+}
+
+.kx-enter {
+  position: fixed;
+  left: 1.4rem;
+  bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+  font: 800 12px Orbitron, sans-serif;
+  color: #a9d6e8;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile + reduced motion                                             */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+  .kx-hud {
+    font-size: 9px;
+  }
+  .kx-ch {
+    display: none;
+  }
+  .s-l,
+  .s-r,
+  .w-chat {
+    left: 4vw;
+    right: auto;
+    width: 92vw;
+    top: 3.2rem;
+  }
+  .s-l .wb,
+  .s-r .wb {
+    max-height: 24vh;
+  }
+  .w-chat .wb {
+    max-height: 36vh;
+    min-height: 20vh;
+  }
+  .s-c,
+  .kx:has(.w-chat) .s-c {
+    left: 50%;
+    width: 94vw;
+    top: auto;
+    bottom: 3vh;
+    translate: -50% 0;
+  }
+  .s-b,
+  .kx:has(.w-chat) .s-b {
+    left: 50%;
+    width: 92vw;
+    bottom: 3vh;
+  }
+  .kx:has(.w-act) .w-log {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tile {
+    width: 29vw;
+    height: 29vw;
+    max-width: 130px;
+    max-height: 130px;
+    font-size: 10px;
+  }
+  .tile svg {
+    width: 34px;
+    height: 34px;
+  }
+  .q {
+    font-size: 1.1rem;
+  }
+  .msg {
+    font-size: 17px;
+  }
+  .s-c .wb {
+    max-height: 52vh;
+  }
+  .m {
+    font-size: 1.05rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .w,
+  .kx-gate,
+  .kx-card {
+    animation: none !important;
+    transition: none !important;
+  }
+}
