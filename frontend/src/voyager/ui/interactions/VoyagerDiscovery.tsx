@@ -105,11 +105,7 @@ export function VoyagerDiscovery() {
           <div className="voyager-stages">
             <section className="voyager-stage" hidden={step !== 0}>
               <div className="unknown-stage-grid">
-                <div className="unknown-object-frame" role="img" aria-label="An unidentified spacecraft appears in darkness">
-                  <div className="unknown-reticle" />
-                  <div className="unknown-object-silhouette"><i /><b /><em /></div>
-                  <span>UNIDENTIFIED OBJECT</span>
-                </div>
+                <UnknownObjectFrame />
                 <div className="crew-lines">
                   <p><b>COMMAND</b><span>Hold position. No active signal.</span></p>
                   <p><b>SCIENCE</b><span>One large antenna. The scan is incomplete.</span></p>
@@ -196,6 +192,29 @@ export function VoyagerDiscovery() {
       ) : (
         <MarsReveal onComplete={() => finishAct()} />
       )}
+    </div>
+  )
+}
+
+function UnknownObjectFrame() {
+  const [viewIndex, setViewIndex] = useState(0)
+  const views = SPACECRAFT_VIEWS.slice(0, 3)
+  const view = views[viewIndex] ?? views[0]
+
+  return (
+    <div className="unknown-object-frame">
+      <img className="unknown-object-image" src={view.src} alt="A partially obscured unidentified spacecraft" />
+      <div className="unknown-reticle" aria-hidden="true" />
+      <span>UNIDENTIFIED OBJECT · VISUAL ECHO {viewIndex + 1}</span>
+      <div className="unknown-view-picker" role="group" aria-label="Unidentified object image echoes">
+        {views.map((item, index) => (
+          <button type="button" key={item.src} className={index === viewIndex ? 'selected' : ''} aria-label={`Show image echo ${index + 1}`} aria-pressed={index === viewIndex} onClick={() => setViewIndex(index)}>
+            <img src={item.src} alt="" loading="lazy" />
+            <small>FRAME 0{index + 1}</small>
+          </button>
+        ))}
+      </div>
+      <small className="unknown-image-credit">NASA / JPL visual references</small>
     </div>
   )
 }
