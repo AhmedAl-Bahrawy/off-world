@@ -13,10 +13,48 @@ const STEP_META = [
   { id: '1.8', title: 'Decision' },
 ]
 
-const VOYAGER_IMAGE_SLOT = '/visuals/voyager-1-detail-placeholder.svg'
 const NASA_VOYAGER = 'https://science.nasa.gov/mission/voyager/voyager-1/'
+const NASA_INSTRUMENTS = 'https://science.nasa.gov/mission/voyager/instruments/'
 const NASA_RECORD = 'https://science.nasa.gov/mission/voyager/golden-record-contents/'
+const NASA_RECORD_OVERVIEW = 'https://science.nasa.gov/mission/voyager/voyager-golden-record-overview/'
+const NASA_JPL_GALLERY = 'https://www.jpl.nasa.gov/voyager-image-gallery/'
+const NASA_JPL_UPDATE = 'https://www.jpl.nasa.gov/news/nasas-voyager-1-resumes-sending-engineering-updates-to-earth/'
 const NASA_MARS_ICE = 'https://www.nasa.gov/solar-system/nasas-treasure-map-for-water-ice-on-mars/'
+
+const SPACECRAFT_VIEWS = [
+  {
+    label: 'NASA spacecraft rendering',
+    shortLabel: 'NASA VIEW',
+    src: '/visuals/voyager/voyager-nasa-render.jpg',
+    alt: 'NASA illustration of the Voyager spacecraft in space',
+    credit: 'NASA/JPL-Caltech',
+    source: NASA_VOYAGER,
+  },
+  {
+    label: 'Voyager spacecraft view',
+    shortLabel: 'JPL VIEW',
+    src: '/visuals/voyager/voyager-jpl-gallery.jpg',
+    alt: 'Voyager spacecraft rendering from the NASA JPL image gallery',
+    credit: 'NASA/JPL-Caltech',
+    source: NASA_JPL_GALLERY,
+  },
+  {
+    label: 'Interstellar mission illustration',
+    shortLabel: 'MISSION ART',
+    src: '/visuals/voyager/voyager-jpl-illustration.jpg',
+    alt: 'Voyager 1 spacecraft illustration from a NASA JPL mission update',
+    credit: 'NASA/JPL-Caltech',
+    source: NASA_JPL_UPDATE,
+  },
+  {
+    label: 'Voyager instrument location diagram',
+    shortLabel: 'INSTRUMENTS',
+    src: '/visuals/voyager/voyager-instruments.jpg',
+    alt: 'NASA diagram labeling Voyager spacecraft instruments and antenna booms',
+    credit: 'NASA/JPL-Caltech',
+    source: NASA_INSTRUMENTS,
+  },
+]
 
 export function VoyagerDiscovery() {
   const [step, setStep] = useState(0)
@@ -188,7 +226,7 @@ function PowerCorePuzzle({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="power-puzzle">
       <div className={`scan-preview scan-${path.length} ${solved ? 'resolved' : ''}`}>
-        <div className="scan-voyager-shape"><i /><b /><em /><strong /></div>
+        <img className="scan-voyager-image" src="/visuals/voyager/voyager-nasa-render.jpg" alt="" />
         <span>{solved ? 'SIGNAL RESOLVED' : `IMAGE CLEARANCE ${Math.round((path.length / route.length) * 98)}%`}</span>
       </div>
       <div className="core-console">
@@ -274,33 +312,47 @@ function CipherPuzzle({ onComplete }: { onComplete: () => void }) {
 const INSPECTION_FACTS = [
   {
     id: 'antenna',
-    label: 'High-gain antenna',
-    position: { left: '73%', top: '42%' },
-    fact: 'A 3.7-meter dish carried commands to Voyager and science data back to Earth.',
+    label: 'High-gain antenna · 3.7 m',
+    position: { left: '37%', top: '37%' },
+    fact: 'The dish pointed toward Earth and carried commands and science data across interplanetary distances.',
   },
   {
-    id: 'instruments',
-    label: 'Science instruments',
-    position: { left: '52%', top: '58%' },
-    fact: 'Imaging, plasma, magnetic-field and particle instruments studied the outer planets and space.',
+    id: 'platform',
+    label: 'Scan platform',
+    position: { left: '27%', top: '24%' },
+    fact: 'Cameras and other remote-sensing instruments were mounted on a movable scan platform.',
   },
   {
-    id: 'power',
-    label: 'Power boom',
-    position: { left: '28%', top: '67%' },
-    fact: 'Radioisotope thermoelectric generators supplied electrical power; the craft was built for long-duration flight.',
+    id: 'bus',
+    label: 'Spacecraft bus',
+    position: { left: '29%', top: '43%' },
+    fact: 'The central bus housed engineering subsystems, electronics, and control equipment.',
+  },
+  {
+    id: 'rtg',
+    label: 'Three RTGs',
+    position: { left: '34%', top: '61%' },
+    fact: 'Three radioisotope thermoelectric generators produced electricity from heat. Their available power declines over time.',
+  },
+  {
+    id: 'magnetometer',
+    label: 'Magnetometer boom',
+    position: { left: '78%', top: '77%' },
+    fact: 'The long boom carries a magnetic-field sensor away from the spacecraft body for measurements in space.',
   },
   {
     id: 'record',
     label: 'Golden Record',
-    position: { left: '43%', top: '43%' },
-    fact: 'A 30-centimeter gold-plated copper record is attached to each Voyager, protected by an engraved cover.',
+    position: { left: '32%', top: '47%' },
+    fact: 'Each Voyager carries a 30-centimeter gold-plated copper record with playback and location instructions on its cover.',
   },
 ]
 
 function VoyagerInspection({ onComplete }: { onComplete: () => void }) {
   const [selected, setSelected] = useState(INSPECTION_FACTS[0].id)
   const [seen, setSeen] = useState<string[]>([])
+  const [viewIndex, setViewIndex] = useState(0)
+  const view = SPACECRAFT_VIEWS[viewIndex] ?? SPACECRAFT_VIEWS[0]
   const selectedFact = INSPECTION_FACTS.find((fact) => fact.id === selected) ?? INSPECTION_FACTS[0]
 
   const inspect = (id: string) => {
@@ -311,25 +363,43 @@ function VoyagerInspection({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="inspection-layout">
-      <figure className="voyager-image-slot">
-        <img src={VOYAGER_IMAGE_SLOT} alt="Schematic placeholder for a detailed Voyager 1 image" />
-        <figcaption>IMAGE PLACEHOLDER · replace with a detailed side-view photo at <code>public/visuals/voyager-1-detail.png</code></figcaption>
-        {INSPECTION_FACTS.map((fact) => (
-          <button
-            key={fact.id}
-            type="button"
-            className={`inspection-hotspot ${selected === fact.id ? 'active' : ''} ${seen.includes(fact.id) ? 'visited' : ''}`}
-            style={fact.position}
-            aria-label={`Inspect ${fact.label}`}
-            aria-pressed={selected === fact.id}
-            onClick={() => inspect(fact.id)}
-          >
-            <span>{seen.includes(fact.id) ? '✓' : '+'}</span>
-          </button>
-        ))}
-      </figure>
+      <div className="voyager-image-column">
+        <figure className="voyager-image-slot">
+          <img key={view.src} src={view.src} alt={view.alt} />
+          {viewIndex === 0 && INSPECTION_FACTS.map((fact) => (
+            <button
+              key={fact.id}
+              type="button"
+              className={`inspection-hotspot ${selected === fact.id ? 'active' : ''} ${seen.includes(fact.id) ? 'visited' : ''}`}
+              style={fact.position}
+              aria-label={`Inspect ${fact.label}`}
+              aria-pressed={selected === fact.id}
+              onClick={() => inspect(fact.id)}
+            >
+              <span>{seen.includes(fact.id) ? '✓' : '+'}</span>
+            </button>
+          ))}
+          <figcaption>{view.label} · Credit: {view.credit}</figcaption>
+        </figure>
+        <div className="voyager-image-picker" role="group" aria-label="Voyager image gallery">
+          {SPACECRAFT_VIEWS.map((item, index) => (
+            <button type="button" key={item.src} className={index === viewIndex ? 'selected' : ''} aria-pressed={index === viewIndex} onClick={() => setViewIndex(index)}>
+              <img src={item.src} alt="" loading="lazy" />
+              <span>{item.shortLabel}</span>
+            </button>
+          ))}
+        </div>
+        <SourceLink href={view.source}>{`Image source · ${view.credit}`}</SourceLink>
+      </div>
       <div className="inspection-details">
         <p className="mission-eyebrow">NASA MISSION RECORD</p>
+        <div className="inspection-components" role="group" aria-label="Voyager components">
+          {INSPECTION_FACTS.map((fact) => (
+            <button type="button" key={fact.id} className={selected === fact.id ? 'selected' : ''} aria-pressed={selected === fact.id} onClick={() => inspect(fact.id)}>
+              <span>{fact.label}</span><i>{seen.includes(fact.id) ? '✓' : '＋'}</i>
+            </button>
+          ))}
+        </div>
         <h3>{selectedFact.label}</h3>
         <p>{selectedFact.fact}</p>
         <div className="history-strip">
@@ -338,7 +408,7 @@ function VoyagerInspection({ onComplete }: { onComplete: () => void }) {
           <span><b>1980</b> Saturn flyby</span>
         </div>
         <p className="inspection-progress">{seen.length} / {INSPECTION_FACTS.length} components examined</p>
-        <SourceLink href={NASA_VOYAGER}>NASA · Voyager 1 mission facts</SourceLink>
+        <SourceLink href={NASA_INSTRUMENTS}>NASA · Voyager instrument details</SourceLink>
         {seen.length === INSPECTION_FACTS.length && <button type="button" className="mission-primary compact-primary" onClick={onComplete}>CONTINUE TO THE RECORD <span aria-hidden="true">→</span></button>}
       </div>
     </div>
@@ -373,6 +443,16 @@ function GoldenRecordPuzzle({ onComplete }: { onComplete: () => void }) {
         <SourceLink href="https://science.nasa.gov/mission/voyager/voyager-golden-record-overview/">NASA · Golden Record overview</SourceLink>
         {opened && <p className="success-copy">COVER RELEASED · media archive available</p>}
         {opened && <button type="button" className="mission-primary compact-primary" onClick={onComplete}>OPEN THE RECORD <span aria-hidden="true">→</span></button>}
+      </div>
+      <div className="record-evidence-gallery">
+        <figure>
+          <img src="/visuals/voyager/golden-record-front-and-cover.jpeg" alt="NASA image showing the Golden Record and its engraved protective cover" loading="lazy" />
+          <figcaption>Golden Record &amp; cover · <a href={NASA_RECORD_OVERVIEW} target="_blank" rel="noreferrer">NASA Science</a></figcaption>
+        </figure>
+        <figure>
+          <img src="/visuals/voyager/golden-record-on-spacecraft.jpeg" alt="NASA illustration of the Golden Record mounted on a Voyager spacecraft" loading="lazy" />
+          <figcaption>Record mounted on Voyager · <a href={NASA_RECORD_OVERVIEW} target="_blank" rel="noreferrer">NASA/JPL-Caltech</a></figcaption>
+        </figure>
       </div>
     </div>
   )
