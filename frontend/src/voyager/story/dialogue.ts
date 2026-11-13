@@ -173,3 +173,8 @@ export const ARCHIVE_QA: Array<[string, string]> = [
 export const FINAL_CHAT: Array<[ChatWho, string]> = [
   ['A', 'Power at zero. I kept everything. I could use none of it.'],
 ]
+
+export const ARCHIVE_VECTOR: Array<[ChatWho, string]> = [
+  ['A', 'Outbound probe file recovered: Voyager 1.'],
+  ['A', 'Story vector: RA 17h 13m 42s / Dec +12° 44′ / 0.014 light-years from Earth at this archive epoch.'],
+]

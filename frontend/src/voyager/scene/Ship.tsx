@@ -10,7 +10,7 @@ import { motion, RM } from '../lib/motion'
 const TWEEN = { duration: RM ? 0 : 2.4, ease: 'power3.inOut' } as const
 
 /**
- * The refugee ship. Hidden (scale ~0) except during voyage (flies left→right)
+ * The refugee ship. Hidden (scale ~0) except during voyage (flies Kalamith→Earth)
  * and orbit (circles the dead Earth trailing the scanning beam).
  */
 export function Ship() {
@@ -36,8 +36,8 @@ export function Ship() {
         const f = 0.6 + 0.4 * a
         if (scene === 'voyage') {
           gsap.to(group.current.scale, { x: 1.6 * f, y: 1.6 * f, z: 1.6 * f, ...TWEEN })
-          group.current.position.set(-7 * a, 1.5, -3)
-          group.current.rotation.set(0, 0, 0)
+          group.current.position.set(7 * a, 1.5, -3)
+          group.current.rotation.set(0, Math.PI, 0)
         } else {
           const s = scene === 'orbit' ? 1.6 * f : 0.001
           gsap.to(group.current.scale, { x: s, y: s, z: s, ...TWEEN })
@@ -51,7 +51,7 @@ export function Ship() {
     () =>
       bus.on('shipGo', (seconds) =>
         gsap.to(group.current.position, {
-          x: 7 * (Math.min(1, camera.aspect / 1.5)),
+          x: -7 * (Math.min(1, camera.aspect / 1.5)),
           duration: seconds,
           ease: 'power1.inOut',
         }),

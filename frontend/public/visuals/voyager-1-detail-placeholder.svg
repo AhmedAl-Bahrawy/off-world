@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Voyager 1 image placeholder</title>
+  <desc id="desc">A schematic placeholder for a detailed Voyager 1 photograph. Replace this artwork with an approved high-resolution image.</desc>
+  <defs>
+    <linearGradient id="space" x2="0" y2="1"><stop stop-color="#101820"/><stop offset="1" stop-color="#05080c"/></linearGradient>
+    <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#f2d28b"/><stop offset=".5" stop-color="#a98145"/><stop offset="1" stop-color="#4f493d"/></linearGradient>
+    <radialGradient id="dish"><stop stop-color="#f7f5eb"/><stop offset=".8" stop-color="#b7c3ca"/><stop offset="1" stop-color="#586674"/></radialGradient>
+  </defs>
+  <rect width="1200" height="620" fill="url(#space)"/>
+  <g fill="#d5e4f0" opacity=".65">
+    <circle cx="88" cy="83" r="2"/><circle cx="200" cy="510" r="2"/><circle cx="317" cy="125" r="1.5"/><circle cx="444" cy="524" r="2"/><circle cx="957" cy="84" r="2"/><circle cx="1090" cy="451" r="1.5"/><circle cx="1037" cy="178" r="2"/><circle cx="755" cy="559" r="1.5"/>
+  </g>
+  <g stroke="#aeb8bd" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M180 332H467M754 332h235M605 383v148M492 382l-96 120M719 382l115 130"/>
+    <path d="M511 291 411 199M511 372l-99 104M698 291l93-96M698 372l114 116" stroke-width="3"/>
+  </g>
+  <g>
+    <path d="M241 332 481 299 481 365 241 332Z" fill="url(#dish)" stroke="#dce4e8" stroke-width="5"/>
+    <path d="M241 332Q349 253 481 299M241 332Q349 411 481 365" fill="none" stroke="#85949d" stroke-width="3"/>
+    <circle cx="484" cy="332" r="15" fill="#d6dadd"/>
+    <rect x="514" y="286" width="189" height="95" rx="8" fill="url(#gold)" stroke="#e9d4a9" stroke-width="4"/>
+    <path d="M538 304h60v60h-60zM612 304h66v22h-66zM612 336h66v28h-66z" fill="#24313a" stroke="#c4ae7d" stroke-width="3"/>
+    <path d="M565 286v-69l-46-39M651 286v-71l46-37" stroke="#d6ba80" stroke-width="8" fill="none"/>
+    <g fill="#be9d61" stroke="#e4d0a2" stroke-width="3">
+      <rect x="489" y="160" width="70" height="38" rx="7"/><rect x="667" y="154" width="73" height="38" rx="7"/>
+      <rect x="471" y="462" width="74" height="36" rx="6"/><rect x="685" y="466" width="73" height="36" rx="6"/>
+    </g>
+    <path d="M552 381 515 433l-40 84M668 381l43 56 57 72" stroke="#9da9ad" stroke-width="6" fill="none"/>
+    <path d="M604 382v129" stroke="#d6ba80" stroke-width="9"/>
+    <path d="M591 423h26v90h-26z" fill="#616c72" stroke="#c2c8c7" stroke-width="3"/>
+    <path d="M586 531h36" stroke="#c2c8c7" stroke-width="6"/>
+    <circle cx="604" cy="334" r="8" fill="#68b9ff"/>
+  </g>
+  <g font-family="Arial, sans-serif" text-anchor="middle">
+    <text x="600" y="575" fill="#8fcaff" font-size="18" letter-spacing="4">SCHEMATIC PLACEHOLDER · NOT AN ARCHIVAL PHOTOGRAPH</text>
+    <text x="600" y="600" fill="#8e99a3" font-size="13">Replace with a detailed Voyager 1 image at public/visuals/voyager-1-detail.png</text>
+  </g>
+</svg>

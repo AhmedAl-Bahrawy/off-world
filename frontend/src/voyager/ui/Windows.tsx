@@ -31,6 +31,7 @@ import {
   TypeMsgInteraction,
   DecodeInteraction,
   ChargeInteraction,
+  VoyagerDiscovery,
 } from './interactions'
 
 /**
@@ -305,6 +306,8 @@ function ActionBody() {
       return <DecodeInteraction key={it.key} {...(it.props as unknown as DecodeProps)} />
     case 'charge':
       return <ChargeInteraction key={it.key} />
+    case 'voyager':
+      return <VoyagerDiscovery key={it.key} />
   }
 }
 

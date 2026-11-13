@@ -39,6 +39,7 @@ export const ACT_META: Record<InteractionKind, { title: string; icon: string }> 
     typeMsg: { title: 'COMPOSE // OPEN CHANNEL', icon: 'sig' },
     decode: { title: 'DECODER // KALAMITH ARRAY', icon: 'eye' },
     charge: { title: 'DRIVE SPIN-UP', icon: 'ship' },
+    voyager: { title: 'VOYAGER 1 // INVESTIGATION', icon: 'eye' },
   }
 
 let resolver: ((value: unknown) => void) | null = null

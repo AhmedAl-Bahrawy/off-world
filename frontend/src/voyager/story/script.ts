@@ -6,6 +6,7 @@ import { useVoyager, type Accent, type ChatWho } from '../state/store'
 import { requestAct } from '../state/interactions'
 import {
   ARMED_CHAT,
+  ARCHIVE_VECTOR,
   ARCHIVE_QA,
   CHAPTERS,
   DECODE_WORDS,
@@ -167,20 +168,27 @@ export async function runStory() {
   }
 
   await chat(FINAL_CHAT)
-  await sleep(1200)
-  S().clearWindows()
-  S().setScene('rem')
+  await chat(ARCHIVE_VECTOR, 'ARCHIVE-9 // OUTBOUND VECTOR', 'cy')
   await sleep(800)
+  S().clearWindows()
+  await sleep(360)
+  S().setScene('discovery')
+  S().setAccent('vi')
+  S().setChapter('VOYAGER 1 // OBJECT RECOVERY')
+  await requestAct<void>('vi', 'voyager')
 
-  openLog('END OF TRANSMISSION', 'sig', 'vi')
-  await say('The Kalamith came to learn.')
-  await say('No one was left to teach.', 'em')
-  await sleep(1500)
+  S().clearWindows()
+  await sleep(360)
+  S().setScene('mars')
+  openLog('MISSION LOG', 'sig', 'vi')
+  await say('The distress call brought them to Earth. The record was a portrait—not a plea.')
+  await say('Now Mars: a mapped ice prospect, still waiting to be confirmed.', 'em')
+  await sleep(450)
 
   S().openWindow({
     id: 'act',
     slot: 'c',
-    title: 'TRANSMISSION ENDED',
+    title: 'MISSION LOG COMPLETE',
     icon: 'sig',
     accent: 'vi',
     kind: 'end',

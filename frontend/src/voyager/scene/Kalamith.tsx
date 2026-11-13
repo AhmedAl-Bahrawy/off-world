@@ -36,7 +36,7 @@ export function Kalamith() {
           gsap.to(group.current.scale, { x: 1.1 * f, y: 1.1 * f, z: 1.1 * f, ...TWEEN })
         } else {
           gsap.to(group.current.position, { x: 9 * a, y: 5.5, z: -12, ...TWEEN })
-          const s = scene === 'orbit' || scene === 'rem' ? 0.001 : 0.45
+          const s = scene === 'orbit' || scene === 'rem' || scene === 'discovery' || scene === 'mars' ? 0.001 : 0.45
           gsap.to(group.current.scale, { x: s, y: s, z: s, ...TWEEN })
         }
       }),

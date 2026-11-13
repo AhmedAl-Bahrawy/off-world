@@ -4,7 +4,7 @@ import { create } from 'zustand'
 /* Types                                                               */
 /* ------------------------------------------------------------------ */
 
-export type SceneName = 'collapse' | 'signal' | 'voyage' | 'orbit' | 'rem'
+export type SceneName = 'collapse' | 'signal' | 'voyage' | 'orbit' | 'rem' | 'discovery' | 'mars'
 export type Accent = 'cy' | 'bl' | 'or' | 'vi' | 'rd'
 export type Slot = 'l' | 'r' | 'c' | 'b'
 export type WindowKind = 'log' | 'chat' | 'bars' | 'act' | 'uplink' | 'end'
@@ -16,6 +16,7 @@ export type InteractionKind =
   | 'typeMsg'
   | 'decode'
   | 'charge'
+  | 'voyager'
 export type ChatWho = 'W' | 'E' | 'A' | 'K'
 
 export interface BarRow {

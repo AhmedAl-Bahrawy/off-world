@@ -72,7 +72,8 @@ export function Earth() {
           gsap.to(group.current.scale, { x: 0.55 * f, y: 0.55 * f, z: 0.55 * f, ...TWEEN })
         } else {
           gsap.to(group.current.position, { x: 0, y: -9.6, z: 0, ...TWEEN })
-          gsap.to(group.current.scale, { x: 1.35, y: 1.35, z: 1.35, ...TWEEN })
+          const s = scene === 'discovery' || scene === 'mars' ? 0.001 : 1.35
+          gsap.to(group.current.scale, { x: s, y: s, z: s, ...TWEEN })
         }
         const dim = scene === 'rem'
         gsap.to(surfaceMat.current.color, {
