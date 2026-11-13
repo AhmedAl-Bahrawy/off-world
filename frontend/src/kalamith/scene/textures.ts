@@ -1,5 +1,11 @@
 import * as THREE from 'three'
 
+const textureLoader = new THREE.TextureLoader()
+
+/** User-supplied Earth artwork and the matching custom Kalamith surface. */
+export const EARTH_MAP = textureLoader.load('/visuals/earth.svg')
+export const KALAMITH_MAP = textureLoader.load('/visuals/kalamith.svg')
+
 /**
  * Procedural planet textures, pre-rendered ONCE at module load with 2D canvas
  * and reused for the whole session (no per-frame or per-mount cost).
@@ -39,9 +45,7 @@ function planetTexture(land: string, sea: string, blobClusters: number) {
   return texture
 }
 
-export const EARTH_MAP = planetTexture('#46a577', '#0a46c8', 16)
 export const CLOUD_MAP = planetTexture('#ffffff', '#000000', 22)
-export const KALAMITH_MAP = planetTexture('#8a4dff', '#2a0b6a', 12)
 
 /**
  * Big glowing planet-name label drawn with the Orbitron face. Because web
