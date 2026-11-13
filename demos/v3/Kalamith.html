@@ -1,0 +1,1380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Kalamith</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Rajdhani:wght@500;600&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @property --acc {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #27d3ff;
+      }
+      :root {
+        color-scheme: dark;
+        --bg: #020813;
+        --cy: #27d3ff;
+        --or: #ff9a3d;
+        --vi: #b07bff;
+        --rd: #ff4a6b;
+        --wh: #f2fbff;
+        --acc: #27d3ff;
+        transition: --acc 1.6s;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--wh);
+        font:
+          600 17px/1.35 Rajdhani,
+          system-ui,
+          sans-serif;
+      }
+      body {
+        background:
+          radial-gradient(90% 60% at 50% 0, #14084a88, transparent 70%),
+          var(--bg);
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9;
+        background:
+          repeating-linear-gradient(0deg, #0000 0 2px, #00000030 2px 3px),
+          radial-gradient(120% 90% at 50% 50%, #0000 55%, #000b);
+      }
+      #sky {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      svg.ic {
+        width: 1.1em;
+        height: 1.1em;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: none;
+      }
+      .pl {
+        position: fixed;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        transition:
+          top 2.4s cubic-bezier(0.6, 0, 0.2, 1),
+          left 2.4s cubic-bezier(0.6, 0, 0.2, 1),
+          width 2.4s cubic-bezier(0.6, 0, 0.2, 1),
+          opacity 1.5s,
+          filter 2s;
+        pointer-events: none;
+      }
+      #earth {
+        width: min(140vw, 1300px);
+        aspect-ratio: 1;
+        top: 72%;
+        left: 50%;
+        background:
+          radial-gradient(ellipse 18% 10% at 28% 16%, #3f9d78 98%, #0000),
+          radial-gradient(ellipse 12% 8% at 62% 12%, #3f9d78 98%, #0000),
+          radial-gradient(ellipse 9% 6% at 45% 8%, #3f9d78 98%, #0000),
+          radial-gradient(
+            circle at 36% 22%,
+            #78e6ff,
+            #1b8cff 36%,
+            #0a3fb0 66%,
+            #031440
+          );
+        box-shadow:
+          0 0 70px 6px #27d3ff88,
+          inset -50px -40px 100px #000a;
+      }
+      #kal {
+        width: 90px;
+        aspect-ratio: 1;
+        top: 9%;
+        left: 84%;
+        background: radial-gradient(
+          circle at 34% 28%,
+          #e6ccff,
+          #9a5cff 38%,
+          #43148c 70%,
+          #14052f
+        );
+        box-shadow:
+          0 0 50px 4px #b07bff88,
+          inset -14px -12px 30px #000a;
+      }
+      #ship {
+        position: fixed;
+        top: 36%;
+        left: 20%;
+        width: 44px;
+        opacity: 0;
+        color: var(--wh);
+        rotate: 90deg;
+        filter: drop-shadow(0 0 8px var(--cy));
+        pointer-events: none;
+        transition:
+          left 8s linear,
+          top 2s,
+          opacity 1s;
+      }
+      #ship svg {
+        width: 100%;
+        height: auto;
+        fill: #0a1a3a;
+        stroke-width: 1.2;
+      }
+      [data-s="voyage"] #earth {
+        top: 36%;
+        left: 11%;
+        width: 150px;
+      }
+      [data-s="voyage"] #kal {
+        top: 34%;
+        left: 88%;
+        width: 190px;
+      }
+      [data-s="voyage"] #ship,
+      [data-s="orbit"] #ship {
+        opacity: 1;
+      }
+      [data-s="orbit"] #ship {
+        left: 14%;
+        top: 20%;
+        rotate: 140deg;
+      }
+      [data-s="orbit"] #kal,
+      [data-s="rem"] #kal {
+        opacity: 0;
+      }
+      [data-s="rem"] #earth {
+        filter: brightness(0.38) saturate(0.35);
+      }
+      [data-s="collapse"] #earth {
+        filter: hue-rotate(-28deg) saturate(0.7);
+      }
+      #hud {
+        position: fixed;
+        top: calc(0.8rem + env(safe-area-inset-top, 0px));
+        left: 1.2rem;
+        right: 1.2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        font:
+          11px/1 Orbitron,
+          sans-serif;
+        letter-spacing: 0.12em;
+        color: #9fd8ee;
+        opacity: 0;
+        transition: opacity 1.5s;
+        z-index: 3;
+      }
+      #hud b {
+        font-size: 17px;
+        color: var(--acc);
+        text-shadow: 0 0 10px var(--acc);
+        margin-left: 0.4rem;
+      }
+      #hud div {
+        display: flex;
+        align-items: center;
+      }
+      .w {
+        position: fixed;
+        z-index: 4;
+        --c: var(--cy);
+        background: #020c1cc7;
+        backdrop-filter: blur(6px);
+        border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+        box-shadow:
+          0 0 24px color-mix(in srgb, var(--c) 24%, transparent),
+          inset 0 0 20px color-mix(in srgb, var(--c) 9%, transparent);
+        animation: pop 0.3s ease-out;
+      }
+      .w::before,
+      .w::after {
+        content: "";
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border: 3px solid var(--wh);
+      }
+      .w::before {
+        top: -3px;
+        left: -3px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .w::after {
+        bottom: -3px;
+        right: -3px;
+        border-left: 0;
+        border-top: 0;
+      }
+      .w.out {
+        animation: pop 0.25s reverse forwards;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          scale: 1 0.06;
+        }
+        to {
+          opacity: 1;
+          scale: 1;
+        }
+      }
+      .wh {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.7rem;
+        color: var(--c);
+        border-bottom: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+        font:
+          800 10.5px/1 Orbitron,
+          sans-serif;
+        letter-spacing: 0.14em;
+        text-shadow: 0 0 8px var(--c);
+      }
+      .wh b {
+        flex: 1;
+        font: inherit;
+      }
+      .wh i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c);
+        box-shadow: 0 0 8px var(--c);
+        animation: bl 1.2s infinite;
+      }
+      @keyframes bl {
+        50% {
+          opacity: 0.2;
+        }
+      }
+      .wb {
+        padding: 0.7rem 0.8rem;
+        max-height: 46vh;
+        overflow: auto;
+      }
+      .s-l {
+        left: 1.2rem;
+        top: 3.6rem;
+        width: min(300px, 42vw);
+      }
+      .s-r {
+        right: 1.2rem;
+        top: 3.6rem;
+        width: min(350px, 46vw);
+      }
+      .s-c {
+        left: 50%;
+        top: 44%;
+        translate: -50% -50%;
+        width: min(560px, 92vw);
+        text-align: center;
+      }
+      .s-b {
+        left: 50%;
+        bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
+        translate: -50% 0;
+        width: min(740px, 92vw);
+      }
+      .s-c.out,
+      .s-c {
+        animation-name: popc;
+      }
+      .s-b {
+        animation-name: popc;
+      }
+      @keyframes popc {
+        from {
+          opacity: 0;
+          filter: brightness(3);
+        }
+        to {
+          opacity: 1;
+          filter: none;
+        }
+      }
+      .s-b p {
+        margin: 0.15rem 0;
+        font-size: 1.15rem;
+      }
+      .s-b .em {
+        color: var(--c);
+        font-style: italic;
+      }
+      .s-b .ai {
+        font:
+          13px/1.5 "Share Tech Mono",
+          monospace;
+        color: var(--c);
+      }
+      .q {
+        margin: 0 0 1rem;
+        font-size: 1.1rem;
+      }
+      .row {
+        display: flex;
+        gap: 0.7rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      button {
+        font:
+          800 12px/1.2 Orbitron,
+          sans-serif;
+        letter-spacing: 0.1em;
+        color: var(--wh);
+        background: #04152e;
+        border: 1px solid var(--c, var(--cy));
+        padding: 0.75rem 1.1rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          box-shadow 0.2s;
+      }
+      button:hover {
+        box-shadow: 0 0 16px var(--c, var(--cy));
+      }
+      button:focus-visible {
+        outline: 2px solid var(--wh);
+        outline-offset: 3px;
+      }
+      .tile {
+        flex-direction: column;
+        width: 112px;
+        height: 112px;
+        justify-content: center;
+        font-size: 10px;
+      }
+      .tile svg {
+        width: 34px;
+        height: 34px;
+      }
+      .tile em {
+        font:
+          normal 11px "Share Tech Mono",
+          monospace;
+        color: var(--rd);
+        min-height: 1em;
+      }
+      .tile.lit,
+      .tile.done {
+        background: color-mix(in srgb, var(--c, var(--cy)) 30%, #04152e);
+        box-shadow: 0 0 20px var(--c, var(--cy));
+      }
+      .word {
+        padding: 0.5rem 0.7rem;
+        font:
+          400 15px "Share Tech Mono",
+          monospace;
+        color: var(--vi);
+        --c: var(--vi);
+      }
+      .word.lit {
+        color: var(--wh);
+        background: #2a1160;
+      }
+      .hint {
+        margin: 0.9rem 0 0;
+        font:
+          13px "Share Tech Mono",
+          monospace;
+        color: #8fb7cc;
+        min-height: 1em;
+      }
+      .msg {
+        font:
+          400 17px/1.5 "Share Tech Mono",
+          monospace;
+        color: var(--cy);
+        min-height: 3.2em;
+        margin: 0;
+      }
+      .bar {
+        height: 9px;
+        border: 1px solid var(--c);
+        margin: 0.4rem 0;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--c);
+        box-shadow: 0 0 10px var(--c);
+        transition: width 2.2s ease-out;
+      }
+      .br {
+        display: grid;
+        grid-template-columns: 1fr 2.4rem;
+        gap: 0 0.5rem;
+        font-size: 14px;
+        margin-bottom: 0.5rem;
+      }
+      .br .bar {
+        grid-column: 1/-1;
+        margin: 0.1rem 0 0;
+      }
+      .br .bar i {
+        transition: width 5s ease-out;
+      }
+      .br em {
+        font:
+          normal 12px "Share Tech Mono",
+          monospace;
+        text-align: right;
+      }
+      .m {
+        margin: 0.35rem 0;
+        padding: 0.3rem 0.6rem;
+        border-left: 3px solid var(--c);
+        background: color-mix(in srgb, var(--c) 10%, transparent);
+      }
+      .m small {
+        display: block;
+        font:
+          800 9.5px Orbitron,
+          sans-serif;
+        letter-spacing: 0.14em;
+        color: var(--c);
+      }
+      .m.W {
+        --c: var(--cy);
+      }
+      .m.E {
+        --c: var(--or);
+      }
+      .m.A {
+        --c: #7dffb5;
+      }
+      .m.K {
+        --c: var(--vi);
+      }
+      .m span i {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        margin-right: 3px;
+        border-radius: 50%;
+        background: var(--c);
+        animation: bl 0.6s infinite;
+      }
+      #card {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        display: grid;
+        place-content: center;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.6s;
+      }
+      #card.on {
+        opacity: 1;
+      }
+      #card h1,
+      #gate h1 {
+        margin: 0.4rem 0;
+        font:
+          800 clamp(34px, 8vw, 92px)/1 Orbitron,
+          sans-serif;
+        letter-spacing: 0.06em;
+        color: var(--wh);
+        text-shadow:
+          0 0 8px var(--acc),
+          0 0 30px var(--acc);
+      }
+      #card small,
+      #gate small {
+        font:
+          800 11px Orbitron,
+          sans-serif;
+        letter-spacing: 0.2em;
+        color: var(--acc);
+      }
+      .ln {
+        display: block;
+        height: 6px;
+        border: 1px solid var(--acc);
+        width: min(420px, 70vw);
+        margin: 0.8rem auto;
+      }
+      #gate {
+        position: fixed;
+        inset: 0;
+        z-index: 8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        text-align: center;
+        transition: opacity 1s;
+        padding: 1rem;
+      }
+      #gate p {
+        margin: 0 0 1.4rem;
+        color: #a9d6e8;
+      }
+      .open {
+        --c: var(--wh);
+        border: 0;
+        font-size: 15px;
+        padding: 1.2rem 2rem;
+        flex-direction: column;
+        gap: 0.1rem;
+        background:
+          linear-gradient(#fff, #fff) 0 0/18px 3px,
+          linear-gradient(#fff, #fff) 0 0/3px 18px,
+          linear-gradient(#fff, #fff) 100% 0/18px 3px,
+          linear-gradient(#fff, #fff) 100% 0/3px 18px,
+          linear-gradient(#fff, #fff) 0 100%/18px 3px,
+          linear-gradient(#fff, #fff) 0 100%/3px 18px,
+          linear-gradient(#fff, #fff) 100% 100%/18px 3px,
+          linear-gradient(#fff, #fff) 100% 100%/3px 18px #0000;
+        background-repeat: no-repeat;
+        text-shadow: 0 0 10px var(--cy);
+      }
+      .enter {
+        position: fixed;
+        left: 1.4rem;
+        bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+        font:
+          800 12px Orbitron,
+          sans-serif;
+        color: #a9d6e8;
+      }
+      @media (max-width: 700px) {
+        .s-l,
+        .s-r {
+          left: 4vw;
+          right: auto;
+          width: 92vw;
+          top: 3.4rem;
+        }
+        .s-l .wb,
+        .s-r .wb {
+          max-height: 26vh;
+        }
+        .s-c {
+          top: auto;
+          bottom: 4vh;
+          translate: -50% 0;
+        }
+        .tile {
+          width: 92px;
+          height: 96px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .w,
+        .pl,
+        #ship {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body data-s="collapse">
+    <svg width="0" height="0" style="position: absolute">
+      <defs>
+        <symbol id="i-sig" viewBox="0 0 24 24">
+          <circle cx="12" cy="14" r="2" />
+          <path d="M7.5 9.5a6 6 0 0 1 9 0M4.5 6.5a10 10 0 0 1 15 0M12 16v5" />
+        </symbol>
+        <symbol id="i-key" viewBox="0 0 24 24">
+          <circle cx="8" cy="12" r="4" />
+          <path d="M12 12h9M18 12v4M15 12v3" />
+        </symbol>
+        <symbol id="i-power" viewBox="0 0 24 24">
+          <path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0" />
+        </symbol>
+        <symbol id="i-factory" viewBox="0 0 24 24">
+          <path d="M3 21V10l6 4v-4l6 4V6h3v15zM8 21v-3m4 3v-3" />
+        </symbol>
+        <symbol id="i-net" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="16" height="6" rx="1" />
+          <rect x="4" y="14" width="16" height="6" rx="1" />
+          <path d="M8 7h.01M8 17h.01" />
+        </symbol>
+        <symbol id="i-warn" viewBox="0 0 24 24">
+          <path d="M12 3 2 20h20zM12 10v5M12 18h.01" />
+        </symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="6.5" rx="4" ry="2.5" />
+          <circle cx="12" cy="6.5" r="1" />
+          <ellipse cx="6" cy="14.5" rx="4" ry="2.5" />
+          <circle cx="6" cy="14.5" r="1" />
+          <ellipse cx="18" cy="14.5" rx="4" ry="2.5" />
+          <circle cx="18" cy="14.5" r="1" />
+        </symbol>
+        <symbol id="i-user" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24">
+          <rect x="5" y="11" width="14" height="9" rx="1" />
+          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+        </symbol>
+        <symbol id="i-globe" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+        </symbol>
+        <symbol id="i-ship" viewBox="0 0 24 24">
+          <path
+            d="M12 2c3 3 4 8 3 13l-3 3-3-3c-1-5 0-10 3-13zM9 16l-4 3 2-5M15 16l4 3-2-5"
+          />
+        </symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24">
+          <path d="M4 5h16v11H9l-5 4z" />
+        </symbol>
+        <symbol id="i-scan" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 12 18 6M2 12h3M19 12h3M12 2v3M12 19v3" />
+        </symbol>
+        <symbol id="i-chip" viewBox="0 0 24 24">
+          <rect x="6" y="6" width="12" height="12" rx="1" />
+          <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" />
+        </symbol>
+      </defs>
+    </svg>
+    <canvas id="sky"></canvas>
+    <div class="pl" id="earth"></div>
+    <div class="pl" id="kal"></div>
+    <div id="ship">
+      <svg viewBox="0 0 24 24"><use href="#i-ship" /></svg>
+    </div>
+    <div id="hud">
+      <div>
+        <svg class="ic"><use href="#i-globe" /></svg><b id="yr">2231</b>
+      </div>
+      <div id="ch"></div>
+      <div id="st">LINK ONLINE</div>
+    </div>
+    <div id="card"></div>
+    <div id="gate">
+      <small>A MESSAGE FROM EARTH</small><span class="ln"></span>
+      <h1>KALAMITH</h1>
+      <p>The last signal of humanity. Sound on.</p>
+      <button class="open" id="go">
+        <span>CLICK</span><span>TO OPEN</span>
+      </button>
+      <div class="enter">PRESS ENTER</div>
+    </div>
+    <script>
+      const $ = (s) => document.querySelector(s),
+        $$ = (s) => [...document.querySelectorAll(s)],
+        sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const RM = matchMedia("(prefers-reduced-motion: reduce)").matches,
+        Y = $("#yr"),
+        NAME = {
+          W: "WEST BLOC",
+          E: "EAST BLOC",
+          A: "ARCHIVE-9",
+          K: "KALAMITH SCOUT",
+        };
+      const IC = (n) => '<svg class="ic"><use href="#i-' + n + '"/></svg>';
+      let actx,
+        speed = 0.05,
+        sp = 0.05;
+
+      /* sound */
+      function audio() {
+        try {
+          actx = new AudioContext();
+          const f = actx.createBiquadFilter(),
+            g = actx.createGain();
+          f.frequency.value = 160;
+          g.gain.value = 0.03;
+          f.connect(g);
+          g.connect(actx.destination);
+          [55, 82.4].forEach((v) => {
+            const o = actx.createOscillator();
+            o.type = "sawtooth";
+            o.frequency.value = v;
+            o.connect(f);
+            o.start();
+          });
+        } catch (e) {}
+      }
+      function blip(fr = 600, v = 0.04) {
+        if (!actx) return;
+        try {
+          const o = actx.createOscillator(),
+            g = actx.createGain(),
+            t = actx.currentTime;
+          o.type = "square";
+          o.frequency.value = fr;
+          g.gain.setValueAtTime(v, t);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+          o.connect(g);
+          g.connect(actx.destination);
+          o.start();
+          o.stop(t + 0.13);
+        } catch (e) {}
+      }
+
+      /* stars */
+      const cv = $("#sky"),
+        x = cv.getContext("2d");
+      let W,
+        H,
+        S = [];
+      function rs() {
+        W = cv.width = innerWidth;
+        H = cv.height = innerHeight;
+        S = Array.from({ length: Math.min(260, ((W * H) / 5500) | 0) }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          z: Math.random() * 0.9 + 0.1,
+        }));
+      }
+      rs();
+      addEventListener("resize", rs);
+      (function d() {
+        sp += (speed - sp) * 0.02;
+        x.clearRect(0, 0, W, H);
+        for (const s of S) {
+          if (!RM) s.x -= sp * s.z * 1.5;
+          if (s.x < -60) s.x = W + Math.random() * 30;
+          x.fillStyle = "rgba(200,235,255," + (0.25 + s.z * 0.65) + ")";
+          x.fillRect(s.x, s.y, 1 + sp * s.z * 9, s.z > 0.6 ? 1.6 : 1);
+        }
+        requestAnimationFrame(d);
+      })();
+
+      /* windows */
+      function win(id, slot, title, icon, c, body = "") {
+        unwin(id, 1);
+        const e = document.createElement("div");
+        e.className = "w s-" + slot;
+        e.id = "w-" + id;
+        e.style.setProperty("--c", "var(--" + c + ")");
+        e.innerHTML =
+          '<div class="wh">' +
+          IC(icon) +
+          "<b>" +
+          title +
+          '</b><i></i></div><div class="wb">' +
+          body +
+          "</div>";
+        document.body.append(e);
+        blip(880, 0.02);
+        return e.querySelector(".wb");
+      }
+      function unwin(id, now) {
+        const e = $("#w-" + id);
+        if (!e) return;
+        if (now) e.remove();
+        else {
+          e.classList.add("out");
+          setTimeout(() => e.remove(), 260);
+        }
+      }
+      const clearW = () => $$(".w").forEach((e) => unwin(e.id.slice(2)));
+      const setAcc = (c) =>
+        document.documentElement.style.setProperty("--acc", "var(--" + c + ")");
+      const done = (res) => {
+        unwin("act");
+        setTimeout(res, 300);
+      };
+      let LG;
+      function L(t, i, c) {
+        LG = win("log", "b", t, i, c);
+      }
+      async function say(t, k = "") {
+        if (!$("#w-log")) L("TRANSMISSION", "sig", "cy");
+        const p = document.createElement("p");
+        p.className = k;
+        LG.append(p);
+        for (const ch of t) {
+          p.textContent += ch;
+          if (!RM && ch !== " ") await sleep(10);
+        }
+        await sleep(240 + t.length * 8);
+        while (LG.children.length > 3) LG.firstChild.remove();
+      }
+      async function chapter(t, s, c, sc) {
+        clearW();
+        setAcc(c);
+        document.body.dataset.s = sc;
+        $("#ch").textContent = t;
+        $("#card").innerHTML =
+          "<small>" + s + "</small><h1>" + t + '</h1><span class="ln"></span>';
+        $("#card").classList.add("on");
+        await sleep(RM ? 1000 : 1900);
+        $("#card").classList.remove("on");
+        await sleep(450);
+      }
+      async function chat(list, title = "COMMS // WEST + EAST", c = "cy") {
+        const b = $("#w-chat .wb") || win("chat", "r", title, "chat", c);
+        for (const [w, t] of list) {
+          const m = document.createElement("div");
+          m.className = "m " + w;
+          m.innerHTML =
+            "<small>" + NAME[w] + "</small><span><i></i><i></i><i></i></span>";
+          b.append(m);
+          b.scrollTop = 1e9;
+          await sleep(380);
+          m.querySelector("span").textContent = t;
+          blip(w === "E" ? 420 : 700, 0.03);
+          b.scrollTop = 1e9;
+          await sleep(260 + t.length * 10);
+        }
+      }
+      function bars(id, title, icon, c, slot, rows, to) {
+        const b = win(
+          id,
+          slot,
+          title,
+          icon,
+          c,
+          rows
+            .map(
+              (r) =>
+                '<div class="br"><span>' +
+                r[0] +
+                "</span><em>" +
+                r[1] +
+                '%</em><div class="bar"><i style="width:' +
+                r[1] +
+                '%"></i></div></div>',
+            )
+            .join(""),
+        );
+        setTimeout(
+          () =>
+            b.querySelectorAll(".br").forEach((e, i) => {
+              e.querySelector("i").style.width = to[i] + "%";
+              e.querySelector("em").textContent = to[i] + "%";
+            }),
+          300,
+        );
+      }
+
+      /* interactions */
+      function tiles(q, items, c) {
+        return new Promise((res) => {
+          const b = win(
+            "act",
+            "c",
+            "ACTION REQUIRED",
+            "warn",
+            c,
+            '<p class="q">' +
+              q +
+              '</p><div class="row">' +
+              items
+                .map(
+                  (i) =>
+                    '<button class="tile">' +
+                    IC(i[0]) +
+                    "<span>" +
+                    i[1] +
+                    "</span><em></em></button>",
+                )
+                .join("") +
+              "</div>",
+          );
+          let n = 0;
+          b.querySelectorAll(".tile").forEach(
+            (t, i) =>
+              (t.onclick = () => {
+                if (t.classList.contains("done")) return;
+                t.classList.add("done");
+                t.querySelector("em").textContent = items[i][2];
+                blip(300 + i * 90);
+                if (++n === items.length) setTimeout(() => done(res), 900);
+              }),
+          );
+        });
+      }
+      function ask(q, opts, c) {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "DECISION",
+              "warn",
+              c,
+              '<p class="q">' + q + '</p><div class="row"></div>',
+            ),
+            r = b.querySelector(".row");
+          opts.forEach((o, i) => {
+            const t = document.createElement("button");
+            t.innerHTML = IC(o[0]) + "<span>" + o[1] + "</span>";
+            t.onclick = () => {
+              blip(420 + i * 240);
+              unwin("act");
+              setTimeout(() => res(i), 280);
+            };
+            r.append(t);
+          });
+        });
+      }
+      function simon() {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "BREACH // EASTERN VAULT",
+              "lock",
+              "rd",
+              '<p class="q">Memorize the access sequence, then repeat it.</p><div class="row"></div><p class="hint"></p>',
+            ),
+            r = b.querySelector(".row"),
+            h = b.querySelector(".hint"),
+            T = ["user", "net", "power", "chip"].map((n) => {
+              const t = document.createElement("button");
+              t.className = "tile";
+              t.style.setProperty("--c", "var(--rd)");
+              t.innerHTML = IC(n);
+              r.append(t);
+              return t;
+            });
+          const seq = Array.from({ length: 4 }, () => (Math.random() * 4) | 0);
+          let k = 0,
+            ok = false;
+          const play = async () => {
+            ok = false;
+            k = 0;
+            h.textContent = "Watching the guard rotation...";
+            await sleep(500);
+            for (const i of seq) {
+              T[i].classList.add("lit");
+              blip(300 + i * 120);
+              await sleep(380);
+              T[i].classList.remove("lit");
+              await sleep(160);
+            }
+            h.textContent = "Your turn.";
+            ok = true;
+          };
+          T.forEach(
+            (t, i) =>
+              (t.onclick = () => {
+                if (!ok) return;
+                blip(300 + i * 120);
+                t.classList.add("lit");
+                setTimeout(() => t.classList.remove("lit"), 150);
+                if (i !== seq[k]) {
+                  h.textContent = "Wrong. Replaying...";
+                  play();
+                  return;
+                }
+                if (++k === 4) {
+                  ok = false;
+                  h.textContent = "ACCESS GRANTED";
+                  setTimeout(() => done(res), 700);
+                }
+              }),
+          );
+          play();
+        });
+      }
+      function keys() {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "KEY AUTHORIZATION",
+              "key",
+              "cy",
+              '<p class="q">Turn both keys within 1.5 seconds of each other.</p><div class="row"><button class="tile" style="--c:var(--cy)">' +
+                IC("key") +
+                '<span>WEST KEY</span></button><button class="tile" style="--c:var(--or)">' +
+                IC("key") +
+                '<span>EAST KEY</span></button></div><p class="hint"></p>',
+            ),
+            T = $$("#w-act .tile"),
+            h = b.querySelector(".hint");
+          let f = null,
+            tm;
+          T.forEach(
+            (t) =>
+              (t.onclick = () => {
+                blip(520);
+                const n = performance.now();
+                if (f && f.t !== t && n - f.n < 1500) {
+                  clearTimeout(tm);
+                  T.forEach((k) => k.classList.add("lit"));
+                  blip(900);
+                  h.textContent = "KEYS SYNCHRONIZED";
+                  setTimeout(() => done(res), 800);
+                  return;
+                }
+                f = { t, n };
+                t.classList.add("lit");
+                h.textContent = "One key turned. Turn the other now.";
+                clearTimeout(tm);
+                tm = setTimeout(() => {
+                  f = null;
+                  T.forEach((k) => k.classList.remove("lit"));
+                  h.textContent = "Window closed. Try again.";
+                }, 1500);
+              }),
+          );
+        });
+      }
+      function typeMsg(msg) {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "COMPOSE // OPEN CHANNEL",
+              "sig",
+              "cy",
+              '<p class="q">Plain English. No encryption. Press any key, or tap.</p><p class="msg"></p>',
+            ),
+            m = b.querySelector(".msg");
+          let n = 0;
+          const f = (e) => {
+            if (
+              e.type === "keydown" &&
+              (e.metaKey || e.ctrlKey || e.key === "Tab")
+            )
+              return;
+            m.textContent = msg.slice(0, ++n);
+            blip(300 + n * 12, 0.03);
+            if (n >= msg.length) {
+              removeEventListener("keydown", f);
+              removeEventListener("pointerdown", f);
+              setTimeout(async () => {
+                unwin("act");
+                const u = win(
+                  "up",
+                  "c",
+                  "UPLINK",
+                  "sig",
+                  "cy",
+                  '<p class="q">Transmitting toward Proxima Centauri b</p><div class="bar"><i></i></div>',
+                );
+                await sleep(100);
+                u.querySelector("i").style.width = "100%";
+                await sleep(2300);
+                unwin("up");
+                setTimeout(res, 300);
+              }, 700);
+            }
+          };
+          addEventListener("keydown", f);
+          addEventListener("pointerdown", f);
+        });
+      }
+      function decode(words) {
+        return new Promise((res) => {
+          const b = win(
+              "act",
+              "c",
+              "DECODER // KALAMITH ARRAY",
+              "eye",
+              "vi",
+              '<p class="q">Tap each word to decode the signal.</p><div class="row"></div>',
+            ),
+            r = b.querySelector(".row"),
+            G = "#@%&$?!*",
+            g = (w) => [...w].map(() => G[(Math.random() * 8) | 0]).join("");
+          let n = 0;
+          const E = words.map((w) => {
+            const t = document.createElement("button");
+            t.className = "word";
+            t.textContent = g(w);
+            r.append(t);
+            return t;
+          });
+          const iv = setInterval(
+            () =>
+              E.forEach((t, i) => {
+                if (!t.classList.contains("lit")) t.textContent = g(words[i]);
+              }),
+            90,
+          );
+          E.forEach(
+            (t, i) =>
+              (t.onclick = () => {
+                if (t.classList.contains("lit")) return;
+                t.classList.add("lit");
+                t.textContent = words[i];
+                blip(500 + i * 50);
+                if (++n === words.length) {
+                  clearInterval(iv);
+                  setTimeout(() => done(res), 900);
+                }
+              }),
+          );
+        });
+      }
+
+      /* story */
+      async function run() {
+        await chapter("THE COLLAPSE", "EARTH, 2231", "rd", "collapse");
+        bars(
+          "sys",
+          "GLOBAL SYSTEMS",
+          "warn",
+          "rd",
+          "l",
+          [
+            ["Power grid", 31],
+            ["Industry", 22],
+            ["Supply chains", 27],
+            ["Knowledge anyone can use", 4],
+          ],
+          [3, 0, 2, 0],
+        );
+        L("ARCHIVE-9 // LOG", "chip", "cy");
+        await say("The machines did not disappear.");
+        await say("The knowledge to rebuild them did.");
+        await say(
+          "A few corporations held every process. A few factories held every skill.",
+        );
+        await tiles(
+          "Everything is failing. Try to repair it.",
+          [
+            ["power", "Power grid", "REPAIR FAILED"],
+            ["factory", "Factories", "NO ONE KNOWS HOW"],
+            ["net", "Supply chain", "OFFLINE"],
+          ],
+          "rd",
+        );
+        await say(
+          "Humanity had become dependent on technology it no longer understood.",
+          "em",
+        );
+        await say(
+          "One gamble remained: the Kalamith, an intelligent species at Proxima Centauri b. Friend or enemy, we do not know.",
+        );
+
+        await chapter("THE LAST SIGNAL", "TWO BLOCS, ONE KEY", "or", "signal");
+        await chat([
+          ["W", "We located the Kalamith. We can send a distress call."],
+          [
+            "W",
+            "The transmitter needs both halves of the key. We hold one. We need yours.",
+          ],
+          ["E", "You want us to beg an alien species to save us?"],
+          ["W", "We want to survive."],
+        ]);
+        const c = await ask(
+          "You speak for the Eastern bloc. Your answer?",
+          [
+            ["key", "Give them our half"],
+            ["lock", "Refuse"],
+          ],
+          "or",
+        );
+        if (c === 0)
+          await chat([
+            ["E", "Take it. Pride will not feed anyone."],
+            ["W", "Thank you. Preparing the transmitter."],
+          ]);
+        else {
+          await chat([
+            ["E", "Request denied. Humanity does not beg."],
+            ["W", "Then we take it another way."],
+            ["A", "ALERT: Western operative inside the Eastern vault."],
+          ]);
+          await simon();
+          await chat([
+            ["A", "Vault open. Key extracted under threat."],
+            ["W", "It worked. It also cost us ten years."],
+          ]);
+        }
+        await keys();
+        await chat([["A", "Both halves accepted. Transmitter armed."]]);
+        await typeMsg("THIS IS HUMANITY. WE ARE DYING. PLEASE HELP.");
+        L("TRANSMISSION", "sig", "or");
+        await say(
+          "No encryption, and a naive hope that they would somehow read English.",
+        );
+        await say(
+          "We held the key to a real conversation and never tried to build a shared language.",
+          "em",
+        );
+
+        await chapter(
+          "ACROSS THE STARS",
+          "KALAMITH, PROXIMA CENTAURI B",
+          "vi",
+          "voyage",
+        );
+        Y.textContent = 2235;
+        L("KALAMITH ARRAY", "eye", "vi");
+        await say("Four years after it left Earth, the signal arrived.");
+        await decode([
+          "THIS",
+          "IS",
+          "HUMANITY",
+          "WE",
+          "ARE",
+          "DYING",
+          "PLEASE",
+          "HELP",
+        ]);
+        await say("Years of decoding. Then a ship.");
+        await say(
+          "They did not come out of mercy. Every species serves its own interest.",
+        );
+        await say(
+          "They hoped to learn what humans knew. They would teach us nothing. Saving us would be enough.",
+          "em",
+        );
+        const end = c === 1 ? 2301 : 2291;
+        bars(
+          "vy",
+          "VOYAGE",
+          "ship",
+          "vi",
+          "l",
+          [
+            ["Distance covered", 0],
+            ["Speed (27% of light)", 27],
+          ],
+          [100, 27],
+        );
+        document.body.dataset.s = "voyage";
+        $("#ship").style.left = "78%";
+        for (let i = 0; i <= 60; i++) {
+          Y.textContent = Math.round(2235 + ((end - 2235) * i) / 60);
+          await sleep(120);
+        }
+        await say(
+          c === 1
+            ? "Ten of these years belong to our pride."
+            : "The long road is over.",
+        );
+
+        await chapter("THE SILENT EARTH", "KALAMITH ARRIVAL", "vi", "orbit");
+        L("KALAMITH ARRAY", "eye", "vi");
+        await say("They scan from orbit, waiting for lights.");
+        await tiles(
+          "Scan the planet for signs of life.",
+          [
+            ["globe", "Americas", "NO SIGNAL"],
+            ["globe", "Europe, Asia", "NO SIGNAL"],
+            ["net", "Orbit", "DEBRIS ONLY"],
+          ],
+          "vi",
+        );
+        await say("A planet that has stopped talking.");
+        await say("Humanity is gone. They did not come to save anyone.", "em");
+
+        await chapter("THE LAST REMNANTS", "WHAT WAS LEFT", "cy", "rem");
+        bars(
+          "pw",
+          "DATA CENTERS",
+          "net",
+          "cy",
+          "l",
+          [
+            ["Online", 3],
+            ["Power remaining", 12],
+          ],
+          [3, 0],
+        );
+        L("ARCHIVE-9", "chip", "cy");
+        await say("One intelligence still answers.");
+        const Q = [
+          [
+            "What are you?",
+            "I am ARCHIVE-9. I store everything humanity wrote, built and forgot.",
+          ],
+          [
+            "What happened here?",
+            "The people stopped understanding their machines. Then the machines stopped working.",
+          ],
+          [
+            "Can you rebuild it?",
+            "I hold every record. I cannot build a single thing.",
+          ],
+        ];
+        for (let r = 0; r < 2; r++) {
+          const k = await ask(
+            "Ask ARCHIVE-9.",
+            Q.map((q) => ["chat", q[0]]),
+            "vi",
+          );
+          await chat(
+            [
+              ["K", Q[k][0]],
+              ["A", Q[k][1]],
+            ],
+            "ARCHIVE-9 TERMINAL",
+            "cy",
+          );
+          Q.splice(k, 1);
+        }
+        await chat([
+          ["A", "Power at 0%. I kept everything. I could not use any of it."],
+        ]);
+        await sleep(1200);
+        clearW();
+        document.body.dataset.s = "rem";
+        await sleep(800);
+        L("END OF TRANSMISSION", "sig", "vi");
+        await say("The Kalamith came to learn from us.");
+        await say("There was no one left to teach.", "em");
+        await sleep(1500);
+        const b = win(
+          "act",
+          "c",
+          "TRANSMISSION ENDED",
+          "sig",
+          "vi",
+          '<div class="row"><button>REPLAY TRANSMISSION</button></div>',
+        );
+        b.querySelector("button").onclick = () => location.reload();
+      }
+      let started = 0;
+      function start() {
+        if (started) return;
+        started = 1;
+        audio();
+        blip(660);
+        const g = $("#gate");
+        g.style.opacity = 0;
+        g.style.pointerEvents = "none";
+        $("#hud").style.opacity = 1;
+        setTimeout(() => {
+          g.remove();
+          run();
+        }, 900);
+      }
+      $("#go").onclick = start;
+      addEventListener("keydown", (e) => {
+        if (e.key === "Enter") start();
+      });
+    </script>
+  </body>
+</html>
