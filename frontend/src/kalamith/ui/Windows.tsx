@@ -61,27 +61,31 @@ function WindowFrame({ win }: { win: WinState }) {
   const root = useRef<HTMLDivElement>(null)
   const [bodyEl, setBodyEl] = useState<HTMLDivElement | null>(null)
 
-  // Open animation.
+  // Open animation. Context + revert keeps StrictMode's double effect from
+  // snapshotting the already-collapsed inline scaleY/opacity as its "from".
   useEffect(() => {
     blip(880, 0.02)
     if (RM) return
     const el = root.current!
-    gsap.fromTo(
-      el,
-      { opacity: 0, scaleY: 0.05, filter: 'brightness(3)' },
-      {
-        opacity: 1,
-        scaleY: 1,
-        filter: 'brightness(1)',
-        duration: 0.45,
-        ease: 'back.out(1.7)',
-        clearProps: 'filter',
-      },
-    )
-    const children = el.querySelector<HTMLElement>('.wb')?.children
-    if (children?.length) {
-      gsap.from(children, { x: -16, opacity: 0, stagger: 0.07, delay: 0.15, duration: 0.4 })
-    }
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, scaleY: 0.05, filter: 'brightness(3)' },
+        {
+          opacity: 1,
+          scaleY: 1,
+          filter: 'brightness(1)',
+          duration: 0.45,
+          ease: 'back.out(1.7)',
+          clearProps: 'filter',
+        },
+      )
+      const children = el.querySelector<HTMLElement>('.wb')?.children
+      if (children?.length) {
+        gsap.from(children, { x: -16, opacity: 0, stagger: 0.07, delay: 0.15, duration: 0.4 })
+      }
+    }, el)
+    return () => ctx.revert()
   }, [])
 
   // Close animation, then self-removal. The seq guard stops a stale timer
@@ -186,13 +190,16 @@ function ChatMessage({ msg }: { msg: ChatMsg }) {
 
   useEffect(() => {
     if (RM) return
-    gsap.from(ref.current, {
-      x: msg.who === 'E' ? 50 : -50,
-      opacity: 0,
-      scale: 0.9,
-      duration: 0.4,
-      ease: 'back.out(1.6)',
-    })
+    const ctx = gsap.context(() => {
+      gsap.from(ref.current, {
+        x: msg.who === 'E' ? 50 : -50,
+        opacity: 0,
+        scale: 0.9,
+        duration: 0.4,
+        ease: 'back.out(1.6)',
+      })
+    }, ref)
+    return () => ctx.revert()
   }, [msg.who])
 
   return (

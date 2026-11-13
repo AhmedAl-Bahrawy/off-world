@@ -20,18 +20,23 @@ export function ChapterCard() {
 function CardInner({ subtitle, title }: { subtitle: string; title: string }) {
   const root = useRef<HTMLDivElement>(null)
 
+  // Scoped via context + revert so StrictMode's second run can't reuse the
+  // already-zeroed inline opacity as its "from" state (letters stuck dim).
   useEffect(() => {
     if (RM) return
     const el = root.current!
-    gsap.from(el.querySelectorAll('h1 span'), {
-      y: 60,
-      opacity: 0,
-      rotateX: -90,
-      stagger: 0.045,
-      duration: 0.7,
-      ease: 'back.out(2)',
-    })
-    gsap.from(el.querySelectorAll('.ln'), { scaleX: 0, duration: 0.8 })
+    const ctx = gsap.context(() => {
+      gsap.from(el.querySelectorAll('h1 span'), {
+        y: 60,
+        opacity: 0,
+        rotateX: -90,
+        stagger: 0.045,
+        duration: 0.7,
+        ease: 'back.out(2)',
+      })
+      gsap.from(el.querySelectorAll('.ln'), { scaleX: 0, duration: 0.8 })
+    }, el)
+    return () => ctx.revert()
   }, [])
 
   return (

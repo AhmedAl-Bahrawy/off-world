@@ -29,16 +29,21 @@ export function Gate() {
     return () => removeEventListener('keydown', onKey)
   }, [])
 
-  // Entrance: children rise into place.
+  // Entrance: children rise into place. gsap.context() + revert() keeps the
+  // tween from re-reading its own inline styles on StrictMode's second effect
+  // run (which otherwise leaves the children stuck dim/offset).
   useEffect(() => {
     if (RM) return
-    gsap.from('.kx-gate > *', {
-      y: 34,
-      opacity: 0,
-      stagger: 0.12,
-      duration: 1,
-      ease: 'power3.out',
+    const ctx = gsap.context(() => {
+      gsap.from('.kx-gate > *', {
+        y: 34,
+        opacity: 0,
+        stagger: 0.12,
+        duration: 1,
+        ease: 'power3.out',
+      })
     })
+    return () => ctx.revert()
   }, [])
 
   return (

@@ -44,12 +44,20 @@ export function Earth() {
   const cityMat = useRef<THREE.PointsMaterial>(null!)
   const camera = useThree((s) => s.camera) as PerspectiveCamera
 
-  // Initial placement + rise from below.
+  // Initial placement + rise from below. fromTo (not from) so StrictMode's
+  // second run can't read the already-lifted inline y as its start value.
   useLayoutEffect(() => {
     group.current.position.set(0, -9.6, 0)
     group.current.scale.setScalar(1.35)
     if (!RM) {
-      gsap.from(group.current.position, { y: -18, duration: 3, ease: 'power3.out' })
+      const ctx = gsap.context(() => {
+        gsap.fromTo(
+          group.current.position,
+          { y: -18 },
+          { y: -9.6, duration: 3, ease: 'power3.out' },
+        )
+      })
+      return () => ctx.revert()
     }
   }, [])
 

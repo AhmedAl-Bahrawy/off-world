@@ -199,7 +199,8 @@ svg.ic {
 .wb {
   padding: 0.7rem 0.8rem;
   max-height: 46vh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden; /* long chat words/log lines must never widen the body */
 }
 
 /* Window slots */

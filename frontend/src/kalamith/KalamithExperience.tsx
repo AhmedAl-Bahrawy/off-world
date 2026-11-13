@@ -61,11 +61,13 @@ export default function KalamithExperience() {
     >
       <IconDefs />
       <Starfield2D />
-      <SceneCanvas key={generation} />
+      {/* Keyed per-generation so a replay remounts both fresh — prefixes keep
+          the sibling keys unique (two bare `key={generation}` collide on "0"). */}
+      <SceneCanvas key={'gl' + generation} />
       <Hud />
       <ChapterCard />
       <Windows />
-      {phase === 'gate' && <Gate key={generation} />}
+      {phase === 'gate' && <Gate key={'gate' + generation} />}
     </div>
   )
 }
