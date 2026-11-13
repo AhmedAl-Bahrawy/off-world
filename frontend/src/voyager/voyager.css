@@ -1586,8 +1586,6 @@ svg.ic {
 .record-evidence-gallery a { color: #8dc7ff; text-decoration: none; }
 .record-evidence-gallery a:hover { text-decoration: underline; }
 @media (max-width: 700px) {
-  .w-act:has(.voyager-mission) { display: flex; flex-direction: column; }
-  .w-act:has(.voyager-mission) .wb { flex: 1; max-height: none; min-height: 0; overflow-y: auto; }
   .voyager-image-slot { min-height: 0; aspect-ratio: 1.2 / 1; }
   .voyager-image-slot > img { min-height: 0; object-fit: contain; }
   .voyager-image-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -1599,27 +1597,6 @@ svg.ic {
 }
 
 
-/* Keep the Voyager explainer centered; scroll its body instead of docking it low. */
-.w-act:has(.voyager-mission) {
-  top: 50%;
-  left: 50%;
-  right: auto;
-  bottom: auto;
-  width: min(1040px, 94vw);
-  max-height: calc(100dvh - 7rem);
-  translate: -50% -50%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.w-act:has(.voyager-mission) .wb {
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: calc(100dvh - 13rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 1rem clamp(1rem, 2vw, 1.6rem) 1.35rem;
-}
 .unknown-object-image {
   position: absolute;
   inset: 8%;
@@ -1667,28 +1644,232 @@ svg.ic {
   font: 600 0.48rem/1 'DM Sans', Arial, sans-serif;
   letter-spacing: 0.08em;
 }
-@supports not (height: 100dvh) {
-  .w-act:has(.voyager-mission) { max-height: calc(100vh - 7rem); }
-  .w-act:has(.voyager-mission) .wb { max-height: calc(100vh - 13rem); }
-}
 @media (max-width: 700px) {
-  .w-act:has(.voyager-mission) {
-    top: 50%;
-    left: 50%;
-    right: auto;
-    bottom: auto;
-    width: 94vw;
-    max-height: calc(100dvh - 6.5rem);
-    translate: -50% -50%;
-  }
-  .w-act:has(.voyager-mission) .wb {
-    max-height: calc(100dvh - 12rem);
-    padding: 0.75rem;
-  }
   .unknown-object-frame { min-height: 14rem; }
   .unknown-view-picker { left: 0.35rem; right: 0.35rem; bottom: 0.35rem; gap: 0.24rem; }
   .kx .unknown-view-picker button { grid-template-columns: 2.1rem 1fr; min-height: 2.4rem; gap: 0.22rem; padding: 0.16rem; }
   .unknown-view-picker img { width: 2.1rem; height: 1.7rem; }
   .unknown-view-picker small { font-size: 0.42rem; }
   .unknown-image-credit { right: 0.4rem; top: 0.5rem; font-size: 0.4rem; }
+}
+
+
+/* Immersive Voyager field log: the investigation is a scrollable journey, not a modal card. */
+.w-act:has(.voyager-mission) {
+  position: fixed;
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  max-height: none;
+  translate: none;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  color: #edf4fa;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  z-index: 30;
+}
+.w-act:has(.voyager-mission) .wh { display: none; }
+.w-act:has(.voyager-mission) .wb {
+  position: absolute;
+  inset: calc(6.2rem + env(safe-area-inset-top, 0px)) 0 0;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.voyager-mission {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: #e8edf2;
+  background: linear-gradient(180deg, #03081322 0%, #0308130a 55%, #03081355 100%);
+}
+.voyager-mission-head,
+.mission-progress {
+  flex: none;
+  width: min(1480px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: clamp(1rem, 4vw, 4rem);
+  padding-left: clamp(1rem, 4vw, 4rem);
+}
+.voyager-mission-head {
+  align-items: center;
+  margin-bottom: 0;
+  padding-top: 0.45rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid #ffffff20;
+  background: linear-gradient(90deg, #050a13b5, #050a1360);
+}
+.voyager-mission-head h2 { font-size: clamp(1.25rem, 2.4vw, 1.9rem); }
+.mission-counter { color: #c2cfdb; }
+.mission-progress {
+  display: flex;
+  gap: clamp(0.15rem, 0.8vw, 0.65rem);
+  overflow-x: auto;
+  padding-top: 0.42rem;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #43627e transparent;
+  background: linear-gradient(90deg, #050a1399, #050a1340);
+}
+.kx .mission-progress button {
+  position: relative;
+  min-width: 5.4rem;
+  min-height: 2.15rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.38rem;
+  padding: 0.3rem 0.42rem;
+  color: #8293a3;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #ffffff25;
+  border-radius: 0;
+  font-size: 0.58rem;
+}
+.kx .mission-progress button.current {
+  color: #edf7ff;
+  background: linear-gradient(180deg, transparent, #62b7ff18);
+  border-bottom: 2px solid #7ec7ff;
+}
+.kx .mission-progress button.complete { color: #b6d7f3; border-bottom-color: #70baff77; }
+.kx .mission-progress button small,
+.kx .mission-progress button.current small,
+.kx .mission-progress button.complete small {
+  flex: none;
+  color: #8bcaff;
+  font-size: 0.5rem;
+}
+.voyager-stages {
+  position: relative;
+  flex: 1 1 auto;
+  width: min(1480px, 100%);
+  min-height: 0;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 4rem) 2.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #3d5a75 transparent;
+  counter-reset: discovery;
+  touch-action: pan-y;
+}
+.voyager-stage.discovery-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: clamp(1.5rem, 4vh, 3.6rem) clamp(0.4rem, 2vw, 1.8rem);
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+  border-bottom: 1px solid #85bfff26;
+  background: radial-gradient(ellipse at 76% 22%, #294b6c22 0, transparent 48%);
+  counter-increment: discovery;
+}
+.voyager-stage.discovery-stage::before {
+  content: 'FIELD DISCOVERY // ' counter(discovery, decimal-leading-zero);
+  display: block;
+  margin: 0 0 0.8rem;
+  color: #8cc9ff;
+  font: 700 0.58rem/1.2 'DM Sans', Arial, sans-serif;
+  letter-spacing: 0.18em;
+  text-shadow: 0 1px 10px #000;
+}
+.voyager-stage.discovery-stage::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  right: 0;
+  width: 1px;
+  height: 80%;
+  background: linear-gradient(transparent, #81c2ff33, transparent);
+  pointer-events: none;
+}
+.voyager-stage[hidden] { display: none; }
+.voyager-stage.discovery-stage.active::before { color: #c4e5ff; }
+.stage-copy {
+  width: min(100%, 62rem);
+  margin: 0 auto 1.35rem;
+  text-shadow: 0 2px 14px #000;
+}
+.stage-copy p {
+  color: #f1f6fb;
+  font: 500 clamp(1.15rem, 2.3vw, 2rem)/1.16 'Space Grotesk', sans-serif;
+  letter-spacing: -0.025em;
+}
+.stage-copy span { max-width: 52rem; color: #b1bdc8; font-size: 0.82rem; }
+.unknown-stage-grid,
+.power-puzzle,
+.inspection-layout,
+.record-alignment,
+.mars-destination-grid {
+  width: min(100%, 68rem);
+  margin-right: auto;
+  margin-left: auto;
+}
+.unknown-stage-grid { align-items: center; }
+.unknown-object-frame { min-height: clamp(17rem, 44vh, 31rem); background-color: #040810b8; }
+.inspection-details,
+.record-visual-wrap,
+.alignment-controls,
+.decision-coordinates,
+.mars-location-card,
+.signal-card,
+.media-asset-slot {
+  background-color: #050a12d9;
+  backdrop-filter: blur(8px);
+}
+@media (max-width: 700px) {
+  .w-act:has(.voyager-mission) .wb {
+    inset: calc(5.6rem + env(safe-area-inset-top, 0px)) 0 0;
+  }
+  .voyager-mission-head,
+  .mission-progress {
+    padding-right: 0.85rem;
+    padding-left: 0.85rem;
+  }
+  .voyager-mission-head { padding-top: 0.35rem; padding-bottom: 0.4rem; }
+  .voyager-mission-head h2 { font-size: 1.16rem; }
+  .mission-eyebrow { font-size: 0.5rem; }
+  .mission-counter { font-size: 0.58rem; }
+  .mission-progress { gap: 0.15rem; padding-top: 0.3rem; padding-bottom: 0.35rem; }
+  .kx .mission-progress button { min-width: 5.2rem; min-height: 1.95rem; padding: 0.25rem 0.34rem; font-size: 0.54rem; }
+  .voyager-stages { padding: 0 0.85rem 1.5rem; scroll-snap-type: y proximity; }
+  .voyager-stage.discovery-stage { min-height: 100%; padding: 1.2rem 0.15rem 1.8rem; }
+  .voyager-stage.discovery-stage::before { margin-bottom: 0.55rem; font-size: 0.5rem; }
+  .voyager-stage.discovery-stage::after { display: none; }
+  .stage-copy { margin-bottom: 0.8rem; }
+  .stage-copy span { font-size: 0.72rem; }
+  .unknown-stage-grid,
+  .power-puzzle,
+  .inspection-layout,
+  .record-alignment,
+  .mars-destination-grid { grid-template-columns: minmax(0, 1fr); }
+  .unknown-object-frame { min-height: 14rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voyager-stages { scroll-behavior: auto; }
 }

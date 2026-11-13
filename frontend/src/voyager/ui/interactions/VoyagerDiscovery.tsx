@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { finishAct } from '../../state/interactions'
 import { useVoyager } from '../../state/store'
 
@@ -60,13 +60,56 @@ export function VoyagerDiscovery() {
   const [step, setStep] = useState(0)
   const [unlocked, setUnlocked] = useState(0)
   const [marsRevealed, setMarsRevealed] = useState(false)
+  const stageScroller = useRef<HTMLDivElement>(null)
+  const stageRefs = useRef<Array<HTMLElement | null>>([])
+  const activeStep = useRef(0)
 
   const goTo = (next: number) => {
     const safeStep = Math.max(0, Math.min(STEP_META.length - 1, next))
+    activeStep.current = safeStep
     setStep(safeStep)
     setUnlocked((current) => Math.max(current, safeStep))
     useVoyager.getState().setChapter(`${STEP_META[safeStep].id} // ${STEP_META[safeStep].title.toUpperCase()}`)
+    window.requestAnimationFrame(() => {
+      stageRefs.current[safeStep]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }
+
+  useEffect(() => {
+    const scroller = stageScroller.current
+    if (!scroller) return
+
+    const updateActiveStep = () => {
+      const bounds = scroller.getBoundingClientRect()
+      let bestIndex = activeStep.current
+      let bestVisibility = -1
+
+      stageRefs.current.slice(0, unlocked + 1).forEach((stage, index) => {
+        if (!stage || stage.hidden) return
+        const rect = stage.getBoundingClientRect()
+        const visible = Math.max(0, Math.min(bounds.bottom, rect.bottom) - Math.max(bounds.top, rect.top))
+        const denominator = Math.min(rect.height, bounds.height)
+        const visibility = denominator > 0 ? visible / denominator : 0
+        if (visibility > bestVisibility) {
+          bestVisibility = visibility
+          bestIndex = index
+        }
+      })
+
+      if (bestIndex !== activeStep.current) {
+        activeStep.current = bestIndex
+        setStep(bestIndex)
+        useVoyager.getState().setChapter(`${STEP_META[bestIndex].id} // ${STEP_META[bestIndex].title.toUpperCase()}`)
+      }
+    }
+
+    scroller.addEventListener('scroll', updateActiveStep, { passive: true })
+    const frame = window.requestAnimationFrame(updateActiveStep)
+    return () => {
+      scroller.removeEventListener('scroll', updateActiveStep)
+      window.cancelAnimationFrame(frame)
+    }
+  }, [unlocked])
 
   const revealMars = () => {
     setMarsRevealed(true)
@@ -102,8 +145,13 @@ export function VoyagerDiscovery() {
             ))}
           </nav>
 
-          <div className="voyager-stages">
-            <section className="voyager-stage" hidden={step !== 0}>
+          <div className="voyager-stages" ref={stageScroller}>
+            <section
+              ref={(element) => { stageRefs.current[0] = element }}
+              className={`voyager-stage discovery-stage ${step === 0 ? 'active' : ''}`}
+              data-discovery-index={0}
+              aria-current={step === 0 ? 'step' : undefined}
+            >
               <div className="unknown-stage-grid">
                 <UnknownObjectFrame />
                 <div className="crew-lines">
@@ -122,7 +170,13 @@ export function VoyagerDiscovery() {
               </div>
             </section>
 
-            <section className="voyager-stage" hidden={step !== 1}>
+            <section
+              ref={(element) => { stageRefs.current[1] = element }}
+              className={`voyager-stage discovery-stage ${step === 1 ? 'active' : ''}`}
+              data-discovery-index={1}
+              aria-current={step === 1 ? 'step' : undefined}
+              hidden={unlocked < 1}
+            >
               <div className="stage-copy">
                 <p>Route power through the cores to clear the image.</p>
                 <span>Connect the start node to the exit. A wrong link resets the trace.</span>
@@ -130,7 +184,13 @@ export function VoyagerDiscovery() {
               <PowerCorePuzzle onComplete={() => goTo(2)} />
             </section>
 
-            <section className="voyager-stage" hidden={step !== 2}>
+            <section
+              ref={(element) => { stageRefs.current[2] = element }}
+              className={`voyager-stage discovery-stage ${step === 2 ? 'active' : ''}`}
+              data-discovery-index={2}
+              aria-current={step === 2 ? 'step' : undefined}
+              hidden={unlocked < 2}
+            >
               <div className="stage-copy">
                 <p>The recovered key is yours to use.</p>
                 <span>Decode the transmission, then enter the identity.</span>
@@ -138,7 +198,13 @@ export function VoyagerDiscovery() {
               <CipherPuzzle onComplete={() => goTo(3)} />
             </section>
 
-            <section className="voyager-stage" hidden={step !== 3}>
+            <section
+              ref={(element) => { stageRefs.current[3] = element }}
+              className={`voyager-stage discovery-stage ${step === 3 ? 'active' : ''}`}
+              data-discovery-index={3}
+              aria-current={step === 3 ? 'step' : undefined}
+              hidden={unlocked < 3}
+            >
               <div className="stage-copy">
                 <p>Examine the craft. Select every marked component.</p>
                 <span>These mission facts come from NASA's published Voyager record.</span>
@@ -146,7 +212,13 @@ export function VoyagerDiscovery() {
               <VoyagerInspection onComplete={() => goTo(4)} />
             </section>
 
-            <section className="voyager-stage" hidden={step !== 4}>
+            <section
+              ref={(element) => { stageRefs.current[4] = element }}
+              className={`voyager-stage discovery-stage ${step === 4 ? 'active' : ''}`}
+              data-discovery-index={4}
+              aria-current={step === 4 ? 'step' : undefined}
+              hidden={unlocked < 4}
+            >
               <div className="stage-copy">
                 <p>Correct the viewing angle until the disc is circular.</p>
                 <span>This alignment lock is fictional; the Golden Record itself is real.</span>
@@ -154,7 +226,13 @@ export function VoyagerDiscovery() {
               <GoldenRecordPuzzle onComplete={() => goTo(5)} />
             </section>
 
-            <section className="voyager-stage" hidden={step !== 5}>
+            <section
+              ref={(element) => { stageRefs.current[5] = element }}
+              className={`voyager-stage discovery-stage ${step === 5 ? 'active' : ''}`}
+              data-discovery-index={5}
+              aria-current={step === 5 ? 'step' : undefined}
+              hidden={unlocked < 5}
+            >
               <div className="stage-copy">
                 <p>A message about a world—not a machine manual.</p>
                 <span>Open a recovered media category. Original recordings are optional assets.</span>
@@ -162,7 +240,13 @@ export function VoyagerDiscovery() {
               <RecordContents onContinue={() => goTo(6)} />
             </section>
 
-            <section className="voyager-stage" hidden={step !== 6}>
+            <section
+              ref={(element) => { stageRefs.current[6] = element }}
+              className={`voyager-stage discovery-stage ${step === 6 ? 'active' : ''}`}
+              data-discovery-index={6}
+              aria-current={step === 6 ? 'step' : undefined}
+              hidden={unlocked < 6}
+            >
               <div className="stage-copy">
                 <p>Compare the two signals.</p>
                 <span>Which one was designed as a portrait of Earth?</span>
@@ -170,7 +254,13 @@ export function VoyagerDiscovery() {
               <SignalComparison onComplete={() => goTo(7)} />
             </section>
 
-            <section className="voyager-stage" hidden={step !== 7}>
+            <section
+              ref={(element) => { stageRefs.current[7] = element }}
+              className={`voyager-stage discovery-stage ${step === 7 ? 'active' : ''}`}
+              data-discovery-index={7}
+              aria-current={step === 7 ? 'step' : undefined}
+              hidden={unlocked < 7}
+            >
               <div className="stage-copy">
                 <p>The archive has one final cross-reference.</p>
                 <span>Its Mars survey marks a possible water-ice region.</span>
@@ -500,9 +590,9 @@ function RecordContents({ onContinue }: { onContinue: () => void }) {
         ))}
       </div>
       <div className="media-asset-slot">
-        <span className="asset-status">ASSET PLACEHOLDER</span>
+        <span className="asset-status">SOURCE FILE NEEDED</span>
         <div><b>{item.title}</b><span>{item.asset}</span></div>
-        <p>Placeholder path only. Add an approved source file, then connect its player in this component.</p>
+        <p>NASA’s original media is not bundled here. Connect an approved image or audio source to enable playback.</p>
       </div>
       <SourceLink href={NASA_RECORD}>NASA · Golden Record contents</SourceLink>
       <button type="button" className="mission-primary compact-primary" onClick={onContinue}>COMPARE WITH THE DISTRESS CALL <span aria-hidden="true">→</span></button>
