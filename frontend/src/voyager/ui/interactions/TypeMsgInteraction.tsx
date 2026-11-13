@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { finishAct, type TypeMsgProps } from '../../state/interactions'
-import { useKalamith } from '../../state/store'
+import { useVoyager } from '../../state/store'
 import { bus } from '../../lib/bus'
 import { blip } from '../../lib/audio'
 import { sleep } from '../../lib/util'
@@ -15,7 +15,7 @@ export function TypeMsgInteraction({ message }: TypeMsgProps) {
   const sentRef = useRef(false)
 
   async function transmit() {
-    const store = useKalamith.getState()
+    const store = useVoyager.getState()
     store.closeWindow('act')
     store.closeWindow('chat')
     bus.emit('pulse')
@@ -37,16 +37,14 @@ export function TypeMsgInteraction({ message }: TypeMsgProps) {
     const onEvent = (e: KeyboardEvent | PointerEvent) => {
       if (
         e instanceof KeyboardEvent &&
-        (e.metaKey || e.ctrlKey || e.key === 'Tab')
+        (e.metaKey || e.ctrlKey || e.key === 'Tab' || e.target instanceof HTMLButtonElement)
       )
         return
       setTyped((n) => Math.min(message.length, n + 1))
     }
     addEventListener('keydown', onEvent)
-    addEventListener('pointerdown', onEvent)
     return () => {
       removeEventListener('keydown', onEvent)
-      removeEventListener('pointerdown', onEvent)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -74,8 +72,11 @@ export function TypeMsgInteraction({ message }: TypeMsgProps) {
 
   return (
     <>
-      <p className="q">Plain English. No encryption. Press any key, or tap.</p>
+      <p className="q">Plain English. No encryption.</p>
       <p className="msg">{message.slice(0, typed)}</p>
+      <div className="row">
+        <button type="button" onClick={() => setTyped(message.length)}>SEND SIGNAL</button>
+      </div>
     </>
   )
 }

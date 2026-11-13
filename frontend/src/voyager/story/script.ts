@@ -2,7 +2,7 @@ import { bus } from '../lib/bus'
 import { blip } from '../lib/audio'
 import { motion, RM } from '../lib/motion'
 import { sleep } from '../lib/util'
-import { useKalamith, type Accent, type ChatWho } from '../state/store'
+import { useVoyager, type Accent, type ChatWho } from '../state/store'
 import { requestAct } from '../state/interactions'
 import {
   ARMED_CHAT,
@@ -28,11 +28,11 @@ import {
 
 /**
  * The whole narrative, as one readable async screenplay.
- * Started once by <KalamithExperience/> when the phase turns "playing";
+ * Started once by <VoyagerExperience/> when the phase turns "playing";
  * `resetStory()` (replay button) rewinds the store and allows a rerun.
  */
 
-const S = () => useKalamith.getState()
+const S = () => useVoyager.getState()
 
 let storyStarted = false
 
@@ -51,21 +51,18 @@ export async function runStory() {
   await chapter(CHAPTERS.collapse)
   bus.emit('killCities', 18)
   bars('sys', 'GLOBAL SYSTEMS', 'warn', 'rd', SYSTEM_ROWS)
-  await say('The machines did not disappear.')
-  await say('The knowledge to rebuild them did.')
-  await say(
-    'A few corporations held every process. A few factories held every skill.',
-  )
+  await say('The machines failed. The know-how went with them.')
+  await say('A few owned the systems. No one could repair them.')
   await requestAct<void>('rd', 'tiles', {
-    question: 'Everything is failing. Try to repair it.',
+    question: 'Systems failing. Try a repair.',
     items: REPAIR_TILES,
   })
   await say(
-    'Humanity had become dependent on technology it no longer understood.',
+    'Humanity depended on machines it no longer understood.',
     'em',
   )
   await say(
-    'One gamble remained: the Kalamith, an intelligent species at Proxima Centauri b. Friend or enemy, we do not know.',
+    'One chance remained: the Kalamith at Proxima Centauri b.',
   )
 
   /* ================= CHAPTER 2 — THE LAST SIGNAL ============== */
@@ -83,7 +80,7 @@ export async function runStory() {
   ])
 
   const choice = await requestAct<number>('or', 'ask', {
-    question: 'You speak for the Eastern bloc. Your answer?',
+    question: 'Eastern bloc. What is your answer?',
     options: EAST_CHOICES,
   })
 
@@ -101,10 +98,10 @@ export async function runStory() {
 
   openLog('TRANSMISSION', 'sig', 'or')
   await say(
-    'No encryption, and a naive hope that they would somehow read English.',
+    'No encryption. We hoped they could read English.',
   )
   await say(
-    'We held the key to a real conversation and never tried to build a shared language.',
+    'We had a key. We never built a shared language.',
     'em',
   )
 
@@ -112,17 +109,12 @@ export async function runStory() {
 
   await chapter(CHAPTERS.voyage)
   S().setYear(2235)
-  openLog('KALAMITH ARRAY', 'eye', 'vi')
-  await say('Four years after it left Earth, the signal arrived.')
+  openLog('VOYAGER ARRAY', 'eye', 'vi')
+  await say('Four years later, the signal reached them.')
   await requestAct<void>('vi', 'decode', { words: DECODE_WORDS })
-  await say('Years of decoding. Then a ship.')
-  await say(
-    'They did not come out of mercy. Every species serves its own interest.',
-  )
-  await say(
-    'They hoped to learn what humans knew. They would teach us nothing. Saving us would be enough.',
-    'em',
-  )
+  await say('The signal decoded. A ship followed.')
+  await say('They came to learn—not to rescue.')
+  await say('Knowledge was all they promised.', 'em')
   await requestAct<void>('vi', 'charge')
 
   motion.starTarget = 3.2
@@ -131,7 +123,7 @@ export async function runStory() {
   bus.emit('shipGo', 7.2)
   for (let i = 0; i <= 60; i++) {
     S().setYear(Math.round(2235 + ((endYear - 2235) * i) / 60))
-    await sleep(120)
+    await sleep(55)
   }
   await say(
     choice === 1 ? 'Ten of these years belong to our pride.' : 'The long road is over.',
@@ -141,14 +133,14 @@ export async function runStory() {
 
   await chapter(CHAPTERS.orbit)
   motion.starTarget = 0.05
-  openLog('KALAMITH ARRAY', 'eye', 'vi')
-  await say('They scan from orbit, waiting for lights.')
+  openLog('VOYAGER ARRAY', 'eye', 'vi')
+  await say('They scan from orbit. No lights answer.')
   await requestAct<void>('vi', 'tiles', {
-    question: 'Scan the planet for signs of life.',
+    question: 'Scan for signs of life.',
     items: SCAN_TILES,
   })
-  await say('A planet that has stopped talking.')
-  await say('Humanity is gone. They did not come to save anyone.', 'em')
+  await say('Earth has gone silent.')
+  await say('Humanity is gone. They came too late.', 'em')
 
   /* ================= CHAPTER 5 — THE LAST REMNANTS ============ */
 
@@ -181,8 +173,8 @@ export async function runStory() {
   await sleep(800)
 
   openLog('END OF TRANSMISSION', 'sig', 'vi')
-  await say('The Kalamith came to learn from us.')
-  await say('There was no one left to teach.', 'em')
+  await say('The Kalamith came to learn.')
+  await say('No one was left to teach.', 'em')
   await sleep(1500)
 
   S().openWindow({
@@ -228,9 +220,9 @@ async function say(text: string, cls = '') {
   for (const ch of text) {
     typed += ch
     S().setLogText(id, typed)
-    if (!RM && ch !== ' ') await sleep(10)
+    if (!RM && ch !== ' ') await sleep(5)
   }
-  await sleep(240 + text.length * 8)
+  await sleep(140 + text.length * 4)
   S().trimLog(3)
 }
 
@@ -253,10 +245,10 @@ async function chat(
   }
   for (const [who, text] of list) {
     const id = S().pushChat(who)
-    await sleep(380)
+    await sleep(240)
     S().setChatText(id, text)
     blip(who === 'E' ? 420 : 700, 0.03)
-    await sleep(260 + text.length * 10)
+    await sleep(160 + text.length * 5)
   }
 }
 

@@ -1,4 +1,4 @@
-/* Global reset — all Kalamith styling lives in src/kalamith/kalamith.css */
+/* Global reset — the Voyager experience owns its scoped design system. */
 html,
 body,
 #root {
@@ -8,5 +8,5 @@ body,
 
 body {
   overflow: hidden;
-  background: #020813;
+  background: #05070a;
 }

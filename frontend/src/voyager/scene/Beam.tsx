@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
-import { useKalamith } from '../state/store'
+import { useVoyager } from '../state/store'
 import { motion } from '../lib/motion'
 
 /**
@@ -21,7 +21,7 @@ export function Beam() {
   const target = useMemo(() => new THREE.Vector3(), [])
 
   useFrame(({ clock }) => {
-    const scene = useKalamith.getState().scene
+    const scene = useVoyager.getState().scene
     if (scene === 'orbit') {
       target.set(motion.earthPos.x, motion.earthPos.y + 6.7, motion.earthPos.z)
       line.geometry.setFromPoints([motion.shipPos, target])

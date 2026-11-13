@@ -112,7 +112,7 @@ interface State extends Snapshot {
 
 let uid = 0
 
-export const useKalamith = create<State>()((set) => ({
+export const useVoyager = create<State>()((set) => ({
   ...initial,
 
   startGame: () => set({ phase: 'playing', hudVisible: true }),
@@ -183,7 +183,7 @@ export const useKalamith = create<State>()((set) => ({
   reset: () =>
     set({
       ...initial,
-      generation: useKalamith.getState().generation + 1,
+      generation: useVoyager.getState().generation + 1,
     }),
 }))
 
@@ -192,8 +192,8 @@ export const useKalamith = create<State>()((set) => ({
  * The callback fires once per actual change; returns the unsubscribe fn.
  */
 export function onSceneChange(cb: (scene: SceneName) => void) {
-  let prev = useKalamith.getState().scene
-  return useKalamith.subscribe((s) => {
+  let prev = useVoyager.getState().scene
+  return useVoyager.subscribe((s) => {
     if (s.scene !== prev) {
       prev = s.scene
       cb(prev)

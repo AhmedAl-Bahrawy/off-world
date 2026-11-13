@@ -1,5 +1,5 @@
-import KalamithExperience from './kalamith'
+import VoyagerExperience from './voyager'
 
 export default function App() {
-  return <KalamithExperience />
+  return <VoyagerExperience />
 }

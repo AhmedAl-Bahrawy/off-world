@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import type { PerspectiveCamera } from 'three'
 import gsap from 'gsap'
-import { onSceneChange, useKalamith } from '../state/store'
+import { onSceneChange, useVoyager } from '../state/store'
 import { bus } from '../lib/bus'
 import { motion, RM } from '../lib/motion'
 
@@ -64,7 +64,7 @@ export function Ship() {
     // Engine flicker.
     flame.current.scale.set(1, 0.8 + Math.random() * 0.4, 1)
 
-    const scene = useKalamith.getState().scene
+    const scene = useVoyager.getState().scene
     if (scene === 'orbit') {
       // Circle the dead Earth; flip to face travel direction on each half.
       const a = t * 0.35

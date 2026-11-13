@@ -6,7 +6,7 @@ import { RM } from '../../lib/motion'
 import { Icon } from '../Icons'
 
 /**
- * Key authorization: both keys must be turned within 1.5 s of each other.
+ * Key authorization: both keys must be turned within three seconds.
  * Synchronizing them spins the keys and resolves the interaction.
  */
 export function KeysInteraction() {
@@ -23,7 +23,7 @@ export function KeysInteraction() {
     const first = firstTurn.current
 
     // Both keys turned in time → synchronized.
-    if (first && first.i !== i && now - first.at < 1500) {
+    if (first && first.i !== i && now - first.at < 3000) {
       clearTimeout(resetTimer.current)
       setLit([0, 1])
       blip(900)
@@ -48,12 +48,12 @@ export function KeysInteraction() {
       firstTurn.current = null
       setLit([])
       setHint('Window closed. Try again.')
-    }, 1500)
+    }, 3000)
   }
 
   return (
     <>
-      <p className="q">Turn both keys within 1.5 seconds of each other.</p>
+      <p className="q">Turn both keys within three seconds.</p>
       <div className="row">
         <button
           ref={westKey}

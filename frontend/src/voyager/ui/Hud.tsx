@@ -1,4 +1,4 @@
-import { useKalamith } from '../state/store'
+import { useVoyager } from '../state/store'
 import { Icon } from './Icons'
 
 /**
@@ -6,10 +6,10 @@ import { Icon } from './Icons'
  * name, and link status. Hidden until the experience starts.
  */
 export function Hud() {
-  const year = useKalamith((s) => s.year)
-  const chapter = useKalamith((s) => s.chapter)
-  const status = useKalamith((s) => s.status)
-  const visible = useKalamith((s) => s.hudVisible)
+  const year = useVoyager((s) => s.year)
+  const chapter = useVoyager((s) => s.chapter)
+  const status = useVoyager((s) => s.status)
+  const visible = useVoyager((s) => s.hudVisible)
 
   return (
     <div className={`kx-hud ${visible ? 'on' : ''}`}>

@@ -34,14 +34,14 @@ export const CHAPTERS = {
     scene: 'signal',
   },
   voyage: {
-    title: 'ACROSS THE STARS',
-    subtitle: 'KALAMITH, PROXIMA CENTAURI B',
+    title: 'THE VOYAGE',
+    subtitle: 'PROXIMA CENTAURI B',
     accent: 'vi',
     scene: 'voyage',
   },
   orbit: {
     title: 'THE SILENT EARTH',
-    subtitle: 'KALAMITH ARRIVAL',
+    subtitle: 'VOYAGER ARRIVAL',
     accent: 'vi',
     scene: 'orbit',
   },
@@ -59,7 +59,7 @@ export const SYSTEM_ROWS = [
   { label: 'Power grid', from: 31, to: 3 },
   { label: 'Industry', from: 22, to: 0 },
   { label: 'Supply chains', from: 27, to: 2 },
-  { label: 'Knowledge anyone can use', from: 4, to: 0 },
+  { label: 'Public knowledge', from: 4, to: 0 },
 ]
 
 export const REPAIR_TILES: Array<{ icon: string; label: string; note: string }> =
@@ -72,29 +72,26 @@ export const REPAIR_TILES: Array<{ icon: string; label: string; note: string }> 
 /* ---- Chapter 2 — The Last Signal ---------------------------------- */
 
 export const OPENING_CHAT: Array<[ChatWho, string]> = [
-  ['W', 'We located the Kalamith. We can send a distress call.'],
-  [
-    'W',
-    'The transmitter needs both halves of the key. We hold one. We need yours.',
-  ],
-  ['E', 'You want us to beg an alien species to save us?'],
+  ['W', 'We found the Kalamith. We can send a distress call.'],
+  ['W', 'We have half the key. We need yours.'],
+  ['E', 'You want us to beg aliens?'],
   ['W', 'We want to survive.'],
 ]
 
 export const REPLY_OPTIONS = [
-  { icon: 'chat', label: 'Why trust the Kalamith?' },
-  { icon: 'chat', label: 'And if they are hostile?' },
-  { icon: 'chat', label: 'Our pride is not for sale.' },
+  { icon: 'chat', label: 'Can we trust them?' },
+  { icon: 'chat', label: 'What if they attack?' },
+  { icon: 'chat', label: 'Pride comes first.' },
 ]
 
 /** [what the East says, what the West answers] — indexed by the reply pick. */
 export const REPLIES: Array<[string, string]> = [
   [
-    'Why should we trust the Kalamith?',
-    'We do not. We only know there is no other option.',
+    'Can we trust them?',
+    'We cannot. There is no other choice.',
   ],
-  ['And if they are hostile?', 'Then we die. But we were already dying.'],
-  ['Our pride is not for sale.', 'Neither is survival. Choose.'],
+  ['What if they attack?', 'Then we die. We are dying already.'],
+  ['Pride comes first.', 'Not before survival. Choose.'],
 ]
 
 export const EAST_CHOICES = [
@@ -103,19 +100,19 @@ export const EAST_CHOICES = [
 ]
 
 export const GIVE_CHAT: Array<[ChatWho, string]> = [
-  ['E', 'Take it. Pride will not feed anyone.'],
-  ['W', 'Thank you. Preparing the transmitter.'],
+  ['E', 'Take it. Pride cannot feed us.'],
+  ['W', 'Thank you. Transmitter is ready.'],
 ]
 
 export const REFUSE_CHAT: Array<[ChatWho, string]> = [
-  ['E', 'Request denied. Humanity does not beg.'],
-  ['W', 'Then we take it another way.'],
-  ['A', 'ALERT: Western operative inside the Eastern vault.'],
+  ['E', 'Denied. Humanity does not beg.'],
+  ['W', 'Then we take it.'],
+  ['A', 'ALERT: Western operative in the vault.'],
 ]
 
 export const HEIST_CHAT: Array<[ChatWho, string]> = [
-  ['A', 'Vault open. Key extracted under threat.'],
-  ['W', 'It worked. It also cost us ten years.'],
+  ['A', 'Vault open. Key taken by force.'],
+  ['W', 'It worked. We lost ten years.'],
 ]
 
 export const ARMED_CHAT: Array<[ChatWho, string]> = [
@@ -161,18 +158,18 @@ export const POWER_ROWS = [
 export const ARCHIVE_QA: Array<[string, string]> = [
   [
     'What are you?',
-    'I am ARCHIVE-9. I store everything humanity wrote, built and forgot.',
+    'ARCHIVE-9. I hold what humanity wrote, built, and forgot.',
   ],
   [
     'What happened here?',
-    'The people stopped understanding their machines. Then the machines stopped working.',
+    'People forgot how their machines worked. Then they stopped.',
   ],
   [
     'Can you rebuild it?',
-    'I hold every record. I cannot build a single thing.',
+    'I hold every record. I cannot build.',
   ],
 ]
 
 export const FINAL_CHAT: Array<[ChatWho, string]> = [
-  ['A', 'Power at 0%. I kept everything. I could not use any of it.'],
+  ['A', 'Power at zero. I kept everything. I could use none of it.'],
 ]

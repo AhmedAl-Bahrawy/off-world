@@ -1,4 +1,4 @@
-import { useKalamith, type Accent, type InteractionKind } from './store'
+import { useVoyager, type Accent, type InteractionKind } from './store'
 
 /**
  * Bridge between the (imperative) story script and the (declarative) UI.
@@ -51,7 +51,7 @@ export function requestAct<T>(
   props: Record<string, unknown> = {},
 ): Promise<T> {
   const meta = ACT_META[kind]
-  useKalamith.getState().openWindow({
+  useVoyager.getState().openWindow({
     id: 'act',
     slot: 'c',
     kind: 'act',
@@ -61,7 +61,7 @@ export function requestAct<T>(
   })
   return new Promise<T>((resolve) => {
     resolver = resolve as (value: unknown) => void
-    useKalamith.setState({ interaction: { key: ++seq, kind, props } })
+    useVoyager.setState({ interaction: { key: ++seq, kind, props } })
   })
 }
 
@@ -70,9 +70,9 @@ export function finishAct(result: unknown = undefined, delay = 300) {
   if (!resolver) return
   const resolve = resolver
   resolver = null
-  useKalamith.getState().closeWindow('act')
+  useVoyager.getState().closeWindow('act')
   setTimeout(() => {
-    useKalamith.setState({ interaction: null })
+    useVoyager.setState({ interaction: null })
     resolve(result)
   }, delay)
 }

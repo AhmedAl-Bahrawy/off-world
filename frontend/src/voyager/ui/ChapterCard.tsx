@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { useKalamith } from '../state/store'
+import { useVoyager } from '../state/store'
 import { RM } from '../lib/motion'
 
 /**
@@ -8,7 +8,7 @@ import { RM } from '../lib/motion'
  * the inner card (keyed) so the per-letter GSAP entrance replays.
  */
 export function ChapterCard() {
-  const card = useKalamith((s) => s.card)
+  const card = useVoyager((s) => s.card)
 
   return (
     <div className={`kx-card ${card?.on ? 'on' : ''}`} aria-hidden={!card?.on}>

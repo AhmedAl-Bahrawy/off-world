@@ -8,7 +8,7 @@ import {
 } from 'react'
 import gsap from 'gsap'
 import {
-  useKalamith,
+  useVoyager,
   type WinState,
   type BarRow,
   type ChatMsg,
@@ -45,7 +45,7 @@ import {
 const BodyContext = createContext<HTMLDivElement | null>(null)
 
 export function Windows() {
-  const windows = useKalamith((s) => s.windows)
+  const windows = useVoyager((s) => s.windows)
   return (
     <>
       {windows.map((win) => (
@@ -93,7 +93,7 @@ function WindowFrame({ win }: { win: WinState }) {
   useEffect(() => {
     if (!win.closing) return
     if (RM) {
-      useKalamith.getState().dropWindow(win.id, win.seq)
+      useVoyager.getState().dropWindow(win.id, win.seq)
       return
     }
     gsap.to(root.current, {
@@ -104,7 +104,7 @@ function WindowFrame({ win }: { win: WinState }) {
       ease: 'power2.in',
     })
     const t = setTimeout(
-      () => useKalamith.getState().dropWindow(win.id, win.seq),
+      () => useVoyager.getState().dropWindow(win.id, win.seq),
       320,
     )
     return () => clearTimeout(t)
@@ -155,7 +155,7 @@ function WindowBody({ win }: { win: WinState }) {
 
 /** Bottom transmission log — typed lines appear here via the story. */
 function LogBody() {
-  const lines = useKalamith((s) => s.log)
+  const lines = useVoyager((s) => s.log)
   return (
     <>
       {lines.map((l) => (
@@ -169,7 +169,7 @@ function LogBody() {
 
 /** Right-hand comms feed with speaker names + auto scroll. */
 function ChatBody() {
-  const messages = useKalamith((s) => s.chat)
+  const messages = useVoyager((s) => s.chat)
   const el = useContext(BodyContext)
 
   useEffect(() => {
@@ -288,7 +288,7 @@ function EndBody() {
 
 /** Routes to the active player interaction (tiles / ask / simon / ...). */
 function ActionBody() {
-  const it = useKalamith((s) => s.interaction)
+  const it = useVoyager((s) => s.interaction)
   if (!it) return null
   switch (it.kind) {
     case 'tiles':
