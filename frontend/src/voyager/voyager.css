@@ -1081,9 +1081,7 @@ svg.ic {
 .vy-bg-base {
   position: absolute;
   inset: 0;
-  background:
-    url('/visuals/Group2.svg') center / cover no-repeat,
-    radial-gradient(70% 55% at 50% 42%, #14224a 0%, #070a1c 62%, #02030a 100%);
+  background: url('/visuals/Group2.svg') center / cover no-repeat;
 }
 .vy-bg .vy-bg-sky {
   position: absolute;
