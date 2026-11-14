@@ -1032,7 +1032,33 @@ svg.ic {
   padding: 0;
   overflow: hidden;
 }
-
+/* Explicit class fallback: do not depend on :has() to size the Voyager host. */
+.w-act.w-voyager {
+  position: fixed;
+  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  translate: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  text-align: left;
+  z-index: 30;
+}
+.w-act.w-voyager .wh { display: none; }
+.w-act.w-voyager .wb {
+  position: absolute;
+  inset: 0;
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+}
 .vy {
   --a: #8fb8ff;
   --gold: #f0c35a;

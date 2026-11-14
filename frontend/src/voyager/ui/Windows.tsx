@@ -61,6 +61,7 @@ export function Windows() {
 function WindowFrame({ win }: { win: WinState }) {
   const root = useRef<HTMLDivElement>(null)
   const [bodyEl, setBodyEl] = useState<HTMLDivElement | null>(null)
+  const interaction = useVoyager((s) => s.interaction)
 
   // Open animation. Context + revert keeps StrictMode's double effect from
   // snapshotting the already-collapsed inline scaleY/opacity as its "from".
@@ -114,7 +115,7 @@ function WindowFrame({ win }: { win: WinState }) {
   return (
     <div
       ref={root}
-      className={`w s-${win.slot} w-${win.id}`}
+      className={`w s-${win.slot} w-${win.id} ${interaction?.kind === 'voyager' ? 'w-voyager' : ''}`}
       style={{ '--c': `var(--${win.accent})` } as CSSProperties}
     >
       <div className="wh">
