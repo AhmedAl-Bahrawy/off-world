@@ -1,4 +1,5 @@
 import { RM } from './motion'
+import type { PerspectiveCamera } from 'three'
 
 /**
  * Shared animation constants — the single source of truth for how the
@@ -29,3 +30,10 @@ export const WIN_CLOSE = {
 
 /** Multiplier applied to GSAP durations when the OS wants reduced motion. */
 export const D = RM ? 0 : 1
+
+/**
+ * Scale factor applied to scene actors so they stay framed on narrow
+ * viewports. Every actor uses this so they agree on how much to shrink.
+ */
+export const aspectScale = (camera: PerspectiveCamera) =>
+  0.6 + 0.4 * Math.min(1, camera.aspect / 1.5)

@@ -1,29 +1,32 @@
 /**
  * Every external asset used by the Voyager 1 scene lives here.
- * All of them are optional: each slot has a CSS-gradient placeholder underneath,
- * so a dead link never breaks the view. Swap any URL (or point it at /public).
  *
- * Wikimedia `Special:FilePath` resolves by file NAME, so it survives re-hashing.
+ * All of them are vendored under `public/assets` — the experience makes no
+ * third-party requests at runtime. `public/assets/manifest.json` records the
+ * source, author and licence for every file referenced here.
+ *
+ * All of them are optional: each slot has a CSS-gradient placeholder
+ * underneath, so a missing file never breaks the view.
  */
-const commons = (file: string, width = 1600) =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=${width}`
 
-/** lucide icon set served as plain .svg files from jsDelivr. */
-export const ICON_BASE = 'https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/'
-
+/** Static image assets. */
 export const IMAGES = {
-  /** Full-screen background, far layer (Milky Way). */
-  bgSky: commons('ESO_-_Milky_Way.jpg', 2400),
   /** Reference photo of the spacecraft (top-right "echo" frame). */
-  voyager: commons('Voyager_spacecraft_model.png', 900),
+  voyager: '/assets/images/voyager-reference.jpg',
   /** The Golden Record cover (shown when the record is inspected). */
-  record: commons('The_Sounds_of_Earth_-_GPN-2000-001976.jpg', 900),
+  record: '/assets/images/golden-record.jpg',
   /** Earth as seen by Voyager 1. */
-  paleBlueDot: commons('Pale_Blue_Dot.png', 700),
+  paleBlueDot: '/assets/images/pale-blue-dot.jpg',
 }
+
+/** Vendored lucide icon set (ISC licence) served as plain .svg files. */
+export const ICON_BASE = '/assets/icons/'
+
+/** The 3D model of Voyager 1 (NASA/VTAD, public domain). */
+export const VOYAGER_MODEL = '/assets/models/voyager-1.glb'
 
 /**
  * Optional equirectangular Mars map. If it fails to load, a procedural
- * canvas texture is used instead. Set to '' to skip the request.
+ * canvas texture is used instead.
  */
-export const MARS_MAP_URL = commons('Mars_viking_colorized.jpg', 2048)
+export const MARS_MAP_URL = '/assets/textures/mars-map.jpg'

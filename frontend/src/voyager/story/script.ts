@@ -1,5 +1,5 @@
 import { bus } from '../lib/bus'
-import { blip } from '../lib/audio'
+import { blip, cue, setVoyageBed } from '../lib/audio'
 import { motion, RM } from '../lib/motion'
 import { sleep } from '../lib/util'
 import { useVoyager, type Accent, type ChatWho, type InteractionKind } from '../state/store'
@@ -45,13 +45,37 @@ let storyStarted = false
 /** Bumped on every run/reset; a screenplay only proceeds while its token is current. */
 let storyRun = 0
 
+/**
+ * Set when the player asks to fast-forward the current narration. The flag
+ * survives until the next line starts typing, so pressing skip during a pause
+ * still takes effect.
+ */
+let skipRequested = false
+
+/** Fast-forward the narration that is currently typing. */
+export function skipNarration() {
+  skipRequested = true
+}
+
 export function resetStory() {
   storyStarted = false
   storyRun++
+  skipRequested = false
   // Wake up any pending interaction so the old screenplay can abort cleanly.
   cancelAct()
+  setVoyageBed(false)
   motion.starTarget = motion.starSpeed = 0.05
   S().reset()
+}
+
+/**
+ * Restart the story immediately, without bouncing through the gate.
+ * The store reset bumps `generation`, which remounts the 3D scene, and the
+ * new phase flips back to "playing" so the screenplay runs again.
+ */
+export function replayStory() {
+  resetStory()
+  S().startGame()
 }
 
 export async function runStory() {
@@ -78,6 +102,7 @@ export async function runStory() {
 
     await chapter(CHAPTERS.collapse, wait)
     bus.emit('killCities', 18)
+    cue('dark')
     bars('sys', 'GLOBAL SYSTEMS', 'warn', 'rd', SYSTEM_ROWS)
     await say('The machines failed. The know-how went with them.', '', wait)
     await say('A few owned the systems. No one could repair them.', '', wait)
@@ -130,6 +155,7 @@ export async function runStory() {
 
     await act<void>('cy', 'keys')
     await chat(ARMED_CHAT, undefined, undefined, wait)
+    cue('transmission')
     await act<void>('cy', 'typeMsg', { message: DISTRESS_MESSAGE })
 
     openLog('TRANSMISSION', 'sig', 'or')
@@ -147,6 +173,7 @@ export async function runStory() {
     /* ================= CHAPTER 3 — ACROSS THE STARS ============= */
 
     await chapter(CHAPTERS.voyage, wait)
+    setVoyageBed(true)
     S().setYear(2235)
     openLog('VOYAGER ARRAY', 'eye', 'vi')
     await say('Four years later, the signal reached them.', '', wait)
@@ -154,6 +181,7 @@ export async function runStory() {
     await say('The signal decoded. A ship followed.', '', wait)
     await say('They came to learn—not to rescue.', '', wait)
     await say('Knowledge was all they promised.', 'em', wait)
+    cue('drive')
     await act<void>('vi', 'charge')
 
     motion.starTarget = 3.2
@@ -173,6 +201,7 @@ export async function runStory() {
     /* ================= CHAPTER 4 — THE SILENT EARTH ============= */
 
     await chapter(CHAPTERS.orbit, wait)
+    setVoyageBed(false)
     motion.starTarget = 0.05
     openLog('VOYAGER ARRAY', 'eye', 'vi')
     await say('They scan from orbit. No lights answer.', '', wait)
@@ -213,14 +242,16 @@ export async function runStory() {
     await wait(800)
     S().clearWindows()
     await wait(360)
-    S().setScene('discovery')
-    S().setAccent('vi')
-    S().setChapter('VOYAGER 1 // OBJECT RECOVERY')
+    // The recovery segment gets the same chapter splash as the rest of the
+    // story, so the hand-off from the archive to the 3D scene reads as a
+    // chapter rather than a sudden full-screen takeover.
+    await chapter(CHAPTERS.discovery, wait)
+    cue('discover')
     await act<void>('vi', 'voyager')
 
     S().clearWindows()
     await wait(360)
-    S().setScene('mars')
+    await chapter(CHAPTERS.mars, wait)
     openLog('MISSION LOG', 'sig', 'vi')
     await say('The distress call brought them to Earth. The record was a portrait—not a plea.', '', wait)
     await say('Now Mars: a mapped ice prospect, still waiting to be confirmed.', 'em', wait)
@@ -253,7 +284,9 @@ async function chapter(def: ChapterDef, wait: Wait) {
   s.setAccent(def.accent)
   s.setScene(def.scene)
   s.setChapter(def.title)
+  s.setStage(def.stage)
   s.showCard(def.subtitle, def.title)
+  cue('chapter')
   await wait(RM ? 900 : 1700)
   s.hideCard()
   await wait(400)
@@ -265,19 +298,40 @@ function openLog(title: string, icon: string, accent: Accent) {
   S().openWindow({ id: 'log', slot: 'b', title, icon, accent, kind: 'log' })
 }
 
-/** Type a line character-by-character into the bottom log window. */
+/**
+ * Type a line character-by-character into the bottom log window.
+ *
+ * The player can fast-forward: `skipNarration()` (bound to the HUD control and
+ * to Space/Enter) completes the line instantly instead of making the player
+ * wait out every character.
+ */
 async function say(text: string, cls: string, wait: Wait) {
   const hasLog = S().windows.some((w) => w.id === 'log' && !w.closing)
   if (!hasLog) openLog('TRANSMISSION', 'sig', 'cy')
 
   const id = S().pushLog(cls)
+  S().setNarration(true)
   let typed = ''
-  for (const ch of text) {
-    typed += ch
-    S().setLogText(id, typed)
-    if (!RM && ch !== ' ') await wait(5)
+  let skipped = false
+  try {
+    for (const ch of text) {
+      typed += ch
+      S().setLogText(id, typed)
+      if (skipRequested) {
+        skipRequested = false
+        skipped = true
+        break
+      }
+      if (!RM && ch !== ' ') await wait(5)
+    }
+    if (skipped) {
+      typed = text
+      S().setLogText(id, text)
+    }
+    await wait(skipped ? 200 : 140 + text.length * 4)
+  } finally {
+    S().setNarration(false)
   }
-  await wait(140 + text.length * 4)
   S().trimLog(3)
 }
 

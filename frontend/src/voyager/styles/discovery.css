@@ -485,6 +485,19 @@
   width: 1rem;
   height: 1rem;
 }
+.vy-hint span {
+  padding: 0 0.15rem;
+  color: #3f6fa8;
+}
+/* Centred variant used for the single instruction on the dark screen. */
+.vy-hint-center {
+  left: 50%;
+  right: auto;
+  bottom: calc(21vh + env(safe-area-inset-bottom, 0px));
+  translate: -50% 0;
+  white-space: nowrap;
+  color: #a8bcff;
+}
 
 /* primary action */
 .vy-go {

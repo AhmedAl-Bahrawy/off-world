@@ -11,7 +11,7 @@ import { Hud } from './ui/Hud'
 import { ChapterCard } from './ui/ChapterCard'
 import { Windows } from './ui/Windows'
 import { SiteHeader } from './ui/SiteHeader'
-import { startAudio, blip, stopAudio } from './lib/audio'
+import { startAudio, blip, stopAudio, stopAmbience } from './lib/audio'
 import './voyager.css'
 
 /** Voyager is the first Off-World story scene; Kalamith remains the species in the narrative. */
@@ -30,6 +30,11 @@ export default function VoyagerExperience() {
   useEffect(() => {
     starting.current = false
   }, [generation])
+
+  // The soundscape belongs to the mission, not to the title screen.
+  useEffect(() => {
+    if (phase === 'gate') stopAmbience()
+  }, [phase])
 
   const start = () => {
     if (phase !== 'gate' || starting.current) return
@@ -55,7 +60,7 @@ export default function VoyagerExperience() {
       style={{ '--acc': `var(--${accent})` } as CSSProperties}
     >
       <IconDefs />
-      <SpaceBackdrop art="/visuals/Group.svg" />
+      <SpaceBackdrop art="/assets/images/milky-way.jpg" />
       <Starfield2D />
       <SceneCanvas key={'gl' + generation} />
       <SiteHeader phase={phase} onStart={start} onHome={home} />

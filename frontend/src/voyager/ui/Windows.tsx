@@ -22,7 +22,7 @@ import { blip } from '../lib/audio'
 import { RM } from '../lib/motion'
 import { WIN_OPEN, WIN_CLOSE } from '../lib/anim'
 import { Bar } from './primitives'
-import { resetStory } from '../story/script'
+import { resetStory, replayStory } from '../story/script'
 import { Icon } from './Icons'
 import {
   TilesInteraction,
@@ -296,11 +296,33 @@ function UplinkBody() {
   )
 }
 
-/** Final window — replay restarts the whole story. */
+/** Final window — the archive summary, plus replay and return. */
 function EndBody() {
   return (
-    <div className="row">
-      <button onClick={resetStory}>REPLAY TRANSMISSION</button>
+    <div className="end">
+      <p className="end-lead">
+        The archive is closed. Somewhere beyond the heliopause, the reply is still
+        travelling.
+      </p>
+      <ul className="end-list">
+        <li>
+          <span>RECOVERED</span> Voyager 1 · 6 components catalogued
+        </li>
+        <li>
+          <span>RECOVERED</span> Golden Record · 115 images · 55 sounds · 90 minutes
+        </li>
+        <li>
+          <span>LOGGED</span> Mars · Arcadia Planitia · ice &lt; 30 cm · unconfirmed
+        </li>
+      </ul>
+      <div className="row">
+        <button type="button" onClick={replayStory}>
+          REPLAY TRANSMISSION
+        </button>
+        <button type="button" onClick={resetStory}>
+          RETURN TO TITLE
+        </button>
+      </div>
     </div>
   )
 }

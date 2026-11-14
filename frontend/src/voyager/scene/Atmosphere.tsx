@@ -12,25 +12,44 @@ const ATMO_VERT = /* glsl */ `
 const ATMO_FRAG = /* glsl */ `
   varying vec3 n;
   uniform vec3 c;
+  uniform float power;
+  uniform float strength;
   void main() {
-    float i = pow(.74 - dot(n, vec3(0., 0., 1.)), 3.);
-    gl_FragColor = vec4(c * i * 1.8, i);
+    // n points along the view direction at the centre of the disc and is
+    // perpendicular at the limb, so (1 - n.z) is a clean limb mask.
+    float limb = pow(1.0 - clamp(n.z, 0.0, 1.0), power);
+    gl_FragColor = vec4(c * limb * strength, limb * strength);
   }
 `
 
 /**
- * Glowing atmosphere shell rendered on the back side of a sphere, additive
- * over whatever is behind it. Used by both Earth and Kalamith.
+ * A thin atmosphere shell rendered on the back side of a sphere, additively
+ * blended over whatever is behind it. The glow is confined to the limb so it
+ * reads as air rather than as a halo around the planet.
  */
-export function Atmosphere({ color, radius }: { color: string; radius: number }) {
+export function Atmosphere({
+  color,
+  radius,
+  power = 3.4,
+  strength = 0.85,
+}: {
+  color: string
+  radius: number
+  power?: number
+  strength?: number
+}) {
   const uniforms = useMemo(
-    () => ({ c: { value: new THREE.Color(color) } }),
-    [color],
+    () => ({
+      c: { value: new THREE.Color(color) },
+      power: { value: power },
+      strength: { value: strength },
+    }),
+    [color, power, strength],
   )
 
   return (
     <mesh>
-      <sphereGeometry args={[radius, 48, 32]} />
+      <sphereGeometry args={[radius, 64, 48]} />
       <shaderMaterial
         uniforms={uniforms}
         vertexShader={ATMO_VERT}

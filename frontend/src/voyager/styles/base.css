@@ -10,9 +10,9 @@
   overflow: hidden;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: #05070a;
-  color: var(--wh);
-  font: 500 15px/1.45 'DM Sans', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font: 500 15px/1.45 var(--font-sans);
   transition: --acc 1.6s;
 }
 
@@ -21,8 +21,8 @@
   content: '';
   position: fixed;
   inset: 4px;
-  z-index: 10;
-  border: 1px solid #1986ee;
+  z-index: var(--z-overlay);
+  border: 1px solid var(--frame);
   pointer-events: none;
   box-shadow: inset 0 0 0 1px #1986ee30;
 }
@@ -40,7 +40,7 @@
 .space-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: var(--z-backdrop);
   pointer-events: none;
 }
 .space-backdrop-nebula {
@@ -62,6 +62,10 @@
   mix-blend-mode: screen;
   filter: grayscale(0.72) contrast(1.1);
   mask-image: linear-gradient(to bottom, transparent 3%, #000 25%, #000 65%, transparent 94%);
+}
+.space-backdrop-art.is-plain {
+  opacity: 0.34;
+  mix-blend-mode: screen;
 }
 /* The dark layer that makes every screen read as deep space. */
 .space-backdrop-dark {
@@ -89,7 +93,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: var(--z-canvas);
   pointer-events: none;
 }
 
@@ -110,20 +114,22 @@ svg.ic {
   min-height: 2.75rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: var(--s-2);
   padding: 0.8rem 1rem;
   cursor: pointer;
   color: #f3f5f7;
-  background: #111820;
+  background: var(--surface-raised);
   border: 1px solid #556270;
-  border-radius: 3px;
-  font: 600 0.82rem/1.25 'DM Sans', Arial, sans-serif;
+  border-radius: var(--r-sm);
+  font: 600 0.82rem/1.25 var(--font-sans);
   letter-spacing: 0.01em;
   transition:
     border-color var(--t-fast) ease,
     background var(--t-fast) ease,
     transform var(--t-fast) ease,
-    box-shadow var(--t-fast) ease;
+    box-shadow var(--t-fast) ease,
+    color var(--t-fast) ease;
 }
 .kx button:hover {
   border-color: #76baff;
@@ -135,6 +141,13 @@ svg.ic {
 .kx button:focus-visible {
   outline: 2px solid #80c2ff;
   outline-offset: 3px;
+}
+.kx button[disabled],
+.kx button[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.4);
 }
 
 /* Accent utilities — map an accent name to the shared --c variable so
@@ -156,6 +169,13 @@ svg.ic {
 }
 .acc-wh {
   --c: var(--wh);
+}
+
+/* Visible keyboard focus everywhere, including inside the full-screen scene. */
+.vy button:focus-visible,
+.vy a:focus-visible {
+  outline: 2px solid #8fb8ff;
+  outline-offset: 3px;
 }
 
 /* Reduced motion: soften the global chrome (component files add their own). */

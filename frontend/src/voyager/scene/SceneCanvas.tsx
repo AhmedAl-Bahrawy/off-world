@@ -1,4 +1,5 @@
 import { Canvas } from '@react-three/fiber'
+import { useVoyager } from '../state/store'
 import { CameraRig } from './CameraRig'
 import { Starfield3D } from './Starfield3D'
 import { Earth } from './Earth'
@@ -20,11 +21,14 @@ export function SceneCanvas() {
       dpr={[1, 2]}
       gl={{ alpha: true, antialias: true }}
       camera={{ fov: 50, near: 0.1, far: 600, position: [0, 0, 16] }}
+      onCreated={({ gl }) => {
+        // Report the first successful frame so the welcome screen can show
+        // that the array is live instead of leaving the player guessing.
+        gl.domElement.dataset.ready = '1'
+        useVoyager.getState().setReady(true)
+      }}
     >
-      {/* Lighting: cold blue ambient + a strong key light from the left. */}
-      <ambientLight intensity={0.9} color="#2a3a66" />
-      <directionalLight intensity={1.25} position={[-8, 6, 10]} />
-
+      <Lighting />
       <CameraRig />
       <Starfield3D />
       <Earth />
@@ -33,5 +37,21 @@ export function SceneCanvas() {
       <Beam />
       <PulseRings />
     </Canvas>
+  )
+}
+
+/**
+ * A three-light setup: a cold key from the sun's direction (the Earth shader
+ * uses the same vector), a soft fill so the night side is not pure black, and
+ * a cool rim that separates silhouettes from the starfield.
+ */
+function Lighting() {
+  return (
+    <>
+      <ambientLight intensity={0.42} color="#24365f" />
+      <directionalLight intensity={1.5} position={[-11, 5.6, 15.8]} />
+      <directionalLight intensity={0.55} position={[9, -4, -8]} color="#2f4fa8" />
+      <directionalLight intensity={0.4} position={[0, 8, -14]} color="#4fd6ff" />
+    </>
   )
 }

@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useLoader } from '@react-three/fiber'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import gsap from 'gsap'
-import { MARS_MAP_URL } from './assets'
+import { MARS_MAP_URL, VOYAGER_MODEL } from './assets'
 import { PARTS, type Ctl, type PartId, type SceneApi } from './parts'
 import { RM } from '../../../lib/motion'
 import { D } from '../../../lib/anim'
@@ -11,6 +13,27 @@ import { D } from '../../../lib/anim'
 const MARS_Z = -140
 const MARS_R = 11
 const Y = new THREE.Vector3(0, 1, 0)
+
+/**
+ * Model-space constants measured off the NASA glTF:
+ * the bus centre is the natural origin, and the craft is rotated a quarter
+ * turn so the RTG boom runs to screen-right and the science boom to
+ * screen-left — a far better silhouette than head-on.
+ */
+const BUS_CENTRE = new THREE.Vector3(0, 0.41, 0)
+const MODEL_SCALE = 1
+const MODEL_TURN = Math.PI / 2
+
+/** Anchor positions in the scene's own space (scale + quarter turn applied). */
+const LOCAL_ANCHORS: Record<PartId, THREE.Vector3> = Object.fromEntries(
+  PARTS.map((p) => [
+    p.id,
+    new THREE.Vector3(...p.anchor)
+      .sub(BUS_CENTRE)
+      .applyAxisAngle(Y, MODEL_TURN)
+      .multiplyScalar(MODEL_SCALE),
+  ]),
+) as Record<PartId, THREE.Vector3>
 
 /* ------------------------------------------------------------------ */
 /* Procedural placeholders (canvas, never SVG)                          */
@@ -30,7 +53,7 @@ function makeMarsTexture() {
   g.fillStyle = grad
   g.fillRect(0, 0, 1024, 512)
   let s = 7
-  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
+  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2144967296
   for (let i = 0; i < 900; i++) {
     const dark = rnd() > 0.45
     g.fillStyle = dark ? `rgba(60,22,12,${0.05 + rnd() * 0.12})` : `rgba(240,170,120,${0.04 + rnd() * 0.1})`
@@ -46,7 +69,7 @@ function makeMarsTexture() {
 function makeStars() {
   const pts: number[] = []
   let s = 11
-  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
+  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2144967296
   for (let i = 0; i < 2600; i++) {
     const r = 70 + rnd() * 330
     const a = rnd() * Math.PI * 2
@@ -54,28 +77,6 @@ function makeStars() {
     pts.push(r * Math.sin(b) * Math.cos(a), r * Math.sin(b) * Math.sin(a), r * Math.cos(b))
   }
   return new Float32Array(pts)
-}
-
-/* ------------------------------------------------------------------ */
-/* Small geometry helper: a cylinder between two points                 */
-/* ------------------------------------------------------------------ */
-
-function Bar({ a, b, r, mat }: { a: [number, number, number]; b: [number, number, number]; r: number; mat: THREE.Material }) {
-  const { pos, quat, len } = useMemo(() => {
-    const va = new THREE.Vector3(...a)
-    const vb = new THREE.Vector3(...b)
-    const dir = vb.clone().sub(va)
-    return {
-      pos: va.clone().add(vb).multiplyScalar(0.5),
-      quat: new THREE.Quaternion().setFromUnitVectors(Y, dir.clone().normalize()),
-      len: dir.length(),
-    }
-  }, [a, b])
-  return (
-    <mesh position={pos} quaternion={quat} material={mat}>
-      <cylinderGeometry args={[r, r, len, 8]} />
-    </mesh>
-  )
 }
 
 /* ------------------------------------------------------------------ */
@@ -88,24 +89,18 @@ interface WorldProps {
   onPick: (id: PartId) => void
 }
 
-const rimPoint = (deg: number): [number, number, number] => [
-  Math.cos((deg * Math.PI) / 180) * 1.88,
-  1.03,
-  Math.sin((deg * Math.PI) / 180) * 1.88,
-]
-const FEED: [number, number, number] = [0, 2.1, 0]
-
 function World({ ctl, apiRef, onPick }: WorldProps) {
   const get = useThree((s) => s.get)
   const gl = useThree((s) => s.gl)
 
   const voy = useRef<THREE.Group>(null!)
+  const modelTilt = useRef<THREE.Group>(null!)
   const marsG = useRef<THREE.Group>(null!)
-  const recG = useRef<THREE.Group>(null!)
   const key = useRef<THREE.DirectionalLight>(null!)
   const amb = useRef<THREE.AmbientLight>(null!)
   const scan = useRef<THREE.Group>(null!)
   const marsMat = useRef<THREE.MeshStandardMaterial>(null!)
+  const locator = useRef<THREE.Mesh>(null!)
   const dragging = useRef(false)
 
   const rot = useRef({ x: 0.2, y: -0.6 }).current
@@ -113,38 +108,34 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
   const cam = useRef({ px: 0, py: 1.5, pz: 11, lx: 0, ly: 0.6, lz: 0, fov: 50 }).current
   const pointer = useRef({ x: 0, y: 0 }).current
   const tmp = useMemo(() => new THREE.Vector3(), [])
+  const tmp2 = useMemo(() => new THREE.Vector3(), [])
 
   const stars = useMemo(() => makeStars(), [])
   const marsTex = useMemo(() => makeMarsTexture(), [])
 
-  /* One material per part so a part can glow as a whole. */
-  const mats = useMemo(() => {
-    const make = (color: string, metalness: number, roughness: number) =>
-      new THREE.MeshStandardMaterial({
-        color,
-        metalness,
-        roughness,
-        side: THREE.DoubleSide,
-        emissive: new THREE.Color('#3fb6ff'),
-        emissiveIntensity: 0,
-      })
-    return {
-      antenna: make('#dfe3e8', 0.7, 0.35),
-      platform: make('#aeb7c2', 0.6, 0.4),
-      bus: make('#b8903f', 0.85, 0.3),
-      rtg: make('#7d8794', 0.6, 0.45),
-      boom: make('#c8cdd4', 0.6, 0.4),
-      record: make('#e6bd4a', 0.95, 0.22),
-    } as Record<PartId, THREE.MeshStandardMaterial>
-  }, [])
-  const dark = useMemo(() => new THREE.MeshStandardMaterial({ color: '#20242b', metalness: 0.4, roughness: 0.6 }), [])
+  /* The real spacecraft. */
+  const gltf = useLoader(GLTFLoader, VOYAGER_MODEL)
+  const model = useMemo(() => {
+    const scene = gltf.scene
+    scene.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (mesh.isMesh) {
+        mesh.castShadow = false
+        mesh.receiveShadow = false
+      }
+    })
+    return scene
+  }, [gltf])
 
   /* Camera framing that survives portrait screens. */
   const fit = () => {
     const a = Math.min(1, (get().camera as THREE.PerspectiveCamera).aspect / 1.4)
     return 1 + (1 / Math.pow(a, 0.75) - 1)
   }
-  const overviewCam = () => ({ px: 0, py: 1.5, pz: 10.8 * fit(), lx: 0, ly: 0.6, lz: 0 })
+  const overviewCam = () => ({ px: 0, py: 1.2, pz: 9.2 * fit(), lx: 0, ly: 0.5, lz: 0 })
+
+  /** Local-space position of a part (the model's own frame, before the spin). */
+  const localOf = (id: PartId) => LOCAL_ANCHORS[id]
 
   /* Optional external Mars map; the canvas texture stays if it fails. */
   useEffect(() => {
@@ -157,6 +148,7 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
       (t) => {
         if (dead || !marsMat.current) return
         t.colorSpace = THREE.SRGBColorSpace
+        t.anisotropy = 4
         marsMat.current.map = t
         marsMat.current.needsUpdate = true
       },
@@ -207,34 +199,78 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
     }
   }, [gl, ctl, rot, marsRot, pointer])
 
+  /* Hover / click resolution against the real model: the nearest part
+     anchor wins, which works even though the glTF is a single merged mesh. */
+  const resolvePart = (e: { point: THREE.Vector3 }): PartId | null => {
+    const local = modelTilt.current.worldToLocal(e.point.clone())
+    let best: PartId | null = null
+    let bestDist = Infinity
+    for (const part of PARTS) {
+      const d = local.distanceTo(tmp2.set(...part.anchor))
+      if (d < bestDist) {
+        bestDist = d
+        best = part.id
+      }
+    }
+    // Reject hits that are nowhere near any part (e.g. empty space on the
+    // magnetometer lattice far from every anchor).
+    return bestDist < 2.2 ? best : null
+  }
+
+  const hoverHandlers = useMemo(
+    () => ({
+      onPointerMove: (e: { point: THREE.Vector3; stopPropagation: () => void }) => {
+        e.stopPropagation()
+        if (ctl.mode !== 'explore') return
+        const id = resolvePart(e)
+        ctl.hover = id
+        document.body.style.cursor = id ? 'pointer' : ''
+      },
+      onPointerOut: () => {
+        ctl.hover = null
+        document.body.style.cursor = ''
+      },
+      onClick: (e: { point: THREE.Vector3; stopPropagation: () => void; delta: number }) => {
+        e.stopPropagation()
+        if (e.delta > 6 || ctl.mode !== 'explore') return
+        const id = resolvePart(e)
+        if (id) onPick(id)
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ctl, onPick],
+  )
+
   /* Imperative API used by the HTML overlay. */
   useEffect(() => {
     apiRef.current = {
       focus(id) {
         const part = PARTS.find((p) => p.id === id)!
-        const [ax, ay, az] = part.anchor
-        const r = Math.hypot(ax, az)
+        const local = localOf(id)
+        const r = Math.hypot(local.x, local.z)
         ctl.focus = id
         gsap.killTweensOf([rot, cam, ctl])
-        let target = r > 0.01 ? -Math.atan2(ax, az) : rot.y
-        target += Math.PI * 2 * Math.round((rot.y - target) / (Math.PI * 2))
+
+        // Spin the craft so the part faces the camera, taking the short way.
+        if (r > 0.01) {
+          const azimuth = Math.atan2(local.x, local.z)
+          let target = -azimuth
+          target += Math.PI * 2 * Math.round((rot.y - target) / (Math.PI * 2))
+          gsap.to(rot, { y: target, x: 0, duration: 1.15 * D, ease: 'power3.inOut' })
+        } else {
+          gsap.to(rot, { x: 0, duration: 1.15 * D, ease: 'power3.inOut' })
+        }
+
         const dur = 1.15 * D
-        gsap.to(rot, { y: target, x: 0, duration: dur, ease: 'power3.inOut' })
         gsap.to(cam, {
           px: 0,
-          py: ay + 0.5,
+          py: local.y + part.pitch,
           pz: r + part.dist * fit(),
           lx: 0,
-          ly: ay,
+          ly: local.y,
           lz: r,
           duration: dur,
           ease: 'power3.inOut',
-        })
-        gsap.to(ctl, {
-          recordOut: id === 'record' ? 1 : 0,
-          duration: id === 'record' ? 1.2 * D : 0.5 * D,
-          delay: id === 'record' ? 0.8 * D : 0,
-          ease: id === 'record' ? 'back.out(1.5)' : 'power2.out',
         })
       },
       overview() {
@@ -242,7 +278,6 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
         gsap.killTweensOf([rot, cam, ctl])
         gsap.to(rot, { x: 0.2, duration: 0.9 * D, ease: 'power3.inOut' })
         gsap.to(cam, { ...overviewCam(), duration: 1 * D, ease: 'power3.inOut' })
-        gsap.to(ctl, { recordOut: 0, duration: 0.6 * D })
       },
       toMars(onArrive) {
         ctl.focus = null
@@ -258,7 +293,6 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
           },
         })
         const T = 5 * D || 0.01
-        tl.to(ctl, { recordOut: 0, duration: 0.4 * D }, 0)
         tl.to(rot, { x: 0.1, y: rot.y + Math.PI * 0.6, duration: T, ease: 'power2.inOut' }, 0)
         tl.to(voy.current.position, { z: MARS_Z + 22, duration: T, ease: 'power2.inOut' }, 0.2 * D)
         tl.to(voy.current.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 1.2 * D, ease: 'power2.in' }, T - 1 * D)
@@ -287,23 +321,20 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
     const p = ctl.power
 
     /* Power-up lighting: a dark silhouette that wakes up. */
-    key.current.intensity = 0.25 + 2.6 * p
-    amb.current.intensity = 0.2 + 0.75 * p
+    key.current.intensity = 0.18 + 2.4 * p
+    amb.current.intensity = 0.16 + 0.85 * p
     const sweeping = m === 'dark' && p > 0.01 && p < 0.995
     scan.current.visible = sweeping
     if (sweeping) scan.current.position.x = -5.5 + 11 * p
 
-    /* Idle spin. */
+    /* Idle drift: a slow oscillation rather than a full spin, so the craft
+       keeps a readable silhouette and the boom never sweeps the camera. */
     if ((m === 'dark' || m === 'explore') && !ctl.focus && !dragging.current && !RM) {
-      rot.y += dt * (m === 'dark' ? 0.05 : 0.14)
+      rot.y += (Math.sin(state.clock.elapsedTime * 0.17) * 0.34 - rot.y) * dt * 0.9
     }
     voy.current.rotation.set(rot.x, rot.y, 0)
     marsG.current.rotation.set(marsRot.x, marsRot.y, 0)
     marsG.current.visible = m === 'transit' || m === 'mars'
-
-    /* Record sliding out of its cover. */
-    recG.current.position.z = 0.95 + ctl.recordOut * 0.95
-    recG.current.rotation.z += dt * (0.4 + ctl.recordOut * 2.2)
 
     /* Camera. */
     const par = m === 'explore' && !ctl.focus ? 1 : m === 'mars' ? 0.5 : 0.2
@@ -315,28 +346,32 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
     }
     camera.updateMatrixWorld()
 
-    /* Part glow. */
-    const k = Math.min(1, dt * 8)
-    for (const part of PARTS) {
-      const mat = mats[part.id]
-      const target = ctl.focus === part.id ? 0.85 : ctl.hover === part.id ? 0.4 : 0
-      mat.emissiveIntensity += (target - mat.emissiveIntensity) * k
+    /* Locator: a ring that marks the focused part on the model itself. */
+    voy.current.updateMatrixWorld()
+    const active = ctl.focus ?? ctl.hover
+    if (active) {
+      const local = LOCAL_ANCHORS[active]
+      tmp.copy(local).applyEuler(voy.current.rotation)
+      locator.current.position.set(tmp.x, tmp.y, tmp.z)
+      locator.current.lookAt(camera.position)
+      const pulse = 0.85 + Math.sin(state.clock.elapsedTime * 4) * 0.15
+      locator.current.scale.setScalar(pulse * (ctl.focus ? 1 : 0.7))
+      locator.current.visible = true
+    } else {
+      locator.current.visible = false
     }
 
     /* Project hotspots to the DOM overlay. */
-    voy.current.updateMatrixWorld()
     const { width, height } = state.size
     for (const part of PARTS) {
       const el = ctl.hotEls[part.id]
       if (!el) continue
-      tmp.set(...part.anchor).applyMatrix4(voy.current.matrixWorld)
-      const wz = tmp.z
+      tmp.copy(LOCAL_ANCHORS[part.id]).applyMatrix4(voy.current.matrixWorld)
       tmp.project(camera)
       const x = (tmp.x * 0.5 + 0.5) * width
       const y = (-tmp.y * 0.5 + 0.5) * height
       el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-50%)`
       let o = m === 'explore' && !ctl.focus ? 1 : 0
-      if (wz < -1.6) o *= 0.2
       if (tmp.z > 1) o = 0
       el.style.opacity = o.toFixed(2)
       el.style.pointerEvents = o > 0.5 ? 'auto' : 'none'
@@ -359,44 +394,12 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
     }
   })
 
-  /* Part event handlers, built once per part (they close over stable refs). */
-  const hover = useMemo(() => {
-    const cache = new Map<PartId, {
-      onPointerOver: (e: { stopPropagation: () => void }) => void
-      onPointerOut: () => void
-      onClick: (e: { stopPropagation: () => void; delta: number }) => void
-    }>()
-    return (id: PartId) => {
-      let handlers = cache.get(id)
-      if (!handlers) {
-        handlers = {
-          onPointerOver: (e) => {
-            e.stopPropagation()
-            if (ctl.mode !== 'explore') return
-            ctl.hover = id
-            document.body.style.cursor = 'pointer'
-          },
-          onPointerOut: () => {
-            if (ctl.hover === id) ctl.hover = null
-            document.body.style.cursor = ''
-          },
-          onClick: (e) => {
-            e.stopPropagation()
-            if (e.delta > 6 || ctl.mode !== 'explore') return
-            onPick(id)
-          },
-        }
-        cache.set(id, handlers)
-      }
-      return handlers
-    }
-  }, [ctl, onPick])
-
   return (
     <>
-      <ambientLight ref={amb} color="#6f86c9" intensity={0.2} />
-      <directionalLight ref={key} position={[-7, 6, 9]} intensity={0.25} />
+      <ambientLight ref={amb} color="#6f86c9" intensity={0.16} />
+      <directionalLight ref={key} position={[-7, 6, 9]} intensity={0.18} />
       <directionalLight position={[6, 3, -9]} intensity={1.1} color="#3b5fd0" />
+      <directionalLight position={[0, -8, 4]} intensity={0.35} color="#8fb8ff" />
 
       {/* Stars */}
       <points>
@@ -420,81 +423,31 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
 
       {/* ---------------- Voyager 1 ---------------- */}
       <group ref={voy}>
-        <group>
-          {/* Bus (decagon) */}
-          <mesh position={[0, 0.15, 0]} material={mats.bus} {...hover('bus')}>
-            <cylinderGeometry args={[0.85, 0.85, 0.5, 10]} />
-          </mesh>
-          <mesh position={[0, -0.12, 0]} material={dark}>
-            <cylinderGeometry args={[0.7, 0.8, 0.12, 10]} />
-          </mesh>
-
-          {/* High-gain dish */}
-          <group {...hover('antenna')}>
-            <mesh position={[0, 4.1, 0]} material={mats.antenna}>
-              <sphereGeometry args={[3.6, 56, 14, 0, Math.PI * 2, Math.PI - 0.55, 0.55]} />
-            </mesh>
-            <mesh position={[0, 0.45, 0]} material={mats.antenna}>
-              <cylinderGeometry args={[0.2, 0.3, 0.3, 10]} />
-            </mesh>
-            {[90, 210, 330].map((d) => (
-              <Bar key={d} a={rimPoint(d)} b={FEED} r={0.025} mat={mats.antenna} />
-            ))}
-            <mesh position={FEED} material={mats.antenna}>
-              <sphereGeometry args={[0.2, 16, 12]} />
-            </mesh>
-          </group>
-
-          {/* RTG boom */}
-          <group {...hover('rtg')}>
-            <Bar a={[0.8, -0.1, 0]} b={[3.95, -0.1, 0]} r={0.04} mat={mats.rtg} />
-            {[2.0, 2.9, 3.75].map((x) => (
-              <mesh key={x} position={[x, -0.1, 0]} rotation={[0, 0, Math.PI / 2]} material={mats.rtg}>
-                <cylinderGeometry args={[0.2, 0.2, 0.7, 16]} />
-              </mesh>
-            ))}
-          </group>
-
-          {/* Science boom + scan platform */}
-          <group {...hover('platform')}>
-            <Bar a={[-0.8, -0.05, 0]} b={[-2.3, -0.05, 0]} r={0.035} mat={mats.platform} />
-            <mesh position={[-2.6, 0, 0]} material={mats.platform}>
-              <boxGeometry args={[0.7, 0.5, 0.7]} />
-            </mesh>
-            <mesh position={[-2.6, 0.05, 0.55]} rotation={[Math.PI / 2, 0, 0]} material={dark}>
-              <cylinderGeometry args={[0.15, 0.18, 0.5, 14]} />
-            </mesh>
-            <mesh position={[-2.6, -0.15, -0.45]} rotation={[Math.PI / 2, 0, 0]} material={dark}>
-              <cylinderGeometry args={[0.1, 0.1, 0.3, 12]} />
-            </mesh>
-          </group>
-
-          {/* Magnetometer boom */}
-          <group {...hover('boom')}>
-            <Bar a={[-0.3, -0.1, -0.8]} b={[-1.8, -0.2, -4.4]} r={0.03} mat={mats.boom} />
-            <mesh position={[-1.8, -0.2, -4.45]} material={mats.boom}>
-              <boxGeometry args={[0.18, 0.18, 0.18]} />
-            </mesh>
-          </group>
-
-          {/* Golden Record + cover */}
-          <group {...hover('record')}>
-            <mesh position={[0, 0.15, 0.9]} rotation={[Math.PI / 2, 0, 0]} material={mats.antenna}>
-              <cylinderGeometry args={[0.64, 0.64, 0.03, 40]} />
-            </mesh>
-            <group ref={recG} position={[0, 0.15, 0.95]}>
-              <mesh rotation={[Math.PI / 2, 0, 0]} material={mats.record}>
-                <cylinderGeometry args={[0.56, 0.56, 0.035, 48]} />
-              </mesh>
-              <mesh position={[0, 0, 0.02]} rotation={[Math.PI / 2, 0, 0]} material={dark}>
-                <cylinderGeometry args={[0.1, 0.1, 0.02, 20]} />
-              </mesh>
-              <mesh position={[0.3, 0, 0.02]} material={dark}>
-                <ringGeometry args={[0.02, 0.05, 16]} />
-              </mesh>
-            </group>
-          </group>
+        <group
+          ref={modelTilt}
+          scale={MODEL_SCALE}
+          rotation={[0, MODEL_TURN, 0]}
+          position={[
+            -MODEL_SCALE * BUS_CENTRE.x,
+            -MODEL_SCALE * BUS_CENTRE.y,
+            -MODEL_SCALE * BUS_CENTRE.z,
+          ]}
+        >
+          <primitive object={model} {...hoverHandlers} />
         </group>
+
+        {/* Locator ring marking the focused / hovered component */}
+        <mesh ref={locator} visible={false}>
+          <ringGeometry args={[0.22, 0.3, 28]} />
+          <meshBasicMaterial
+            color="#ffd77a"
+            transparent
+            opacity={0.95}
+            side={THREE.DoubleSide}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
       </group>
 
       {/* ---------------- Mars ---------------- */}
@@ -520,6 +473,16 @@ interface SceneProps extends WorldProps {
   onMiss: () => void
 }
 
+/** Shown while the 727 KB model is still on the wire. */
+function ModelPending() {
+  return (
+    <mesh>
+      <icosahedronGeometry args={[0.6, 1]} />
+      <meshBasicMaterial color="#1a2a55" wireframe transparent opacity={0.6} />
+    </mesh>
+  )
+}
+
 export function VoyagerScene({ ctl, apiRef, onPick, onMiss }: SceneProps) {
   return (
     <Canvas
@@ -529,7 +492,9 @@ export function VoyagerScene({ ctl, apiRef, onPick, onMiss }: SceneProps) {
       camera={{ fov: 50, near: 0.1, far: 900, position: [0, 1.5, 11] }}
       onPointerMissed={onMiss}
     >
-      <World ctl={ctl} apiRef={apiRef} onPick={onPick} />
+      <Suspense fallback={<ModelPending />}>
+        <World ctl={ctl} apiRef={apiRef} onPick={onPick} />
+      </Suspense>
     </Canvas>
   )
 }

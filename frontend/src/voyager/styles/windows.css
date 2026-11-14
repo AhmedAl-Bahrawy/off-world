@@ -70,12 +70,12 @@
 
 .s-l {
   left: clamp(1rem, 4vw, 3rem);
-  top: 7.4rem;
+  top: 8.4rem;
   width: min(300px, 42vw);
 }
 .s-r {
   right: clamp(1rem, 4vw, 3rem);
-  top: 7.4rem;
+  top: 8.4rem;
   width: min(350px, 46vw);
 }
 .s-c {
@@ -105,7 +105,7 @@
 /* Comms window overrides */
 .w-chat {
   width: min(480px, 50vw);
-  top: 7.2rem;
+  top: 8.4rem;
 }
 .w-chat .wb {
   max-height: 64vh;
@@ -193,6 +193,48 @@
   max-height: none;
   padding: 0;
   overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* Final archive card                                                  */
+/* ------------------------------------------------------------------ */
+
+.w-end .wb {
+  max-height: none;
+}
+.end {
+  text-align: left;
+}
+.end-lead {
+  margin: 0 0 1rem;
+  max-width: var(--measure);
+  color: var(--text-soft);
+  font: 400 var(--fs-body)/1.55 var(--font-sans);
+}
+.end-list {
+  margin: 0 0 1.4rem;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-faint);
+}
+.end-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line-faint);
+  color: var(--text-dim);
+  font: 500 var(--fs-body-sm)/1.4 var(--font-sans);
+}
+.end-list span {
+  flex: none;
+  width: 6.2rem;
+  color: var(--acc);
+  font: 600 var(--fs-micro)/1.4 var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+}
+.end .row {
+  justify-content: flex-start;
 }
 
 /* ------------------------------------------------------------------ */

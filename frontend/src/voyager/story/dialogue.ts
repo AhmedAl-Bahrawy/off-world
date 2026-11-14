@@ -10,6 +10,8 @@ export interface ChapterDef {
   subtitle: string
   accent: Accent
   scene: SceneName
+  /** Index in the story's progress rail (0-based). */
+  stage: number
 }
 
 export const CHAPTERS = {
@@ -18,32 +20,65 @@ export const CHAPTERS = {
     subtitle: 'EARTH, 2231',
     accent: 'rd',
     scene: 'collapse',
+    stage: 0,
   },
   signal: {
     title: 'THE LAST SIGNAL',
     subtitle: 'TWO BLOCS, ONE KEY',
     accent: 'or',
     scene: 'signal',
+    stage: 1,
   },
   voyage: {
     title: 'THE VOYAGE',
     subtitle: 'PROXIMA CENTAURI B',
     accent: 'vi',
     scene: 'voyage',
+    stage: 2,
   },
   orbit: {
     title: 'THE SILENT EARTH',
     subtitle: 'VOYAGER ARRIVAL',
     accent: 'vi',
     scene: 'orbit',
+    stage: 3,
   },
   remnants: {
     title: 'THE LAST REMNANTS',
     subtitle: 'WHAT WAS LEFT',
     accent: 'cy',
     scene: 'rem',
+    stage: 4,
+  },
+  discovery: {
+    title: 'VOYAGER 1',
+    subtitle: 'OBJECT RECOVERY',
+    accent: 'vi',
+    scene: 'discovery',
+    stage: 5,
+  },
+  mars: {
+    title: 'MARS',
+    subtitle: 'ARCADIA PLANITIA',
+    accent: 'vi',
+    scene: 'mars',
+    stage: 6,
   },
 } satisfies Record<string, ChapterDef>
+
+/**
+ * The ordered list of story segments. Drives the HUD progress rail so the
+ * player always knows where they are in the transmission.
+ */
+export const STAGES = [
+  'COLLAPSE',
+  'SIGNAL',
+  'VOYAGE',
+  'SILENT EARTH',
+  'REMNANTS',
+  'VOYAGER 1',
+  'MARS',
+] as const
 
 /* ---- Chapter 1 — The Collapse ------------------------------------ */
 

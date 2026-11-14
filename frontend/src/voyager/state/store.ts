@@ -74,10 +74,19 @@ const initial = {
   phase: 'gate' as 'gate' | 'playing',
   scene: 'collapse' as SceneName,
   chapter: '',
+  /**
+   * Index of the current story segment (0-6). Drives the HUD progress rail so
+   * the player always knows how far through the transmission they are.
+   */
+  stage: 0,
   year: 2231,
   status: 'LINK ONLINE',
   accent: 'cy' as Accent,
   hudVisible: false,
+  /** True while the story is typing a narration line (enables the skip cue). */
+  narration: false,
+  /** True once the 3D scene has finished its first render. */
+  ready: false,
   card: null as CardState | null,
   windows: [] as WinState[],
   log: [] as LogLine[],
@@ -93,8 +102,11 @@ interface State extends Snapshot {
   startGame: () => void
   setScene: (scene: SceneName) => void
   setChapter: (chapter: string) => void
+  setStage: (stage: number) => void
   setYear: (year: number) => void
   setAccent: (accent: Accent) => void
+  setReady: (ready: boolean) => void
+  setNarration: (narration: boolean) => void
   showCard: (subtitle: string, title: string) => void
   hideCard: () => void
   openWindow: (win: Omit<WinState, 'closing'>) => void
@@ -119,8 +131,11 @@ export const useVoyager = create<State>()((set) => ({
   startGame: () => set({ phase: 'playing', hudVisible: true }),
   setScene: (scene) => set({ scene }),
   setChapter: (chapter) => set({ chapter }),
+  setStage: (stage) => set({ stage }),
   setYear: (year) => set({ year }),
   setAccent: (accent) => set({ accent }),
+  setReady: (ready) => set({ ready }),
+  setNarration: (narration) => set({ narration }),
   showCard: (subtitle, title) =>
     set({ card: { key: ++uid, subtitle, title, on: true } }),
   hideCard: () =>

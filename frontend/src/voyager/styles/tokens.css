@@ -1,6 +1,7 @@
 /* ====================================================================
    Off-World design tokens — the single source of truth.
-   One palette, one motion scale. Nothing here is overridden later.
+   One palette, one type scale, one motion scale, one layer order.
+   Nothing here is overridden later; component styles consume these.
    ==================================================================== */
 
 @property --acc {
@@ -11,19 +12,103 @@
 
 :root {
   color-scheme: dark;
+
+  /* ---- surfaces -------------------------------------------------- */
   --bg: #05070a;
-  /* Accents — names match hues: cy/bl/vi cool, or amber, rd red. */
+  --bg-deep: #010409;
+  --surface: #070b10e8;
+  --surface-solid: #0b1118;
+  --surface-raised: #111820;
+  --surface-glass: #0d1536dd;
+  --scrim: #010409bf;
+
+  /* ---- text ------------------------------------------------------ */
+  --text: #f5f6f7;
+  --text-soft: #d3d8de;
+  --text-dim: #aab3be;
+  --text-faint: #89919b;
+  --text-on-accent: #090b0e;
+
+  /* ---- accents (hue-named) --------------------------------------- */
   --cy: #48a8ff;
   --bl: #67a5ff;
   --or: #f5b86a;
   --rd: #f07b62;
   --vi: #b28cff;
   --wh: #f5f6f7;
+  --gold: #f0c35a;
+  --green: #7dffb5;
+
+  /* The live accent, driven by the story through --acc on .kx. */
   --acc: #48a8ff;
-  /* Motion tokens: the shared duration/easing scale (snappy by design). */
+  --acc-soft: color-mix(in srgb, var(--acc) 22%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 45%, transparent);
+
+  /* ---- lines & borders ------------------------------------------- */
+  --line: #ffffff28;
+  --line-strong: #ffffff45;
+  --line-faint: #ffffff14;
+  --frame: #1986ee;
+
+  /* ---- typography ------------------------------------------------ */
+  --font-sans: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+  --font-display: 'Space Grotesk', 'DM Sans', Arial, sans-serif;
+  --font-mono: 'Share Tech Mono', 'DM Sans', monospace;
+  --font-stamp: 'Orbitron', 'Space Grotesk', sans-serif;
+
+  /* Type scale — 1.200 minor third, clamped for small screens. */
+  --fs-micro: 0.58rem;
+  --fs-label: 0.68rem;
+  --fs-body-sm: 0.8rem;
+  --fs-body: 0.94rem;
+  --fs-lead: 1.05rem;
+  --fs-title-sm: 1.1rem;
+  --fs-title: clamp(1.6rem, 3.4vw, 2.4rem);
+  --fs-display: clamp(2.6rem, 9vw, 7rem);
+
+  --tracking-label: 0.14em;
+  --tracking-wide: 0.22em;
+  --tracking-display: 0.06em;
+  --leading-tight: 1.15;
+  --leading-body: 1.5;
+  --measure: 62ch;
+
+  /* ---- spacing (4px base) ---------------------------------------- */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4.5rem;
+
+  /* ---- radii ----------------------------------------------------- */
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 12px;
+  --r-pill: 99px;
+
+  /* ---- motion ---------------------------------------------------- */
   --t-fast: 150ms;
   --t-med: 240ms;
   --t-slow: 420ms;
+  --t-scene: 2400ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- layers ---------------------------------------------------- */
+  --z-backdrop: 0;
+  --z-canvas: 1;
+  --z-hud: 3;
+  --z-windows: 4;
+  --z-chapter: 5;
+  --z-gate: 8;
+  --z-frame: 9;
+  --z-overlay: 10;
+  --z-scene: 30;
+  --z-header: 40;
+
   transition: --acc 1.6s;
 }

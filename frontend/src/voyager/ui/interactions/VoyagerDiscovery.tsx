@@ -183,10 +183,9 @@ export function VoyagerDiscovery() {
 
   return (
     <div className="vy" ref={root} data-mode={mode}>
-      {/* Shared deep-space backdrop; the async sky image layers inside it */}
-      <SpaceBackdrop art="/visuals/Group2.svg" dim>
-        <Slot src={IMAGES.bgSky} label="BG · SKY" className="vy-bg-sky" />
-      </SpaceBackdrop>
+      {/* Shared deep-space backdrop. The Milky Way is drawn once, by the
+          backdrop itself, so it never doubles up with the reference frames. */}
+      <SpaceBackdrop art="/assets/images/milky-way.jpg" dim />
 
       <VoyagerScene ctl={ctl} apiRef={apiRef} onPick={pick} onMiss={onMiss} />
 
@@ -244,6 +243,13 @@ export function VoyagerDiscovery() {
             <Ico n="zap" />
             <b>HOLD</b>
           </button>
+        )}
+
+        {/* What to do next, always on screen. */}
+        {mode === 'dark' && (
+          <p className="vy-hint vy-hint-center">
+            <Ico n="zap" /> HOLD TO POWER THE OBJECT
+          </p>
         )}
 
         {/* 2 · Explore */}
@@ -309,7 +315,7 @@ export function VoyagerDiscovery() {
             </nav>
 
             <p className="vy-hint">
-              <Ico n="move" /> DRAG
+              <Ico n="move" /> DRAG TO ORBIT <span>·</span> SELECT A COMPONENT
             </p>
 
             {allSeen && !active && (
