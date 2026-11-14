@@ -359,7 +359,7 @@
     linear-gradient(90deg, #211529 1px, transparent 1px);
   background-size: 16px 16px;
   clip-path: inset(0 100% 0 0);
-  animation: marsPixelSweep 0.9s steps(8, end) both;
+  animation: marsPixelSweep 0.5s steps(5, end) both;
 }
 .mars-shell[data-zone="pathfinder"] {
   --mars-amber: #ffd47e;
@@ -369,7 +369,7 @@
   --mars-mint: #b6e5ff;
 }
 .mars-touch {
-  display: none;
+  display: flex;
   position: absolute;
   z-index: 4;
   bottom: 66px;
@@ -393,12 +393,6 @@
   color: var(--mars-amber);
   border-color: var(--mars-amber);
   font-size: 10px;
-}
-.mars-shell:has(.mars-touch) .mars-touch {
-  display: flex;
-}
-.mars-shell:has(.mars-touch) .mars-panel-playing {
-  bottom: 130px;
 }
 .mars-shell button:focus-visible {
   outline: 2px solid #fff;
@@ -489,9 +483,6 @@
   }
   .mars-touch {
     bottom: 56px;
-  }
-  .mars-shell:has(.mars-touch) .mars-panel-playing {
-    bottom: 117px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1057,5 +1048,145 @@
   .mars-archive-tabs button {
     padding: 7px 9px;
     font-size: 8px !important;
+  }
+}
+
+/* ============================================================
+   Guidance, teleport explanation, wide end screen, touch extras
+   ============================================================ */
+.mars-tasks {
+  list-style: none;
+  margin: 14px 0 4px;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 10px;
+  line-height: 1.55;
+  color: #d8cccb;
+}
+.mars-tasks b {
+  display: inline-block;
+  min-width: 16px;
+  margin-right: 6px;
+  text-align: center;
+  color: #17101c;
+  background: var(--mars-amber);
+}
+.mars-wrong-note {
+  border-left: 3px solid #ff927d;
+  padding: 8px 12px;
+  background: #ff927d14;
+  color: #ffd3ca !important;
+}
+.mars-respawn-detail {
+  display: block;
+  margin: 10px auto 0;
+  max-width: 420px;
+  font-size: 9px;
+  line-height: 1.6;
+  color: #c4b9b7;
+  letter-spacing: 0.06em;
+}
+.mars-respawn .mars-primary {
+  margin-top: 16px;
+}
+.mars-panel-wide {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(940px, 94vw);
+  animation: marsFadeIn 0.4s ease both;
+}
+.mars-touch {
+  bottom: 56px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.mars-touch-extra {
+  position: absolute;
+  right: 0;
+  bottom: 62px;
+  display: flex;
+  gap: 8px;
+}
+.mars-touch .mars-touch-small {
+  width: 56px;
+  height: 36px;
+  font-size: 9px;
+  color: var(--mars-amber);
+}
+.mars-touch .mars-touch-fly {
+  color: var(--mars-mint);
+  border-color: var(--mars-mint);
+}
+.mars-touch button {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.mars-canvas {
+  touch-action: none;
+}
+@media (max-width: 720px) {
+  .mars-panel-wide {
+    width: 94vw;
+    top: 52%;
+  }
+}
+@media (max-height: 520px) {
+  .mars-panel {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .mars-touch {
+    bottom: 44px;
+  }
+}
+
+.mars-ended {
+  border: 1px solid var(--mars-amber);
+  background: #d0834718;
+  padding: 20px 22px 18px;
+  margin-bottom: 24px;
+}
+.mars-ended-stamp {
+  display: inline-block;
+  margin: 0 0 12px !important;
+  padding: 5px 9px;
+  font-size: 9px !important;
+  letter-spacing: 0.2em;
+  color: #17101c;
+  background: var(--mars-amber);
+}
+.mars-ended-list {
+  list-style: none;
+  margin: 16px 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 18px;
+  font-size: 11px;
+  color: #e6dddc;
+}
+.mars-ended-list .is-done span {
+  color: var(--mars-mint);
+}
+.mars-ended-list .is-open span {
+  color: #ff927d;
+}
+.mars-ended-next {
+  margin: 0 !important;
+  color: var(--mars-mint) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em;
+}
+.mars-final-title-sub {
+  font-size: clamp(22px, 3.4vw, 34px) !important;
+  margin: 0 0 8px !important;
+}
+@media (max-width: 720px) {
+  .mars-ended-list {
+    grid-template-columns: 1fr;
   }
 }
