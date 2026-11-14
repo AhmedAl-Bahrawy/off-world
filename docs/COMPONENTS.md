@@ -3,6 +3,29 @@
 How to reuse the primitives introduced in the pro-polish pass. Everything
 lives under `frontend/src/voyager/ui/primitives/` and `lib/`.
 
+## `<Directive />` — the guidance layer ("what should I do?")
+
+Every major player step opens with a **MISSION DIRECTIVE**: a big title that
+says WHAT to do, plus one playful line that says WHY. The player should never
+wonder what a mini-game is for.
+
+- Copy lives in `story/dialogue.ts` → `DIRECTIVES` (one entry per step).
+- `story/script.ts` shows it with `await brief('repair', wait)` right before
+  the matching `act(...)` call — the banner lingers above the act window and
+  clears automatically when the step completes (`finishAct`).
+- Story-shaping moments (`replyWest`, `eastKey`, `voyager`, `mars`) are
+  flagged `splash: true`: they get a full-screen moment first, then settle
+  into the banner.
+- Steps flagged `banner: false` are splash-only — used where a lingering
+  banner would sit on top of a full-screen scene's own title (Voyager/Mars).
+- Dismissal: click anywhere / Enter / Space ends the directive early (the
+  brief waits are dismissal-aware); the step completing hides it anyway.
+- Announced via `role="status"` + `aria-live="polite"`; instant under
+  `prefers-reduced-motion`.
+
+To add guidance to a new step: add a `DIRECTIVES` entry, then call
+`await brief('myKey', wait)` before its `act(...)` in `script.ts`.
+
 ## `ActLayout` / `ActRow` — interaction window bodies
 
 Every player-facing window body used to copy-paste the same

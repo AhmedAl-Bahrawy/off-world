@@ -78,6 +78,7 @@ from `styles/`:
 | `styles/base.css`   | root shell, canvases, icons, button primitive        |
 | `styles/hud.css`    | header, HUD bar, gate, chapter card                  |
 | `styles/windows.css`| window frames, screen slots, log/comms feeds         |
+| `styles/directive.css` | mission guidance layer (splash + banner)          |
 | `styles/interactions.css` | tiles, decoder, prompts, progress bars        |
 | `styles/discovery.css`    | the full-screen Voyager 1 scene UI (`.vy`)    |
 
