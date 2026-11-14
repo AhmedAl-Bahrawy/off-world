@@ -58,10 +58,16 @@ const SYMBOLS: Record<string, React.ReactNode> = {
     <path d="M12 2c3 3 4 8 3 13l-3 3-3-3c-1-5 0-10 3-13zM9 16l-4 3 2-5M15 16l4 3-2-5" />
   ),
   chat: <path d="M4 5h16v11H9l-5 4z" />,
-  scan: (
+  'sound-on': (
     <>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 12 18 6M2 12h3M19 12h3M12 2v3M12 19v3" />
+      <path d="M4 9v6h4l5 4V5L8 9H4z" />
+      <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" />
+    </>
+  ),
+  'sound-off': (
+    <>
+      <path d="M4 9v6h4l5 4V5L8 9H4z" />
+      <path d="M17 9.5l4 5M21 9.5l-4 5" />
     </>
   ),
   chip: (

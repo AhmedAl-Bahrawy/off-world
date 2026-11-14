@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
-import { MARS_MAP_URL, VOYAGER_GLB_URL } from './assets'
+import { MARS_MAP_URL } from './assets'
 import { PARTS, type Ctl, type PartId, type SceneApi } from './parts'
 import { RM } from '../../../lib/motion'
+import { D } from '../../../lib/anim'
 
 const MARS_Z = -140
 const MARS_R = 11
@@ -113,9 +114,8 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
   const pointer = useRef({ x: 0, y: 0 }).current
   const tmp = useMemo(() => new THREE.Vector3(), [])
 
-  const stars = useMemo(makeStars, [])
-  const marsTex = useMemo(makeMarsTexture, [])
-  const [glb, setGlb] = useState<THREE.Object3D | null>(null)
+  const stars = useMemo(() => makeStars(), [])
+  const marsTex = useMemo(() => makeMarsTexture(), [])
 
   /* One material per part so a part can glow as a whole. */
   const mats = useMemo(() => {
@@ -145,34 +145,6 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
     return 1 + (1 / Math.pow(a, 0.75) - 1)
   }
   const overviewCam = () => ({ px: 0, py: 1.5, pz: 10.8 * fit(), lx: 0, ly: 0.6, lz: 0 })
-
-  /* Optional external model. */
-  useEffect(() => {
-    if (!VOYAGER_GLB_URL) return
-    let dead = false
-    import('three/examples/jsm/loaders/GLTFLoader.js')
-      .then(({ GLTFLoader }) => {
-        new GLTFLoader().load(
-          VOYAGER_GLB_URL,
-          (res) => {
-            if (dead) return
-            const obj = res.scene
-            const box = new THREE.Box3().setFromObject(obj)
-            const size = box.getSize(new THREE.Vector3())
-            const k = 9 / Math.max(size.x, size.y, size.z, 0.0001)
-            obj.scale.setScalar(k)
-            obj.position.copy(box.getCenter(new THREE.Vector3()).multiplyScalar(-k))
-            setGlb(obj)
-          },
-          undefined,
-          () => {},
-        )
-      })
-      .catch(() => {})
-    return () => {
-      dead = true
-    }
-  }, [])
 
   /* Optional external Mars map; the canvas texture stays if it fails. */
   useEffect(() => {
@@ -237,7 +209,6 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
 
   /* Imperative API used by the HTML overlay. */
   useEffect(() => {
-    const D = RM ? 0 : 1
     apiRef.current = {
       focus(id) {
         const part = PARTS.find((p) => p.id === id)!
@@ -388,23 +359,38 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
     }
   })
 
-  const hover = (id: PartId) => ({
-    onPointerOver: (e: { stopPropagation: () => void }) => {
-      e.stopPropagation()
-      if (ctl.mode !== 'explore') return
-      ctl.hover = id
-      document.body.style.cursor = 'pointer'
-    },
-    onPointerOut: () => {
-      if (ctl.hover === id) ctl.hover = null
-      document.body.style.cursor = ''
-    },
-    onClick: (e: { stopPropagation: () => void; delta: number }) => {
-      e.stopPropagation()
-      if (e.delta > 6 || ctl.mode !== 'explore') return
-      onPick(id)
-    },
-  })
+  /* Part event handlers, built once per part (they close over stable refs). */
+  const hover = useMemo(() => {
+    const cache = new Map<PartId, {
+      onPointerOver: (e: { stopPropagation: () => void }) => void
+      onPointerOut: () => void
+      onClick: (e: { stopPropagation: () => void; delta: number }) => void
+    }>()
+    return (id: PartId) => {
+      let handlers = cache.get(id)
+      if (!handlers) {
+        handlers = {
+          onPointerOver: (e) => {
+            e.stopPropagation()
+            if (ctl.mode !== 'explore') return
+            ctl.hover = id
+            document.body.style.cursor = 'pointer'
+          },
+          onPointerOut: () => {
+            if (ctl.hover === id) ctl.hover = null
+            document.body.style.cursor = ''
+          },
+          onClick: (e) => {
+            e.stopPropagation()
+            if (e.delta > 6 || ctl.mode !== 'explore') return
+            onPick(id)
+          },
+        }
+        cache.set(id, handlers)
+      }
+      return handlers
+    }
+  }, [ctl, onPick])
 
   return (
     <>
@@ -434,8 +420,7 @@ function World({ ctl, apiRef, onPick }: WorldProps) {
 
       {/* ---------------- Voyager 1 ---------------- */}
       <group ref={voy}>
-        {glb && <primitive object={glb} />}
-        <group visible={!glb}>
+        <group>
           {/* Bus (decagon) */}
           <mesh position={[0, 0.15, 0]} material={mats.bus} {...hover('bus')}>
             <cylinderGeometry args={[0.85, 0.85, 0.5, 10]} />

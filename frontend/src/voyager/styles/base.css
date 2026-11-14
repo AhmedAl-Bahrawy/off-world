@@ -1,0 +1,168 @@
+/* ====================================================================
+   Root shell, layer canvases, icons, and the shared button primitive.
+   ==================================================================== */
+
+.kx {
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #05070a;
+  color: var(--wh);
+  font: 500 15px/1.45 'DM Sans', Arial, sans-serif;
+  transition: --acc 1.6s;
+}
+
+/* Screen frame + vignette */
+.kx::before {
+  content: '';
+  position: fixed;
+  inset: 4px;
+  z-index: 10;
+  border: 1px solid #1986ee;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px #1986ee30;
+}
+.kx::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 48%, #0008 100%);
+}
+
+/* Deep-space backdrop: nebula base → artwork → extra layers → dark veil.
+   Rendered by <SpaceBackdrop/>; the first view (gate) sits on top of it. */
+.space-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.space-backdrop-nebula {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(90% 60% at 50% 0%, #14084acc, transparent 70%),
+    radial-gradient(42% 34% at 74% 30%, #5a2dd34d, transparent 70%),
+    radial-gradient(36% 30% at 16% 78%, #1c6dff2e, transparent 70%),
+    linear-gradient(145deg, #020813 0%, #06012b 48%, #130019 100%);
+}
+.space-backdrop-art {
+  position: absolute;
+  inset: 0;
+  background: center / cover no-repeat;
+}
+.space-backdrop-art.is-dim {
+  opacity: 0.19;
+  mix-blend-mode: screen;
+  filter: grayscale(0.72) contrast(1.1);
+  mask-image: linear-gradient(to bottom, transparent 3%, #000 25%, #000 65%, transparent 94%);
+}
+/* The dark layer that makes every screen read as deep space. */
+.space-backdrop-dark {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #010409bf 0%, transparent 26%, transparent 72%, #010409d6 100%),
+    radial-gradient(ellipse at 50% 42%, transparent 42%, #010409b8 100%);
+}
+/* Inside a full-screen scene the backdrop is scoped, not viewport-fixed. */
+.vy .space-backdrop {
+  position: absolute;
+  z-index: 0;
+}
+
+/* Layer canvases */
+.kx-sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.kx-gl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Icons */
+svg.ic {
+  width: 1.1em;
+  height: 1.1em;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+/* Buttons — one primitive, skinned per context */
+.kx button {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  color: #f3f5f7;
+  background: #111820;
+  border: 1px solid #556270;
+  border-radius: 3px;
+  font: 600 0.82rem/1.25 'DM Sans', Arial, sans-serif;
+  letter-spacing: 0.01em;
+  transition:
+    border-color var(--t-fast) ease,
+    background var(--t-fast) ease,
+    transform var(--t-fast) ease,
+    box-shadow var(--t-fast) ease;
+}
+.kx button:hover {
+  border-color: #76baff;
+  background: #172331;
+}
+.kx button:active {
+  transform: translateY(1px) scale(0.99);
+}
+.kx button:focus-visible {
+  outline: 2px solid #80c2ff;
+  outline-offset: 3px;
+}
+
+/* Accent utilities — map an accent name to the shared --c variable so
+   components never need inline style casts. */
+.acc-cy {
+  --c: var(--cy);
+}
+.acc-bl {
+  --c: var(--bl);
+}
+.acc-or {
+  --c: var(--or);
+}
+.acc-rd {
+  --c: var(--rd);
+}
+.acc-vi {
+  --c: var(--vi);
+}
+.acc-wh {
+  --c: var(--wh);
+}
+
+/* Reduced motion: soften the global chrome (component files add their own). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

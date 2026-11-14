@@ -42,6 +42,9 @@ export const ACT_META: Record<InteractionKind, { title: string; icon: string }> 
     voyager: { title: 'VOYAGER 1 // INVESTIGATION', icon: 'eye' },
   }
 
+/** Sentinel handed back to a pending `requestAct` when the story resets. */
+export const ACT_CANCELLED = Symbol('act-cancelled')
+
 let resolver: ((value: unknown) => void) | null = null
 let seq = 0
 
@@ -76,4 +79,17 @@ export function finishAct(result: unknown = undefined, delay = 300) {
     useVoyager.setState({ interaction: null })
     resolve(result)
   }, delay)
+}
+
+/**
+ * Abort a pending interaction. Called when the story resets: the parked
+ * promise resolves with `ACT_CANCELLED` (so the old screenplay can notice
+ * and stop) instead of hanging forever.
+ */
+export function cancelAct() {
+  const resolve = resolver
+  if (!resolve) return
+  resolver = null
+  useVoyager.setState({ interaction: null })
+  resolve(ACT_CANCELLED)
 }

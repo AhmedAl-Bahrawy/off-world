@@ -2,13 +2,19 @@ import { useEffect, useRef, useState } from 'react'
 import { finishAct } from '../../state/interactions'
 import { blip } from '../../lib/audio'
 import { sleep } from '../../lib/util'
-import { Icon } from '../Icons'
+import { useTimeout } from '../../lib/hooks'
+import { ActLayout, ActRow, Tile } from '../primitives'
 
 /**
  * Simon-style vault breach: watch the access sequence flash, then repeat it.
  * A wrong press replays the sequence; completing it resolves the interaction.
  */
-const PAD_ICONS = ['user', 'net', 'power', 'chip']
+const PADS: Array<{ icon: string; name: string }> = [
+  { icon: 'user', name: 'personnel' },
+  { icon: 'net', name: 'network' },
+  { icon: 'power', name: 'power' },
+  { icon: 'chip', name: 'core' },
+]
 const SEQUENCE_LENGTH = 4
 
 type Phase = 'watch' | 'input' | 'won'
@@ -22,6 +28,7 @@ export function SimonInteraction() {
   const [hint, setHint] = useState('')
   const progress = useRef(0)
   const unmounted = useRef(false)
+  const finish = useTimeout()
 
   useEffect(() => () => {
     unmounted.current = true
@@ -36,15 +43,15 @@ export function SimonInteraction() {
     progress.current = 0
     setHint('Watching the guard rotation...')
     ;(async () => {
-      await sleep(500)
+      await sleep(450)
       for (const i of sequence) {
         if (cancelled()) return
         setLit(i)
         blip(300 + i * 120)
-        await sleep(380)
+        await sleep(350)
         if (cancelled()) return
         setLit(null)
-        await sleep(160)
+        await sleep(150)
       }
       if (cancelled()) return
       setHint('Your turn.')
@@ -67,7 +74,7 @@ export function SimonInteraction() {
     if (phase !== 'input') return
     blip(300 + i * 120)
     setLit(i)
-    setTimeout(() => setLit((cur) => (cur === i ? null : cur)), 150)
+    finish(() => setLit((cur) => (cur === i ? null : cur)), 150)
 
     if (i !== sequence[progress.current]) {
       setHint('Wrong. Replaying...')
@@ -77,25 +84,23 @@ export function SimonInteraction() {
     if (++progress.current === SEQUENCE_LENGTH) {
       setPhase('won')
       setHint('ACCESS GRANTED')
-      setTimeout(() => finishAct(), 700)
+      finish(() => finishAct(), 650)
     }
   }
 
   return (
-    <>
-      <p className="q">Memorize the access sequence, then repeat it.</p>
-      <div className="row">
-        {PAD_ICONS.map((icon, i) => (
-          <button
-            key={icon}
-            className={`tile ${lit === i ? 'lit' : ''}`}
+    <ActLayout question="Memorize the access sequence, then repeat it." hint={hint}>
+      <ActRow>
+        {PADS.map((pad, i) => (
+          <Tile
+            key={pad.icon}
+            icon={pad.icon}
+            on={lit === i}
+            ariaLabel={`Vault pad ${i + 1} — ${pad.name}`}
             onClick={() => press(i)}
-          >
-            <Icon name={icon} />
-          </button>
+          />
         ))}
-      </div>
-      <p className="hint">{hint}</p>
-    </>
+      </ActRow>
+    </ActLayout>
   )
 }

@@ -1,0 +1,29 @@
+/* ====================================================================
+   Off-World design tokens — the single source of truth.
+   One palette, one motion scale. Nothing here is overridden later.
+   ==================================================================== */
+
+@property --acc {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #48a8ff;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #05070a;
+  /* Accents — names match hues: cy/bl/vi cool, or amber, rd red. */
+  --cy: #48a8ff;
+  --bl: #67a5ff;
+  --or: #f5b86a;
+  --rd: #f07b62;
+  --vi: #b28cff;
+  --wh: #f5f6f7;
+  --acc: #48a8ff;
+  /* Motion tokens: the shared duration/easing scale (snappy by design). */
+  --t-fast: 150ms;
+  --t-med: 240ms;
+  --t-slow: 420ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  transition: --acc 1.6s;
+}

@@ -27,14 +27,13 @@ function CardInner({ subtitle, title }: { subtitle: string; title: string }) {
     const el = root.current!
     const ctx = gsap.context(() => {
       gsap.from(el.querySelectorAll('h1 span'), {
-        y: 60,
+        y: 50,
         opacity: 0,
         rotateX: -90,
-        stagger: 0.045,
-        duration: 0.7,
+        stagger: 0.038,
+        duration: 0.55,
         ease: 'back.out(2)',
       })
-      gsap.from(el.querySelectorAll('.ln'), { scaleX: 0, duration: 0.8 })
     }, el)
     return () => ctx.revert()
   }, [])
@@ -44,12 +43,9 @@ function CardInner({ subtitle, title }: { subtitle: string; title: string }) {
       <small>{subtitle}</small>
       <h1>
         {[...title].map((ch, i) => (
-          <span key={i} style={{ display: 'inline-block' }}>
-            {ch === ' ' ? '\u00A0' : ch}
-          </span>
+          <span key={i}>{ch === ' ' ? '\u00A0' : ch}</span>
         ))}
       </h1>
-      <span className="ln" />
     </div>
   )
 }

@@ -16,6 +16,7 @@ export function SceneCanvas() {
   return (
     <Canvas
       className="kx-gl"
+      aria-hidden="true"
       dpr={[1, 2]}
       gl={{ alpha: true, antialias: true }}
       camera={{ fov: 50, near: 0.1, far: 600, position: [0, 0, 16] }}

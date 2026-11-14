@@ -1,35 +1,72 @@
 /**
  * WebAudio: a low engine hum plus short square-wave UI blips.
- * Everything is wrapped in try/catch — audio is optional, never fatal.
+ *
+ * One AudioContext is created lazily and reused for the whole session —
+ * creating a new context per replay used to leak oscillators until the
+ * browser's ~6-context cap silently killed all audio. Everything is
+ * wrapped in try/catch: audio is optional, never fatal.
  */
 
 let actx: AudioContext | null = null
+let humGain: GainNode | null = null
+let muted = false
 
-/** Start the ambient hum. Must be called from a user gesture. */
+/** Start (or resume) the ambient hum. Must be called from a user gesture. */
 export function startAudio() {
   try {
-    actx = new AudioContext()
-    const filter = actx.createBiquadFilter()
-    const gain = actx.createGain()
-    filter.frequency.value = 160
-    gain.gain.value = 0.03
-    filter.connect(gain)
-    gain.connect(actx.destination)
-    for (const f of [55, 82.4]) {
-      const osc = actx.createOscillator()
-      osc.type = 'sawtooth'
-      osc.frequency.value = f
-      osc.connect(filter)
-      osc.start()
+    if (!actx) {
+      actx = new AudioContext()
+      const filter = actx.createBiquadFilter()
+      humGain = actx.createGain()
+      filter.frequency.value = 160
+      humGain.gain.value = 0.03
+      filter.connect(humGain)
+      humGain.connect(actx.destination)
+      for (const f of [55, 82.4]) {
+        const osc = actx.createOscillator()
+        osc.type = 'sawtooth'
+        osc.frequency.value = f
+        osc.connect(filter)
+        osc.start()
+      }
     }
+    if (actx.state === 'suspended') void actx.resume()
   } catch {
-    /* no audio available — stay silent */
+    actx = null
+    humGain = null
+  }
+}
+
+/** Fully stop the hum (used on replay so the next run starts clean). */
+export function stopAudio() {
+  try {
+    void actx?.close()
+  } catch {
+    /* ignore */
+  }
+  actx = null
+  humGain = null
+}
+
+export function isMuted() {
+  return muted
+}
+
+/** Mute/unmute the whole experience (hum + blips). */
+export function setMuted(next: boolean) {
+  muted = next
+  if (humGain && actx) {
+    try {
+      humGain.gain.setTargetAtTime(muted ? 0 : 0.03, actx.currentTime, 0.05)
+    } catch {
+      /* ignore */
+    }
   }
 }
 
 /** Short UI blip at `fr` Hz. */
 export function blip(fr = 600, v = 0.04) {
-  if (!actx) return
+  if (!actx || muted) return
   try {
     const osc = actx.createOscillator()
     const gain = actx.createGain()

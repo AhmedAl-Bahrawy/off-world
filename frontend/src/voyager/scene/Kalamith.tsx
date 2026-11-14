@@ -8,8 +8,7 @@ import { Atmosphere } from './Atmosphere'
 import { PlanetLabel } from './PlanetLabel'
 import { onSceneChange } from '../state/store'
 import { RM } from '../lib/motion'
-
-const TWEEN = { duration: RM ? 0 : 2.4, ease: 'power3.inOut' } as const
+import { SCENE_TWEEN } from '../lib/anim'
 
 /**
  * The Kalamith home world: purple planet + tilted ring + atmosphere.
@@ -32,12 +31,12 @@ export function Kalamith() {
         const a = Math.min(1, camera.aspect / 1.5)
         const f = 0.6 + 0.4 * a
         if (scene === 'voyage') {
-          gsap.to(group.current.position, { x: 9 * a, y: 1, z: -6, ...TWEEN })
-          gsap.to(group.current.scale, { x: 1.1 * f, y: 1.1 * f, z: 1.1 * f, ...TWEEN })
+          gsap.to(group.current.position, { x: 9 * a, y: 1, z: -6, ...SCENE_TWEEN })
+          gsap.to(group.current.scale, { x: 1.1 * f, y: 1.1 * f, z: 1.1 * f, ...SCENE_TWEEN })
         } else {
-          gsap.to(group.current.position, { x: 9 * a, y: 5.5, z: -12, ...TWEEN })
+          gsap.to(group.current.position, { x: 9 * a, y: 5.5, z: -12, ...SCENE_TWEEN })
           const s = scene === 'orbit' || scene === 'rem' || scene === 'discovery' || scene === 'mars' ? 0.001 : 0.45
-          gsap.to(group.current.scale, { x: s, y: s, z: s, ...TWEEN })
+          gsap.to(group.current.scale, { x: s, y: s, z: s, ...SCENE_TWEEN })
         }
       }),
     [camera],

@@ -9,12 +9,11 @@ import { PlanetLabel } from './PlanetLabel'
 import { onSceneChange } from '../state/store'
 import { bus } from '../lib/bus'
 import { motion, RM } from '../lib/motion'
+import { SCENE_TWEEN } from '../lib/anim'
 
 /** Aspect-scaled factor used by every scene transition. */
 const aspectFactor = (camera: PerspectiveCamera) =>
   0.6 + 0.4 * Math.min(1, camera.aspect / 1.5)
-
-const TWEEN = { duration: RM ? 0 : 2.4, ease: 'power3.inOut' } as const
 
 /** City light positions, pre-computed ONCE at module load (260 points). */
 const CITY_POSITIONS = (() => {
@@ -68,19 +67,19 @@ export function Earth() {
         const f = aspectFactor(camera)
         const a = Math.min(1, camera.aspect / 1.5)
         if (scene === 'voyage') {
-          gsap.to(group.current.position, { x: -9 * a, y: 1.5, z: -5, ...TWEEN })
-          gsap.to(group.current.scale, { x: 0.55 * f, y: 0.55 * f, z: 0.55 * f, ...TWEEN })
+          gsap.to(group.current.position, { x: -9 * a, y: 1.5, z: -5, ...SCENE_TWEEN })
+          gsap.to(group.current.scale, { x: 0.55 * f, y: 0.55 * f, z: 0.55 * f, ...SCENE_TWEEN })
         } else {
-          gsap.to(group.current.position, { x: 0, y: -9.6, z: 0, ...TWEEN })
+          gsap.to(group.current.position, { x: 0, y: -9.6, z: 0, ...SCENE_TWEEN })
           const s = scene === 'discovery' || scene === 'mars' ? 0.001 : 1.35
-          gsap.to(group.current.scale, { x: s, y: s, z: s, ...TWEEN })
+          gsap.to(group.current.scale, { x: s, y: s, z: s, ...SCENE_TWEEN })
         }
         const dim = scene === 'rem'
         gsap.to(surfaceMat.current.color, {
           r: dim ? 0.25 : 1,
           g: dim ? 0.25 : 1,
           b: dim ? 0.3 : 1,
-          duration: TWEEN.duration ? 3 : 0,
+          duration: SCENE_TWEEN.duration ? 3 : 0,
         })
       }),
     [camera],

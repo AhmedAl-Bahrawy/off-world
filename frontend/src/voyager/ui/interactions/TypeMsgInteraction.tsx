@@ -4,17 +4,20 @@ import { useVoyager } from '../../state/store'
 import { bus } from '../../lib/bus'
 import { blip } from '../../lib/audio'
 import { sleep } from '../../lib/util'
+import { useTimeout } from '../../lib/hooks'
+import { ActLayout, ActRow } from '../primitives'
 
 /**
- * Open-channel composer: any key/tap reveals the plaintext distress message
- * character by character. When complete, fires the pulse rings and plays the
- * uplink sequence before resolving.
+ * Open-channel composer: any key or tap reveals the plaintext distress
+ * message character by character. When complete, fires the pulse rings and
+ * plays the uplink sequence before resolving.
  */
 export function TypeMsgInteraction({ message }: TypeMsgProps) {
   const [typed, setTyped] = useState(0)
   const sentRef = useRef(false)
+  const finish = useTimeout()
 
-  async function transmit() {
+  const transmit = async () => {
     const store = useVoyager.getState()
     store.closeWindow('act')
     store.closeWindow('chat')
@@ -33,21 +36,29 @@ export function TypeMsgInteraction({ message }: TypeMsgProps) {
     finishAct()
   }
 
+  // Any key — or a tap anywhere outside the fallback button — advances the
+  // composition one character. (Touch users previously could only use the
+  // button because the pointer half of "any key/tap" was never wired up.)
   useEffect(() => {
-    const onEvent = (e: KeyboardEvent | PointerEvent) => {
-      if (
-        e instanceof KeyboardEvent &&
-        (e.metaKey || e.ctrlKey || e.key === 'Tab' || e.target instanceof HTMLButtonElement)
-      )
-        return
-      setTyped((n) => Math.min(message.length, n + 1))
+    const advance = () =>
+      setTyped((n) => (n < message.length ? Math.min(message.length, n + 1) : n))
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.key === 'Tab') return
+      // Space/Enter on the fallback button trigger its click; don't double-step.
+      if ((e.key === ' ' || e.key === 'Enter') && e.target instanceof HTMLButtonElement) return
+      advance()
     }
-    addEventListener('keydown', onEvent)
+    const onPointer = (e: PointerEvent) => {
+      if ((e.target as HTMLElement | null)?.closest('button')) return
+      advance()
+    }
+    addEventListener('keydown', onKey)
+    addEventListener('pointerdown', onPointer)
     return () => {
-      removeEventListener('keydown', onEvent)
+      removeEventListener('keydown', onKey)
+      removeEventListener('pointerdown', onPointer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [message.length])
 
   // Blip per character (without re-render loops).
   const lastBlip = useRef(0)
@@ -61,22 +72,24 @@ export function TypeMsgInteraction({ message }: TypeMsgProps) {
   // Message fully typed → uplink sequence.
   useEffect(() => {
     if (typed < message.length) return
-    const t = setTimeout(() => {
+    finish(() => {
       if (sentRef.current) return
       sentRef.current = true
-      transmit()
-    }, 700)
-    return () => clearTimeout(t)
+      void transmit()
+    }, 650)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typed])
 
   return (
-    <>
-      <p className="q">Plain English. No encryption.</p>
-      <p className="msg">{message.slice(0, typed)}</p>
-      <div className="row">
-        <button type="button" onClick={() => setTyped(message.length)}>SEND SIGNAL</button>
-      </div>
-    </>
+    <ActLayout question="Plain English. No encryption.">
+      <p className="msg" aria-live="polite">
+        {message.slice(0, typed)}
+      </p>
+      <ActRow>
+        <button type="button" onClick={() => setTyped(message.length)}>
+          SEND SIGNAL
+        </button>
+      </ActRow>
+    </ActLayout>
   )
 }

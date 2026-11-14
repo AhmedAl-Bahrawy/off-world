@@ -1,3 +1,5 @@
+import { SoundToggle } from './SoundToggle'
+
 type SiteHeaderProps = {
   phase: 'gate' | 'playing'
   onStart: () => void
@@ -20,16 +22,14 @@ export function SiteHeader({ phase, onStart, onHome }: SiteHeaderProps) {
         >
           HOME
         </button>
-        <button
-          className={phase === 'playing' ? 'active' : ''}
-          type="button"
-          onClick={onStart}
-          aria-current={phase === 'playing' ? 'page' : undefined}
-        >
-          MISSION
-        </button>
-        <span className="future-nav" aria-disabled="true" title="Coming later">DATA</span>
-        <span className="future-nav" aria-disabled="true" title="Coming later">ABOUT</span>
+        {/* Only a real action: starting the mission from the gate. Mid-game
+            it would be a no-op, so it is not rendered at all. */}
+        {phase === 'gate' && (
+          <button type="button" onClick={onStart}>
+            MISSION
+          </button>
+        )}
+        <SoundToggle />
       </nav>
     </header>
   )

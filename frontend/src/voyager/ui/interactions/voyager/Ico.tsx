@@ -24,7 +24,7 @@ export function Ico({ n, className = '' }: { n: string; className?: string }) {
 export function Slot({ src, label, className = '' }: { src: string; label: string; className?: string }) {
   const [state, setState] = useState<'wait' | 'ok' | 'err'>('wait')
   return (
-    <div className={`vy-slot ${state === 'ok' ? 'ok' : ''} ${className}`}>
+    <div className={`vy-slot st-${state} ${state === 'ok' ? 'ok' : ''} ${className}`}>
       <span className="vy-slot-label">{label}</span>
       {state !== 'err' && (
         <img

@@ -5,6 +5,7 @@ import gsap from 'gsap'
 import { onSceneChange } from '../state/store'
 import { bus } from '../lib/bus'
 import { RM } from '../lib/motion'
+import { SCENE_DUR } from '../lib/anim'
 
 /**
  * Camera behaviour: gentle mouse parallax every frame, a z-dolly per scene
@@ -30,7 +31,7 @@ export function CameraRig() {
       onSceneChange((scene) => {
         gsap.to(camera.position, {
           z: scene === 'voyage' ? 15 : 16,
-          duration: RM ? 0 : 2.4,
+          duration: SCENE_DUR,
           ease: 'power2.inOut',
         })
       }),

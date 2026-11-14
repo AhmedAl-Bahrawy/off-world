@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
 } from 'react'
 import gsap from 'gsap'
 import {
@@ -21,6 +20,8 @@ import {
 } from '../state/interactions'
 import { blip } from '../lib/audio'
 import { RM } from '../lib/motion'
+import { WIN_OPEN, WIN_CLOSE } from '../lib/anim'
+import { Bar } from './primitives'
 import { resetStory } from '../story/script'
 import { Icon } from './Icons'
 import {
@@ -35,11 +36,12 @@ import {
 } from './interactions'
 
 /**
- * HUD window system: fixed "terminal" panels with corner brackets, a glowing
- * header, and a scrollable body. Content is chosen by `win.kind`.
+ * HUD window system: fixed "terminal" panels with a glowing header and a
+ * scrollable body. Content is chosen by `win.kind`.
  *
- * Lifecycle mirrors the original demo — open with a spring-in animation,
- * close with a collapse animation, then unmount.
+ * Lifecycle: open with a spring-in animation, close with a collapse
+ * animation, then unmount. Interaction windows also manage keyboard focus
+ * (focus moves in on open) so players can play with the keyboard alone.
  */
 
 /** The .wb scroll container of the current window, for auto-scrolling bodies. */
@@ -77,14 +79,20 @@ function WindowFrame({ win }: { win: WinState }) {
           opacity: 1,
           scaleY: 1,
           filter: 'brightness(1)',
-          duration: 0.45,
+          duration: WIN_OPEN.frame,
           ease: 'back.out(1.7)',
           clearProps: 'filter',
         },
       )
       const children = el.querySelector<HTMLElement>('.wb')?.children
       if (children?.length) {
-        gsap.from(children, { x: -16, opacity: 0, stagger: 0.07, delay: 0.15, duration: 0.4 })
+        gsap.from(children, {
+          x: -14,
+          opacity: 0,
+          stagger: WIN_OPEN.childStagger,
+          delay: WIN_OPEN.childDelay,
+          duration: WIN_OPEN.childDur,
+        })
       }
     }, el)
     return () => ctx.revert()
@@ -102,21 +110,35 @@ function WindowFrame({ win }: { win: WinState }) {
       scaleY: 0.04,
       opacity: 0,
       filter: 'brightness(3)',
-      duration: 0.3,
+      duration: WIN_CLOSE.dur,
       ease: 'power2.in',
     })
     const t = setTimeout(
       () => useVoyager.getState().dropWindow(win.id, win.seq),
-      320,
+      WIN_CLOSE.removeAfter,
     )
     return () => clearTimeout(t)
   }, [win.closing, win.id, win.seq])
 
+  // Keyboard focus: when a player interaction opens, move focus into it so
+  // keyboard users land on the mini-game instead of getting lost on <body>.
+  useEffect(() => {
+    if (win.kind !== 'act' || win.closing) return
+    const t = setTimeout(() => {
+      root.current?.querySelector<HTMLElement>('button, [tabindex]')?.focus()
+    }, 240)
+    return () => clearTimeout(t)
+  }, [win.kind, win.closing])
+
+  const isFeed = win.kind === 'log' || win.kind === 'chat'
+
   return (
     <div
       ref={root}
-      className={`w s-${win.slot} w-${win.id} ${interaction?.kind === 'voyager' ? 'w-voyager' : ''}`}
-      style={{ '--c': `var(--${win.accent})` } as CSSProperties}
+      className={`w s-${win.slot} w-${win.id} acc-${win.accent} ${interaction?.kind === 'voyager' ? 'w-voyager' : ''}`}
+      role={isFeed ? 'log' : undefined}
+      aria-live={isFeed ? 'polite' : undefined}
+      aria-label={isFeed ? win.title : undefined}
     >
       <div className="wh">
         <Icon name={win.icon} />
@@ -194,10 +216,10 @@ function ChatMessage({ msg }: { msg: ChatMsg }) {
     if (RM) return
     const ctx = gsap.context(() => {
       gsap.from(ref.current, {
-        x: msg.who === 'E' ? 50 : -50,
+        x: msg.who === 'E' ? 40 : -40,
         opacity: 0,
-        scale: 0.9,
-        duration: 0.4,
+        scale: 0.94,
+        duration: 0.3,
         ease: 'back.out(1.6)',
       })
     }, ref)
@@ -237,7 +259,7 @@ function BarsBody({ rows }: { rows: BarRow[] }) {
     // Let the "from" state paint first, then animate toward "to" via CSS.
     const t = setTimeout(
       () => setValues(rows.map((r) => r.to)),
-      300,
+      240,
     )
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -249,9 +271,7 @@ function BarsBody({ rows }: { rows: BarRow[] }) {
         <div className="br" key={r.label}>
           <span>{r.label}</span>
           <em>{values[i]}%</em>
-          <div className="bar">
-            <i style={{ width: `${values[i]}%` }} />
-          </div>
+          <Bar value={values[i]} label={r.label} />
         </div>
       ))}
     </>
@@ -260,21 +280,18 @@ function BarsBody({ rows }: { rows: BarRow[] }) {
 
 /** Uplink progress shown while the distress message transmits. */
 function UplinkBody() {
-  const bar = useRef<HTMLElement | null>(null)
+  const [value, setValue] = useState(0)
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (bar.current) bar.current.style.width = '100%'
-    }, 100)
+    // Let the empty bar paint first, then animate to 100% via CSS.
+    const t = setTimeout(() => setValue(100), 100)
     return () => clearTimeout(t)
   }, [])
 
   return (
     <>
       <p className="q">Transmitting toward Proxima Centauri b</p>
-      <div className="bar">
-        <i ref={bar} />
-      </div>
+      <Bar value={value} label="Uplink progress" />
     </>
   )
 }
@@ -311,5 +328,3 @@ function ActionBody() {
       return <VoyagerDiscovery key={it.key} />
   }
 }
-
-/* Re-exports kept close to their consumers */

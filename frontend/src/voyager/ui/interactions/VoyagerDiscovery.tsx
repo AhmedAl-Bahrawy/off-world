@@ -4,9 +4,11 @@ import { finishAct } from '../../state/interactions'
 import { useVoyager } from '../../state/store'
 import { blip } from '../../lib/audio'
 import { RM } from '../../lib/motion'
+import { D } from '../../lib/anim'
 import { VoyagerScene } from './voyager/VoyagerScene'
 import { Ico, Slot } from './voyager/Ico'
 import { IMAGES } from './voyager/assets'
+import { SpaceBackdrop, Chip } from '../primitives'
 import { PARTS, RECORD_CHIPS, makeCtl, type Mode, type PartId, type SceneApi } from './voyager/parts'
 
 const MARS_CHIPS = [
@@ -23,7 +25,7 @@ const setChapter = (text: string) => useVoyager.getState().setChapter(text)
  * then fly to Mars. A tiny HTML layer carries only icons and a few words.
  */
 export function VoyagerDiscovery() {
-  const ctl = useMemo(makeCtl, [])
+  const ctl = useMemo(() => makeCtl(), [])
   const apiRef = useRef<SceneApi | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const chargeEl = useRef<HTMLButtonElement>(null)
@@ -38,7 +40,6 @@ export function VoyagerDiscovery() {
   const [scanned, setScanned] = useState<string[]>([])
   const [chip, setChip] = useState<number | null>(null)
 
-  const D = RM ? 0 : 1
   const allSeen = seen.length === PARTS.length
   const allScanned = scanned.length === MARS_CHIPS.length
 
@@ -56,7 +57,7 @@ export function VoyagerDiscovery() {
     blip(880, 0.05)
     if (flashEl.current) gsap.fromTo(flashEl.current, { opacity: 0.85 }, { opacity: 0, duration: 1.3 * D, ease: 'power2.out' })
     apiRef.current?.overview()
-  }, [ctl, D])
+  }, [ctl])
 
   const hold = useCallback(() => {
     if (ctl.mode !== 'dark') return
@@ -69,13 +70,13 @@ export function VoyagerDiscovery() {
       onUpdate: paint,
       onComplete: reveal,
     })
-  }, [ctl, D, paint, reveal])
+  }, [ctl, paint, reveal])
 
   const release = useCallback(() => {
     if (ctl.mode !== 'dark') return
     holdTween.current?.kill()
     holdTween.current = gsap.to(ctl, { power: 0, duration: 0.7 * D, ease: 'power2.out', onUpdate: paint })
-  }, [ctl, D, paint])
+  }, [ctl, paint])
 
   /* ---------------- exploring ---------------- */
 
@@ -182,12 +183,10 @@ export function VoyagerDiscovery() {
 
   return (
     <div className="vy" ref={root} data-mode={mode}>
-      {/* Background image placeholders (CSS gradients + web image on top) */}
-      <div className="vy-bg" aria-hidden="true">
-        <div className="vy-bg-base" />
+      {/* Shared deep-space backdrop; the async sky image layers inside it */}
+      <SpaceBackdrop art="/visuals/Group2.svg" dim>
         <Slot src={IMAGES.bgSky} label="BG · SKY" className="vy-bg-sky" />
-        <div className="vy-bg-glow" />
-      </div>
+      </SpaceBackdrop>
 
       <VoyagerScene ctl={ctl} apiRef={apiRef} onPick={pick} onMiss={onMiss} />
 
@@ -271,21 +270,20 @@ export function VoyagerDiscovery() {
                     <Slot src={IMAGES.record} label="RECORD · COVER" className="vy-record-img" />
                     <div className="vy-chips">
                       {RECORD_CHIPS.map((c, i) => (
-                        <button
-                          type="button"
+                        <Chip
                           key={c.icon}
-                          className={`vy-chip ${chip === i ? 'on' : ''}`}
+                          icon={<Ico n={c.icon} />}
+                          label={c.label}
+                          on={chip === i}
                           onClick={() => {
                             setChip(i)
                             blip(400 + i * 120, 0.03)
                           }}
                         >
-                          <Ico n={c.icon} />
-                          <span>{c.label}</span>
                           <u aria-hidden="true">
                             <s /><s /><s /><s />
                           </u>
-                        </button>
+                        </Chip>
                       ))}
                     </div>
                   </div>
@@ -342,15 +340,14 @@ export function VoyagerDiscovery() {
             <Slot src={IMAGES.paleBlueDot} label="HOME" className="vy-ref vy-home" />
             <div className="vy-mars-chips">
               {MARS_CHIPS.map((c) => (
-                <button
-                  type="button"
+                <Chip
                   key={c.id}
-                  className={`vy-chip big ${scanned.includes(c.id) ? 'on' : ''}`}
+                  big
+                  icon={<Ico n={scanned.includes(c.id) ? 'check' : c.icon} />}
+                  label={c.label}
+                  on={scanned.includes(c.id)}
                   onClick={() => scan(c.id)}
-                >
-                  <Ico n={scanned.includes(c.id) ? 'check' : c.icon} />
-                  <span>{c.label}</span>
-                </button>
+                />
               ))}
             </div>
             {allScanned && (

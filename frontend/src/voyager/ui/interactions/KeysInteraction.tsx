@@ -3,17 +3,22 @@ import gsap from 'gsap'
 import { finishAct } from '../../state/interactions'
 import { blip } from '../../lib/audio'
 import { RM } from '../../lib/motion'
-import { Icon } from '../Icons'
+import { useTimeout } from '../../lib/hooks'
+import { ActLayout, ActRow, Tile } from '../primitives'
 
 /**
  * Key authorization: both keys must be turned within three seconds.
  * Synchronizing them spins the keys and resolves the interaction.
  */
+
+/** The single source of truth for the time window, used by logic and copy. */
+const WINDOW_MS = 3000
+
 export function KeysInteraction() {
   const westKey = useRef<HTMLButtonElement>(null)
   const eastKey = useRef<HTMLButtonElement>(null)
   const firstTurn = useRef<{ i: number; at: number } | null>(null)
-  const resetTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const finish = useTimeout()
   const [lit, setLit] = useState<number[]>([])
   const [hint, setHint] = useState('')
 
@@ -23,19 +28,18 @@ export function KeysInteraction() {
     const first = firstTurn.current
 
     // Both keys turned in time → synchronized.
-    if (first && first.i !== i && now - first.at < 3000) {
-      clearTimeout(resetTimer.current)
+    if (first && first.i !== i && now - first.at < WINDOW_MS) {
       setLit([0, 1])
       blip(900)
       if (!RM) {
         gsap.fromTo(
           [westKey.current, eastKey.current],
           { rotationY: 0 },
-          { rotationY: 360, duration: 0.9, ease: 'power2.inOut', stagger: 0.1 },
+          { rotationY: 360, duration: 0.8, ease: 'power2.inOut', stagger: 0.1 },
         )
       }
       setHint('KEYS SYNCHRONIZED')
-      setTimeout(() => finishAct(), 800)
+      finish(() => finishAct(), 700)
       return
     }
 
@@ -43,38 +47,35 @@ export function KeysInteraction() {
     setLit((cur) => (cur.includes(i) ? cur : [...cur, i]))
     setHint('One key turned. Turn the other now.')
 
-    clearTimeout(resetTimer.current)
-    resetTimer.current = setTimeout(() => {
+    finish(() => {
       firstTurn.current = null
       setLit([])
       setHint('Window closed. Try again.')
-    }, 3000)
+    }, WINDOW_MS)
   }
 
   return (
-    <>
-      <p className="q">Turn both keys within three seconds.</p>
-      <div className="row">
-        <button
-          ref={westKey}
-          className={`tile ${lit.includes(0) ? 'lit' : ''}`}
-          style={{ '--c': 'var(--bl)' } as React.CSSProperties}
+    <ActLayout question={`Turn both keys within ${WINDOW_MS / 1000} seconds.`} hint={hint}>
+      <ActRow>
+        <Tile
+          icon="key"
+          label="WEST KEY"
+          on={lit.includes(0)}
+          pressed={lit.includes(0)}
+          accent="bl"
+          buttonRef={westKey}
           onClick={() => press(0)}
-        >
-          <Icon name="key" />
-          <span>WEST KEY</span>
-        </button>
-        <button
-          ref={eastKey}
-          className={`tile ${lit.includes(1) ? 'lit' : ''}`}
-          style={{ '--c': 'var(--or)' } as React.CSSProperties}
+        />
+        <Tile
+          icon="key"
+          label="EAST KEY"
+          on={lit.includes(1)}
+          pressed={lit.includes(1)}
+          accent="or"
+          buttonRef={eastKey}
           onClick={() => press(1)}
-        >
-          <Icon name="key" />
-          <span>EAST KEY</span>
-        </button>
-      </div>
-      <p className="hint">{hint}</p>
-    </>
+        />
+      </ActRow>
+    </ActLayout>
   )
 }

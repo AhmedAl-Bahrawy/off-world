@@ -5,9 +5,8 @@ import type { PerspectiveCamera } from 'three'
 import gsap from 'gsap'
 import { onSceneChange, useVoyager } from '../state/store'
 import { bus } from '../lib/bus'
-import { motion, RM } from '../lib/motion'
-
-const TWEEN = { duration: RM ? 0 : 2.4, ease: 'power3.inOut' } as const
+import { motion } from '../lib/motion'
+import { SCENE_TWEEN } from '../lib/anim'
 
 /**
  * The refugee ship. Hidden (scale ~0) except during voyage (flies Kalamith→Earth)
@@ -35,12 +34,12 @@ export function Ship() {
         const a = Math.min(1, camera.aspect / 1.5)
         const f = 0.6 + 0.4 * a
         if (scene === 'voyage') {
-          gsap.to(group.current.scale, { x: 1.6 * f, y: 1.6 * f, z: 1.6 * f, ...TWEEN })
+          gsap.to(group.current.scale, { x: 1.6 * f, y: 1.6 * f, z: 1.6 * f, ...SCENE_TWEEN })
           group.current.position.set(7 * a, 1.5, -3)
           group.current.rotation.set(0, Math.PI, 0)
         } else {
           const s = scene === 'orbit' ? 1.6 * f : 0.001
-          gsap.to(group.current.scale, { x: s, y: s, z: s, ...TWEEN })
+          gsap.to(group.current.scale, { x: s, y: s, z: s, ...SCENE_TWEEN })
         }
       }),
     [camera],

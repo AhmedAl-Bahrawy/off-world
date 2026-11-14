@@ -5,14 +5,6 @@ import type { Accent, ChatWho, SceneName } from '../state/store'
  * `script.ts` reads like a screenplay and wording is easy to edit in one place.
  */
 
-/** Speaker display names used in chat windows. */
-export const SPEAKERS: Record<ChatWho, string> = {
-  W: 'WEST BLOC',
-  E: 'EAST BLOC',
-  A: 'ARCHIVE-9',
-  K: 'KALAMITH SCOUT',
-}
-
 export interface ChapterDef {
   title: string
   subtitle: string

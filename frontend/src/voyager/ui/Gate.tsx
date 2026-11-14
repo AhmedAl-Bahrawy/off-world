@@ -1,20 +1,36 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { RM } from '../lib/motion'
 
-type GateProps = { leaving: boolean; onStart: () => void }
+type GateProps = { onStart: () => void }
 
 /** Minimal Voyager mission welcome; entry is also available from the nav. */
-export function Gate({ leaving, onStart }: GateProps) {
-  const startRef = useRef(onStart)
-  startRef.current = onStart
+export function Gate({ onStart }: GateProps) {
+  // Leaving/starting are local: a replay remounts the gate (keyed by
+  // generation), so both reset without any effect bookkeeping.
+  const [leaving, setLeaving] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const onStartRef = useRef(onStart)
+
+  useEffect(() => {
+    onStartRef.current = onStart
+  }, [onStart])
+
+  const start = () => {
+    if (starting) return
+    setStarting(true)
+    setLeaving(true)
+    onStartRef.current()
+  }
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === ' ') {
-        if (event.target instanceof HTMLButtonElement) return
+        // Never hijack keys aimed at an interactive element.
+        const target = event.target as HTMLElement | null
+        if (target?.closest('button, a, input, textarea, select')) return
         event.preventDefault()
-        startRef.current()
+        onStartRef.current()
       }
     }
     addEventListener('keydown', onKey)
@@ -25,10 +41,10 @@ export function Gate({ leaving, onStart }: GateProps) {
     if (RM) return
     const ctx = gsap.context(() => {
       gsap.from('.kx-gate > *', {
-        y: 28,
+        y: 24,
         opacity: 0,
-        stagger: 0.1,
-        duration: 0.85,
+        stagger: 0.08,
+        duration: 0.7,
         ease: 'power3.out',
       })
     })
@@ -41,7 +57,7 @@ export function Gate({ leaving, onStart }: GateProps) {
         <p className="eyebrow">OFF-WORLD TRANSMISSION · 2231</p>
         <h1>VOYAGER</h1>
         <p className="hero-subtitle">A signal from the edge of silence.</p>
-        <button className="open" type="button" onClick={onStart}>
+        <button className="open" type="button" onClick={start}>
           ENTER THE MISSION <span aria-hidden="true">↗</span>
         </button>
         <p className="entry-hint">CLICK TO BEGIN <span>·</span> OR PRESS ENTER</p>

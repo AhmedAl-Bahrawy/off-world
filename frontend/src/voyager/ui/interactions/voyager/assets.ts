@@ -27,9 +27,3 @@ export const IMAGES = {
  * canvas texture is used instead. Set to '' to skip the request.
  */
 export const MARS_MAP_URL = commons('Mars_viking_colorized.jpg', 2048)
-
-/**
- * Optional Voyager 1 glTF/GLB. Leave '' to use the built-in procedural model.
- * When set it is auto-fitted and drawn instead; hotspots keep their positions.
- */
-export const VOYAGER_GLB_URL = ''

@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { finishAct, type DecodeProps } from '../../state/interactions'
 import { blip } from '../../lib/audio'
+import { useLitSet, useTimeout } from '../../lib/hooks'
+import { ActLayout, ActRow } from '../primitives'
 
 /**
  * Signal decoder: words scroll through garbage glyphs until tapped; tapping
@@ -9,49 +11,47 @@ import { blip } from '../../lib/audio'
 const GLYPHS = '#@%&$?!*'
 const scramble = (word: string) =>
   [...word].map(() => GLYPHS[(Math.random() * GLYPHS.length) | 0]).join('')
+const SCRAMBLE_MS = 90
 
 export function DecodeInteraction({ words }: DecodeProps) {
   const [texts, setTexts] = useState(() => words.map(scramble))
-  const [lit, setLit] = useState<number[]>([])
-  const litRef = useRef(new Set<number>())
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const { litRef, add, has, size } = useLitSet()
+  const finish = useTimeout()
 
   // Keep re-scrambling every undecoded word.
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
+    const iv = setInterval(() => {
       setTexts((prev) => prev.map((t, i) => (litRef.current.has(i) ? t : scramble(words[i]))))
-    }, 90)
-    return () => clearInterval(intervalRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    }, SCRAMBLE_MS)
+    return () => clearInterval(iv)
+  }, [litRef, words])
 
   const tap = (i: number) => {
-    if (litRef.current.has(i)) return
-    litRef.current.add(i)
-    setLit((cur) => [...cur, i])
+    if (has(i)) return
+    add(i)
     setTexts((prev) => prev.map((t, j) => (j === i ? words[i] : t)))
     blip(500 + i * 50)
 
-    if (litRef.current.size === words.length) {
-      clearInterval(intervalRef.current)
-      setTimeout(() => finishAct(), 900)
+    if (size + 1 === words.length) {
+      finish(() => finishAct(), 800)
     }
   }
 
   return (
-    <>
-      <p className="q">Tap each word to decode the signal.</p>
-      <div className="row">
+    <ActLayout question="Tap each word to decode the signal.">
+      <ActRow>
         {words.map((_, i) => (
           <button
             key={i}
-            className={`word ${lit.includes(i) ? 'lit' : ''}`}
+            type="button"
+            className={`word ${has(i) ? 'lit' : ''}`}
+            aria-pressed={has(i)}
             onClick={() => tap(i)}
           >
             {texts[i]}
           </button>
         ))}
-      </div>
-    </>
+      </ActRow>
+    </ActLayout>
   )
 }

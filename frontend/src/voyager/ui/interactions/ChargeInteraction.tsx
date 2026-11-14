@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { finishAct } from '../../state/interactions'
 import { bus } from '../../lib/bus'
 import { blip } from '../../lib/audio'
+import { useTimeout } from '../../lib/hooks'
+import { ActLayout, ActRow, Bar } from '../primitives'
 import { Icon } from '../Icons'
 
 /**
@@ -12,6 +14,7 @@ export function ChargeInteraction() {
   const [charge, setCharge] = useState(0)
   const chargeRef = useRef(0)
   const fullRef = useRef(false)
+  const finish = useTimeout()
 
   // Constant decay — mashing has to outrun it.
   useEffect(() => {
@@ -32,22 +35,19 @@ export function ChargeInteraction() {
 
     if (chargeRef.current >= 100) {
       fullRef.current = true
-      setTimeout(() => finishAct(), 400)
+      finish(() => finishAct(), 350)
     }
   }
 
   return (
-    <>
-      <p className="q">Tap fast to charge the drive to 27% of light speed.</p>
-      <div className="bar">
-        <i style={{ width: `${charge}%`, transition: 'width .1s' }} />
-      </div>
-      <div className="row">
-        <button style={{ '--c': 'var(--vi)' } as React.CSSProperties} onClick={mash}>
+    <ActLayout question="Tap fast to charge the drive to 27% of light speed.">
+      <Bar value={charge} label="Drive charge" fast />
+      <ActRow>
+        <button type="button" className="acc-vi" onClick={mash}>
           <Icon name="power" />
           <span>CHARGE</span>
         </button>
-      </div>
-    </>
+      </ActRow>
+    </ActLayout>
   )
 }

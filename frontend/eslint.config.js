@@ -20,13 +20,15 @@ export default defineConfig([
     },
   },
   {
-    // R3F is imperative by design (three.js objects are mutated in useFrame,
-    // procedural textures are generated once). The React Compiler's purity
-    // rules cannot express this, so they are relaxed for the Kalamith code.
-    files: ['src/kalamith/**/*.{ts,tsx}'],
+    // R3F/three.js is imperative by design: render loops mutate shared three
+    // objects held in refs (useRef({...}).current), and procedural textures
+    // are generated once. The React Compiler's purity/ref rules cannot
+    // express this, so they are relaxed for the 3D scene code.
+    files: ['src/voyager/**/*.{ts,tsx}'],
     rules: {
       'react-hooks/immutability': 'off',
       'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
     },
   },
 ])
