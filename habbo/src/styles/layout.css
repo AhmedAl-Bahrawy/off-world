@@ -1,0 +1,126 @@
+#root {
+  padding: 0 10px 12px;
+}
+.page-shell {
+  width: min(var(--page-width), 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--blue);
+  border-left: 3px solid #1a2830;
+  border-right: 3px solid #1a2830;
+  box-shadow:
+    0 0 0 1px #d9e6e6,
+    0 0 0 4px rgba(0, 0, 0, 0.45);
+}
+.main-canvas {
+  padding: 8px 6px 18px;
+}
+.portal-grid {
+  display: grid;
+  grid-template-columns: 1.18fr 1fr;
+  gap: 5px;
+  align-items: stretch;
+}
+.home-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px;
+  align-items: start;
+  margin-top: 5px;
+}
+.column-stack {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.content-divider {
+  margin: 20px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #eaf5f5;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.content-divider::before,
+.content-divider::after {
+  content: "";
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  flex: 1;
+}
+.story-section {
+  margin: 0 0 30px;
+  scroll-margin-top: 12px;
+}
+.story-feature {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+.story-copy {
+  background: #eaf0ec;
+  border: 2px solid var(--line);
+  padding: 12px;
+  box-shadow: var(--pixel-shadow);
+}
+.timeline-list {
+  background: #eaf0ec;
+  border: 2px solid var(--line);
+  padding: 8px 14px;
+}
+.artifact-index {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+.arrival-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 15px;
+  align-items: center;
+  margin: 28px 0;
+  padding: 12px;
+  background: var(--navy-deep);
+  color: white;
+  border: 2px solid #101820;
+}
+.sources-section {
+  background: #eaf0ec;
+  border: 2px solid var(--line);
+  padding: 12px;
+  margin-top: 18px;
+}
+.site-footer {
+  background: #073d59;
+  color: #c4dce4;
+  padding: 14px;
+  text-align: center;
+  border-top: 3px solid #0b2f43;
+}
+@media (max-width: 680px) {
+  #root {
+    padding: 0;
+  }
+  .page-shell {
+    border: 0;
+    box-shadow: none;
+  }
+  .main-canvas {
+    padding: 6px;
+  }
+  .portal-grid,
+  .home-columns {
+    grid-template-columns: 1fr;
+  }
+  .story-feature,
+  .arrival-section {
+    grid-template-columns: 1fr;
+  }
+  .artifact-index {
+    grid-template-columns: 1fr;
+  }
+}

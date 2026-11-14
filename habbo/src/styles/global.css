@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 12px;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  background-color: #477d21;
+  background-image: url("/outer-space-pattern.svg");
+  background-repeat: repeat;
+  color: var(--ink);
+  font-family: Tahoma, Verdana, Arial, sans-serif;
+  font-size: 12px;
+}
+a {
+  color: inherit;
+}
+button {
+  font: inherit;
+}
+::selection {
+  background: #ffd000;
+  color: #102c3b;
+}
+:focus-visible {
+  outline: 3px solid #ff7a00;
+  outline-offset: 2px;
+}

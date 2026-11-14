@@ -1,0 +1,20 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #45434a;
+  background: #91e0e5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --sky: #91e0e5;
+  --sky-deep: #70d1dc;
+  --panel-white: #f8f8fb;
+  --panel-lavender: #eeedf8;
+  --lime: #d7f58d;
+  --lime-border: #9bc44a;
+  --link: #0000ee;
+  --ink: #45434a;
+  --line: #a8d4a0;
+  --content-width: 725px;
+  --main-width: 533px;
+  --side-width: 180px;
+  --column-gap: 11px;
+}

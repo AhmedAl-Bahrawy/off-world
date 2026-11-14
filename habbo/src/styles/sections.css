@@ -1,0 +1,340 @@
+/* ===== Archive & story-block extensions ===== */
+
+/* Fact labels (story-vs-fact system) */
+.fact-label {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 5px;
+  background: var(--fact-bg);
+  border: 1px solid var(--fact-border);
+  color: var(--fact-ink);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+}
+.fact-label--data {
+  background: var(--data-bg);
+  border-color: var(--data-border);
+  color: var(--data-ink);
+}
+.fact-label--log {
+  background: var(--log-bg);
+  border-color: var(--log-border);
+  color: var(--log-ink);
+}
+.fact-label--recon {
+  background: var(--recon-bg);
+  border-color: var(--recon-border);
+  color: var(--recon-ink);
+}
+
+/* Story blocks (labelled fact/log/data entries) */
+.story-block {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: #eaf0ec;
+  border: 2px solid var(--line);
+  box-shadow: var(--pixel-shadow);
+}
+.story-block h4 {
+  margin: 2px 0 4px;
+  font-size: 12px;
+  color: #143e54;
+}
+.story-block p {
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+.story-block--panel {
+  background: #f7f7f3;
+  border-color: #142630;
+}
+.story-copy__note {
+  padding: 6px 8px;
+  background: #fdf6d8;
+  border: 1px dashed #b8a24d;
+  font-size: 10px;
+  color: #6b5a20;
+}
+.source-citation {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #b84d0b;
+  font-size: 8px;
+  font-weight: bold;
+}
+.source-citation:hover {
+  text-decoration: underline;
+}
+
+/* Quest intro glyph (replaces removed icon) */
+.quest-intro__glyph {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  background: #0b4865;
+  color: #ffe05b;
+  border: 1px solid #101820;
+  font-size: 14px;
+}
+.archive-links__glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  color: #0b4865;
+  font-size: 11px;
+}
+.archive-links__index {
+  margin-left: auto;
+  color: #b4520d;
+}
+
+/* Artifact cards (archive index) */
+.chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.artifact-list {
+  display: grid;
+  gap: 7px;
+  max-width: 560px;
+}
+.artifact-card {
+  background: var(--panel);
+  border: 2px solid #142630;
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+.artifact-card__toggle {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.artifact-card__toggle:hover {
+  background: #fff6c4;
+}
+.artifact-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.artifact-card__top b {
+  font-size: 12px;
+  color: #173c50;
+}
+.artifact-card__summary {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: #536469;
+}
+.artifact-card__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 5px;
+  color: #c24d08;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+.artifact-card__detail {
+  padding: 8px 10px;
+  border-top: 1px dotted #a4b0b0;
+  background: #eef2ee;
+}
+.artifact-card__detail p {
+  margin: 0 0 4px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #465b60;
+}
+
+/* Golden Record panel */
+.golden-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  margin: 6px 0;
+}
+.golden-tab {
+  padding: 7px 3px;
+  background: #e9dfae;
+  border: 1px solid #aa9654;
+  color: #4c3f14;
+  cursor: pointer;
+  text-align: center;
+  font-size: 8px;
+  font-weight: bold;
+}
+.golden-tab:hover {
+  background: #fdf3c0;
+}
+.golden-tab.is-active {
+  background: var(--yellow);
+  border-color: #101820;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+.golden-detail {
+  padding: 8px;
+  background: #f4ecd0;
+  border: 1px solid #aa9654;
+}
+.golden-detail b {
+  font-size: 10px;
+  color: #4c3f14;
+}
+.golden-detail p {
+  margin: 3px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #5c522f;
+}
+
+/* Mission timeline */
+.timeline-panel .panel__body {
+  padding: 4px 8px;
+}
+.timeline-entry__source {
+  display: inline-block;
+  margin-top: 3px;
+  color: #b84d0b;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+/* Archive map (clearly labelled schematic) */
+.map-row {
+  margin-top: 10px;
+}
+.map-panel .panel__body {
+  display: grid;
+  gap: 8px;
+}
+.archive-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #06253a;
+  border: 1px solid #061c28;
+}
+.archive-map__orbit {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 0.5;
+}
+.archive-map__orbit--dash {
+  stroke-dasharray: 2 2;
+}
+.archive-map__sun {
+  fill: var(--yellow);
+  stroke: #a16c00;
+  stroke-width: 0.6;
+}
+.archive-map__stop {
+  fill: #ffe05b;
+  stroke: #101820;
+  stroke-width: 0.5;
+  cursor: pointer;
+}
+.archive-map__stop:hover {
+  fill: #ff9d3d;
+}
+.archive-map__text {
+  fill: #cfe6ea;
+  font-size: 3.4px;
+  font-weight: bold;
+  text-anchor: middle;
+  letter-spacing: 0.3px;
+}
+.archive-map__arrow {
+  stroke: var(--yellow);
+  stroke-width: 0.8;
+  fill: none;
+}
+.map-legend {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.map-legend a {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 5px;
+  background: #e7ece8;
+  border: 1px solid #c0ccca;
+  color: #164760;
+  text-decoration: none;
+  font-size: 9px;
+  font-weight: bold;
+}
+.map-legend a:hover {
+  background: #fff2a8;
+}
+.map-legend i {
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  background: var(--yellow);
+  border: 1px solid #101820;
+}
+.map-legend a span {
+  margin-left: auto;
+  color: #667579;
+  font-weight: normal;
+}
+
+/* Arrival chapter blocks */
+.arrival-blocks {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+}
+.arrival-block {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.arrival-block p {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #cfe2e8;
+}
+
+/* Footer links */
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .golden-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .chapter-grid {
+    grid-template-columns: 1fr;
+  }
+  .artifact-list {
+    max-width: none;
+  }
+  .artifact-card__top {
+    flex-wrap: wrap;
+  }
+}

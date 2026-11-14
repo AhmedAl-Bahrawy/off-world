@@ -1,0 +1,21 @@
+* { box-sizing: border-box; }
+html { min-width: 320px; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font: 13px/1.35 Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(ellipse at 12% 25%, rgba(255,255,255,.24) 0 11%, transparent 11.3%),
+    radial-gradient(ellipse at 26% 8%, rgba(255,255,255,.2) 0 10%, transparent 10.3%),
+    radial-gradient(ellipse at 80% 45%, rgba(255,255,255,.13) 0 12%, transparent 12.3%),
+    radial-gradient(ellipse at 60% 85%, rgba(255,255,255,.16) 0 14%, transparent 14.3%),
+    linear-gradient(115deg, #80d9e2, #a5e8e8 50%, #7dd6df);
+  background-attachment: fixed;
+}
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+mark { color: #26232b; background: #fff000; padding: 0 2px; }
+:focus-visible { outline: 2px solid #45434a; outline-offset: 1px; }

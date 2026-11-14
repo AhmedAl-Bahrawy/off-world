@@ -1,0 +1,1 @@
+{"routes":[{"path":"/","title":"OFF-WORLD Home"},{"path":"/archive","title":"Mission Archive"},{"path":"/golden-record","title":"Golden Record"},{"path":"/about","title":"About the Exhibit"},{"path":"/artifact/:slug","title":"Artifact Detail"},{"path":"/chapter/:id","title":"Expedition Chapter"}]}
