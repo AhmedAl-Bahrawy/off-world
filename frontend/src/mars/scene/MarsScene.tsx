@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "../styles/mars.css";
+import "../styles/archive.css";
 import { MISSIONS } from "../story/missions";
+import type { MissionAnchor } from "../story/missions";
+import { ARTIFACT_BY_ID } from "../story/artifacts";
 import { useMarsStore } from "../state/store";
 import type { MarsView } from "../state/store";
 import { SceneTitle } from "../../shared/SceneTitle";
+import ArtifactPanel from "../ui/ArtifactPanel";
+import EvidenceCard from "../ui/EvidenceCard";
+import MarsArchive from "../ui/MarsArchive";
+import ArchiveViewer from "../archive/ArchiveViewer";
 
 type Platform = {
   x: number;
@@ -12,12 +19,29 @@ type Platform = {
   h: number;
   oneWay?: boolean;
 };
+type Interactable = {
+  id: string;
+  kind: MissionAnchor["kind"];
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label: string;
+  unknownLabel: string;
+  verb: string;
+  artifactId: string;
+  componentId?: string;
+  evidenceId?: string;
+  air?: boolean;
+  taken: boolean;
+  pinged: boolean;
+};
 type World = {
   solids: Platform[];
   length: number;
   goalX: number;
   checkpoints: number[];
-  shards: { x: number; y: number; got: boolean; hidden?: boolean }[];
+  interactables: Interactable[];
 };
 type Player = {
   x: number;
@@ -33,6 +57,12 @@ type Player = {
   bounced: boolean;
   flying: boolean;
   battery: number;
+};
+type Sequence = {
+  id: string;
+  steps: { text: string; at: number }[];
+  duration: number;
+  t: number;
 };
 
 const W = 480,
@@ -77,6 +107,7 @@ const spriteNames = [
 ];
 
 function buildWorld(index: number): World {
+  const mission = MISSIONS[index];
   const length = 1500 + (index % 3) * 160;
   const solids: Platform[] = [
     { x: 0, y: GROUND, w: 215, h: 80 },
@@ -103,20 +134,37 @@ function buildWorld(index: number): World {
     x += width + gap;
   }
   solids.push({ x: length - 180, y: GROUND, w: 220, h: 80 });
-  const shards = Array.from({ length: 8 }, (_, i) => ({
-    x: 125 + i * ((length - 260) / 8),
-    y: index === 1 ? GROUND + 20 : 184 - (i % 3) * 25,
-    got: false,
-    hidden: index === 1,
-  }));
+
+  const interactables: Interactable[] = mission.anchors.map((anchor) => {
+    const base = 70 + anchor.at * (length - 180);
+    return {
+      id: anchor.id,
+      kind: anchor.kind,
+      x: base,
+      y: GROUND - (anchor.dy ?? 0) - (anchor.kind === "evidence" ? 14 : 0),
+      w: anchor.kind === "artifact" ? 46 : 26,
+      h: anchor.kind === "artifact" ? 54 : 30,
+      label: anchor.label,
+      unknownLabel: anchor.unknownLabel ?? anchor.label,
+      verb: anchor.verb,
+      artifactId: anchor.artifactId,
+      componentId: anchor.componentId,
+      evidenceId: anchor.evidenceId,
+      air: anchor.air,
+      taken: false,
+      pinged: false,
+    };
+  });
+
   return {
     solids,
     length,
     goalX: length - 90,
     checkpoints: [0, Math.floor(length * 0.48)],
-    shards,
+    interactables,
   };
 }
+
 function sprite(
   imgs: Record<string, HTMLImageElement>,
   name: string,
@@ -156,8 +204,9 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
     keys: {} as Record<string, boolean>,
     jumpEdge: false,
     imgs: {} as Record<string, HTMLImageElement>,
-    bits: 0,
     got: 0,
+    prompt: "",
+    sequence: null as Sequence | null,
   });
   const view = useMarsStore((s) => s.view);
   const setView = useMarsStore((s) => s.setView);
@@ -169,17 +218,51 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
   const setCollected = useMarsStore((s) => s.setCollected);
   const quizResult = useMarsStore((s) => s.quizResult);
   const setQuizResult = useMarsStore((s) => s.setQuizResult);
+  const discovered = useMarsStore((s) => s.discoveredArtifacts);
+  const inspected = useMarsStore((s) => s.inspectedComponents);
+  const recovered = useMarsStore((s) => s.recoveredEvidence);
+  const discoverArtifact = useMarsStore((s) => s.discoverArtifact);
+  const inspectComponent = useMarsStore((s) => s.inspectComponent);
+  const recoverEvidence = useMarsStore((s) => s.recoverEvidence);
+  const unlockArchive = useMarsStore((s) => s.unlockArchive);
+  const completeCheck = useMarsStore((s) => s.completeCheck);
+  const completeArtifact = useMarsStore((s) => s.completeArtifact);
+  const [livePrompt, setLivePrompt] = useState("");
+  const [openArtifact, setOpenArtifact] = useState("");
+  const [openEvidence, setOpenEvidence] = useState("");
+
   const mission = MISSIONS[level];
-  const changeView = useCallback((next: MarsView) => {
-    gameRef.current.view = next;
-    setView(next);
+  const artifact = ARTIFACT_BY_ID[mission.artifactId];
+
+  const changeView = useCallback(
+    (next: MarsView) => {
+      gameRef.current.view = next;
+      setView(next);
+    },
+    [setView],
+  );
+
+  // Keep the world's view of the player's knowledge in sync with the store.
+  const syncWorld = useCallback(() => {
+    const g = gameRef.current;
+    const st = useMarsStore.getState();
+    g.world.interactables.forEach((i) => {
+      if (i.evidenceId) i.taken = st.recoveredEvidence.includes(i.evidenceId);
+      if (i.componentId)
+        i.taken = st.inspectedComponents.includes(i.componentId);
+    });
   }, []);
+
+  useEffect(() => {
+    syncWorld();
+  }, [recovered, inspected, discovered, syncWorld]);
 
   const resetMission = useCallback(
     (idx: number) => {
       const g = gameRef.current;
       g.level = idx;
       g.world = buildWorld(idx);
+      syncWorld();
       g.player = {
         x: 48,
         y: 190,
@@ -200,16 +283,17 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       g.checkpoint = 0;
       g.deaths = 0;
       g.got = 0;
-      g.world.shards.forEach((s) => {
-        s.got = false;
-      });
+      g.sequence = null;
+      g.prompt = "";
+      setOpenArtifact("");
+      setOpenEvidence("");
       setLevel(idx);
       setDeaths(0);
       setCollected(0);
       setQuizResult(false);
       changeView("play");
     },
-    [changeView],
+    [changeView, syncWorld, setCollected, setDeaths, setLevel, setQuizResult],
   );
 
   useEffect(() => {
@@ -241,16 +325,69 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
     };
     resize();
     window.addEventListener("resize", resize);
+
+    const nearestInteractable = (g: typeof gameRef.current): Interactable | null => {
+      const p = g.player;
+      let best: Interactable | null = null;
+      let bestDist = Infinity;
+      for (const i of g.world.interactables) {
+        if (i.taken) continue;
+        if (i.air && !p.flying) continue;
+        const dx = Math.abs(p.x + 9 - i.x);
+        const dy = Math.abs(p.y + 12 - i.y);
+        if (dx < 40 && dy < 46 && dx < bestDist) {
+          best = i;
+          bestDist = dx;
+        }
+      }
+      return best;
+    };
+
+    const startSequence = (id: string) => {
+      const sequences: Record<string, Sequence["steps"]> = {
+        sample: [
+          { text: "ARM EXTENDS", at: 0 },
+          { text: "SOIL SAMPLE", at: 1.1 },
+          { text: "SAMPLE MOVED", at: 2.2 },
+          { text: "INSIDE THE LANDER — THE LAB IS RUNNING", at: 3.4 },
+        ],
+        deploy: [
+          { text: "RAMP OPENS", at: 0 },
+          { text: "SOJOURNER ROLLS DOWN", at: 1.3 },
+          { text: "THE ROVER LEAVES THE LANDER", at: 2.9 },
+          { text: "PATHFINDER DELIVERED SOJOURNER", at: 4.3 },
+        ],
+        flight: [
+          { text: "FLIGHT 72 — CLIMBING TO 40 FEET", at: 0 },
+          { text: "HOVERING 4.5 SECONDS", at: 1.6 },
+          { text: "DESCENDING — THE GROUND LOOKS THE SAME", at: 3.2 },
+          { text: "HARD LANDING — ROTOR DAMAGE", at: 4.8 },
+          { text: "THE FLIGHT ENDED. THE KNOWLEDGE CONTINUED.", at: 6.4 },
+        ],
+      };
+      const steps = sequences[id];
+      if (!steps) return;
+      gameRef.current.sequence = {
+        id,
+        steps,
+        duration: steps[steps.length - 1].at + 2.4,
+        t: 0,
+      };
+    };
+
     const keyDown = (e: KeyboardEvent) => {
+      const g = gameRef.current;
       if (
         [
           "ArrowLeft",
           "ArrowRight",
           "ArrowUp",
+          "ArrowDown",
           "Space",
           "KeyA",
           "KeyD",
           "KeyW",
+          "KeyS",
           "ShiftLeft",
           "ShiftRight",
           "KeyE",
@@ -262,34 +399,64 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       )
         e.preventDefault();
       if (e.repeat) return;
-      gameRef.current.keys[e.code] = true;
-      if (["Space", "KeyW", "ArrowUp"].includes(e.code))
-        gameRef.current.jumpEdge = true;
-      if (e.code === "Escape" && gameRef.current.view === "play")
-        changeView("pause");
-      else if (e.code === "Escape" && gameRef.current.view === "pause")
-        changeView("play");
-      if (e.code === "KeyE" && gameRef.current.view === "play") {
-        const g = gameRef.current;
-        if (Math.abs(g.player.x - (g.world.goalX - 16)) < 38)
-          changeView("quiz");
-        else if (g.level === 1) {
-          const nearest = g.world.shards.find(
-            (s) => s.hidden && !s.got && Math.abs(s.x - g.player.x) < 26,
-          );
-          if (nearest) {
-            nearest.hidden = false;
-            nearest.y = GROUND - 20;
-          }
-        }
+      if (g.view === "play") g.keys[e.code] = true;
+      if (["Space", "KeyW", "ArrowUp"].includes(e.code) && g.view === "play")
+        g.jumpEdge = true;
+      if (g.sequence && (e.code === "Space" || e.code === "KeyE")) {
+        g.sequence = null;
+        return;
       }
-      if (e.code === "KeyQ" && gameRef.current.view === "play")
-        gameRef.current.world.shards.forEach((s) => {
-          if (Math.abs(s.x - gameRef.current.player.x) < 150 && s.hidden) {
-            s.hidden = false;
-            s.y = Math.min(s.y, 170);
+      if (e.code === "Escape" && g.view === "play") changeView("pause");
+      else if (e.code === "Escape" && g.view === "pause") changeView("play");
+      else if (e.code === "Escape" && (g.view === "artifact" || g.view === "archive")) {
+        setOpenArtifact("");
+        setOpenEvidence("");
+        changeView("play");
+      }
+      if (e.code === "KeyE" && g.view === "play") {
+        const target = nearestInteractable(g);
+        if (!target) return;
+        if (target.kind === "artifact") {
+          discoverArtifact(target.artifactId);
+          setOpenArtifact(target.artifactId);
+          changeView("artifact");
+          return;
+        }
+        if (target.kind === "component") {
+          if (!useMarsStore.getState().discoveredArtifacts.includes(target.artifactId)) {
+            discoverArtifact(target.artifactId);
           }
+          if (target.componentId) {
+            inspectComponent(target.componentId);
+            const comp = ARTIFACT_BY_ID[target.artifactId]?.components.find(
+              (c) => c.id === target.componentId,
+            );
+            if (comp?.action) startSequence(comp.action);
+          }
+          setOpenArtifact(target.artifactId);
+          changeView("artifact");
+          return;
+        }
+        if (target.kind === "evidence") {
+          if (target.evidenceId) {
+            recoverEvidence(target.evidenceId);
+            setOpenEvidence(target.evidenceId);
+            changeView("evidence");
+          }
+          return;
+        }
+        if (target.kind === "archive") {
+          setOpenArtifact(target.artifactId);
+          changeView("archive");
+        }
+        return;
+      }
+      if (e.code === "KeyQ" && g.view === "play") {
+        g.world.interactables.forEach((i) => {
+          if (i.kind === "evidence" && !i.taken && Math.abs(i.x - g.player.x) < 150)
+            i.pinged = true;
         });
+      }
     };
     const keyUp = (e: KeyboardEvent) => {
       gameRef.current.keys[e.code] = false;
@@ -300,6 +467,7 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
     window.addEventListener("keydown", keyDown);
     window.addEventListener("keyup", keyUp);
     window.addEventListener("blur", clearKeys);
+
     const drawSprite = (
       name: string,
       x: number,
@@ -332,6 +500,7 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         );
       ctx.restore();
     };
+
     const render = () => {
       const g = gameRef.current,
         p = g.player,
@@ -394,30 +563,86 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
           0,
         ),
       );
-      world.shards.forEach((s) => {
-        if (s.got || s.hidden) return;
-        const bob = Math.sin(g.time * 3 + s.x) * 3;
-        drawSprite(
-          "shard",
-          s.x - g.camera,
-          s.y + bob,
-          1,
-          Math.floor(g.time * 5) % 2,
-        );
+
+      // --- Artifact landmarks, component markers, evidence and the terminal ---
+      world.interactables.forEach((item) => {
+        const sx = item.x - g.camera;
+        if (sx < -70 || sx > W + 70) return;
+        const known = useMarsStore
+          .getState()
+          .discoveredArtifacts.includes(item.artifactId);
+        const pulse = 0.5 + 0.5 * Math.sin(g.time * 3 + item.x);
+
+        if (item.kind === "artifact") {
+          // Environmental framing: a soft halo, debris and a standing antenna.
+          ctx.fillStyle = `rgba(255,220,170,${0.05 + 0.05 * pulse})`;
+          ctx.beginPath();
+          ctx.arc(sx, GROUND - 26, 46, 0, Math.PI * 2);
+          ctx.fill();
+          drawSprite(
+            MISSIONS[g.level].sprite,
+            sx - 22,
+            GROUND - 40,
+            3,
+            Math.floor(g.time * 1.5) % 2,
+          );
+          drawSprite("antenna", sx + 26, GROUND - 26, 1, 0);
+          drawSprite("rock", sx - 42, GROUND - 10, 1, 0);
+          if (known) {
+            ctx.strokeStyle = `rgba(200,240,210,${0.25 + 0.35 * pulse})`;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(sx - 34.5, GROUND - 46.5, 69, 47);
+          }
+          return;
+        }
+
+        if (item.kind === "component") {
+          if (!known) return;
+          drawSprite("cell", sx - 5, item.y - 4, 1, 0);
+          ctx.strokeStyle = `rgba(255,214,140,${0.35 + 0.45 * pulse})`;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(sx - 7.5, item.y - 6.5, 15, 15);
+          return;
+        }
+
+        if (item.kind === "evidence") {
+          if (item.taken) return;
+          const bob = Math.sin(g.time * 3 + item.x) * 2;
+          if (item.air && !p.flying) {
+            // An aerial waypoint only resolves while the player is flying.
+            ctx.strokeStyle = `rgba(180,220,255,${0.2 + 0.3 * pulse})`;
+            ctx.setLineDash([3, 3]);
+            ctx.strokeRect(sx - 9.5, item.y - 9.5 + bob, 19, 19);
+            ctx.setLineDash([]);
+            return;
+          }
+          drawSprite(
+            item.pinged || item.air ? "bit" : "shard",
+            sx - 4,
+            item.y - 6 + bob,
+            1,
+            Math.floor(g.time * 5) % 2,
+          );
+          ctx.strokeStyle = `rgba(255,236,180,${0.25 + 0.4 * pulse})`;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(sx - 6.5, item.y - 8.5 + bob, 13, 13);
+          return;
+        }
+
+        if (item.kind === "archive") {
+          drawSprite("antenna", sx - 9, item.y - 4, 1, 0);
+          ctx.strokeStyle = `rgba(190,240,210,${0.3 + 0.4 * pulse})`;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(sx - 11.5, item.y - 6.5, 23, 23);
+        }
       });
+
       drawSprite(
         "goalpost",
         world.goalX - g.camera,
         GROUND - 28,
         2,
         Math.floor(g.time * 3) % 2,
-      );
-      drawSprite(
-        MISSIONS[g.level].sprite,
-        world.goalX + 42 - g.camera,
-        GROUND - 19,
-        2,
-        Math.floor(g.time * 2) % 2,
       );
       const animName = !p.onGround
         ? p.vy < 0
@@ -440,6 +665,8 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         ctx.fillStyle = "#fff7";
         ctx.fillRect(p.x - g.camera - 2, p.y - 2, 28, 32);
       }
+
+      // --- HUD ---
       ctx.fillStyle = "#080b18b8";
       ctx.fillRect(10, 10, 258, 31);
       ctx.strokeStyle = "#e4b771";
@@ -454,7 +681,7 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       ctx.fillStyle = "#fff";
       ctx.font = "7px monospace";
       ctx.fillText(
-        `MEMORIES ${g.got}/${world.shards.length}     ${MISSIONS[g.level].zone.toUpperCase()}`,
+        `EVIDENCE ${g.got}/${ARTIFACT_BY_ID[MISSIONS[g.level].artifactId].evidence.length}     ${MISSIONS[g.level].zone.toUpperCase()}`,
         18,
         34,
       );
@@ -474,7 +701,7 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         20,
       );
       ctx.fillText(
-        g.level >= 1 ? "Q RELAY · E DIG · ESC" : "E INTERACT · ESC PAUSE",
+        g.level >= 1 ? "Q RELAY · E INSPECT · ESC" : "E INSPECT · ESC PAUSE",
         W - 108,
         30,
       );
@@ -484,8 +711,99 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         ctx.fillStyle = p.battery > 25 ? "#b6e5ff" : "#ff927d";
         ctx.fillRect(W - 113, 40, Math.max(0, p.battery), 3);
       }
+
+      // --- Contextual interaction prompt ---
+      const target = g.view === "play" ? nearestInteractable(g) : null;
+      const promptKey = target
+        ? `${target.id}:${target.label}:${target.verb}:${
+            useMarsStore.getState().discoveredArtifacts.includes(target.artifactId)
+          }`
+        : "";
+      if (promptKey !== g.prompt) {
+        g.prompt = promptKey;
+        setLivePrompt(
+          target
+            ? `${target.label}. Press E to ${target.verb.toLowerCase()}.`
+            : "",
+        );
+      }
+      if (target) {
+        const knownNow = useMarsStore
+          .getState()
+          .discoveredArtifacts.includes(target.artifactId);
+        const label =
+          target.kind === "artifact" && !knownNow
+            ? target.unknownLabel
+            : target.label;
+        const bx = Math.max(6, Math.min(W - 214, target.x - g.camera - 100));
+        const by = Math.max(52, target.y - 44);
+        ctx.fillStyle = "#080b18e0";
+        ctx.fillRect(bx, by, 208, 30);
+        ctx.strokeStyle = "#ffd9a0";
+        ctx.strokeRect(bx + 0.5, by + 0.5, 207, 29);
+        ctx.fillStyle = "#ffe0a0";
+        ctx.font = "bold 7px monospace";
+        ctx.fillText(label.slice(0, 32), bx + 8, by + 12);
+        ctx.fillStyle = "#c0e9d1";
+        ctx.font = "7px monospace";
+        ctx.fillText(`E  ${target.verb}`, bx + 8, by + 24);
+      }
+
+      // --- Playable beats ---
+      if (g.sequence) {
+        const seq = g.sequence;
+        const step =
+          [...seq.steps].reverse().find((s) => seq.t >= s.at) ?? seq.steps[0];
+        ctx.fillStyle = "#080b18e6";
+        ctx.fillRect(40, H - 46, W - 80, 28);
+        ctx.strokeStyle = "#ffd9a0";
+        ctx.strokeRect(40.5, H - 45.5, W - 81, 27);
+        ctx.fillStyle = "#ffe0a0";
+        ctx.font = "bold 8px monospace";
+        ctx.fillText(step.text, 52, H - 28);
+
+        const anchor = world.interactables.find((i) => i.kind === "artifact");
+        const ax = (anchor?.x ?? 0) - g.camera;
+        if (seq.id === "sample" && ax > -60 && ax < W + 60) {
+          const reach = Math.min(1, seq.t / 1.6);
+          ctx.strokeStyle = "#e8d5b0";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(ax + 18, GROUND - 34);
+          ctx.lineTo(ax + 18 + reach * 26, GROUND - 34 + reach * 22);
+          ctx.stroke();
+          if (seq.t > 1.1)
+            drawSprite("shard", ax + 42, GROUND - 14, 1, 0);
+        }
+        if (seq.id === "deploy" && ax > -60 && ax < W + 60) {
+          ctx.strokeStyle = "#d8c39a";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(ax + 16, GROUND - 26);
+          ctx.lineTo(ax + 44, GROUND - 6);
+          ctx.stroke();
+          const roll = Math.min(1, Math.max(0, (seq.t - 1.3) / 1.8));
+          drawSprite("sojourner", ax + 40 + roll * 58, GROUND - 10 - roll * 2, 1, 0);
+        }
+        if (seq.id === "flight" && ax > -60 && ax < W + 60) {
+          const up = Math.min(1, seq.t / 1.6);
+          const down = Math.max(0, Math.min(1, (seq.t - 3.2) / 2));
+          const height = 34 * up - 30 * down * down;
+          drawSprite("coper_idle", ax - 10, GROUND - 40 - height, 2, 0);
+          if (seq.t > 4.8) {
+            ctx.strokeStyle = "#ff927d";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(ax - 18.5, GROUND - 26.5, 40, 26);
+          }
+        }
+        ctx.fillStyle = "#ffffff88";
+        ctx.font = "6px monospace";
+        ctx.fillText("SPACE / E — SKIP", W - 96, H - 18);
+      }
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
+
     const die = () => {
       const g = gameRef.current;
       g.deaths++;
@@ -516,12 +834,20 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         if (gameRef.current.view === "respawn") changeView("play");
       }, 850);
     };
+
     const update = (dt: number) => {
       const g = gameRef.current,
         p = g.player,
         world = g.world,
         keys = g.keys;
       g.time += dt;
+
+      if (g.sequence) {
+        g.sequence.t += dt;
+        if (g.sequence.t >= g.sequence.duration) g.sequence = null;
+        render();
+        return;
+      }
       if (g.view !== "play") {
         render();
         return;
@@ -600,11 +926,16 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       world.checkpoints.forEach((x, i) => {
         if (p.x > x && i > g.checkpoint) g.checkpoint = i;
       });
-      world.shards.forEach((s) => {
-        if (!s.got && Math.abs(p.x - s.x) < 17 && Math.abs(p.y - s.y) < 28) {
-          s.got = true;
-          g.got++;
-          setCollected(g.got);
+      world.interactables.forEach((item) => {
+        if (item.taken || item.kind !== "evidence") return;
+        if (item.air && !p.flying) return;
+        if (Math.abs(p.x + 9 - item.x) < 17 && Math.abs(p.y + 12 - item.y) < 30) {
+          item.taken = true;
+          if (item.evidenceId) {
+            recoverEvidence(item.evidenceId);
+            setOpenEvidence(item.evidenceId);
+            changeView("evidence");
+          }
         }
       });
       const target = Math.max(
@@ -619,19 +950,20 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       }
       render();
     };
+
     const loop = (now: number) => {
       const g = gameRef.current;
       if (!g.last) g.last = now;
-      let dt = Math.min(0.05, (now - g.last) / 1000);
+      const dt = Math.min(0.05, (now - g.last) / 1000);
       g.last = now;
-      if (g.view === "play") {
+      if (g.view === "play" || g.sequence) {
         g.accumulator += dt;
         let n = 0;
         while (g.accumulator >= STEP && n < 5) {
           update(STEP);
           g.accumulator -= STEP;
           n++;
-          if (g.view !== "play") break;
+          if (g.view !== "play" && !g.sequence) break;
         }
       } else render();
       raf = requestAnimationFrame(loop);
@@ -644,7 +976,25 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", clearKeys);
     };
-  }, [changeView]);
+  }, [
+    changeView,
+    discoverArtifact,
+    inspectComponent,
+    recoverEvidence,
+    setDeaths,
+  ]);
+
+  // Evidence recovered inside the current artifact drives the HUD counter.
+  useEffect(() => {
+    const ids = ARTIFACT_BY_ID[MISSIONS[level].artifactId]?.evidence.map(
+      (e) => e.id,
+    );
+    const count = ids
+      ? ids.filter((id) => recovered.includes(id)).length
+      : 0;
+    gameRef.current.got = count;
+    setCollected(count);
+  }, [recovered, level, setCollected]);
 
   const advance = () => {
     if (level === MISSIONS.length - 1) changeView("complete");
@@ -653,11 +1003,29 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       changeView("brief");
     }
   };
+
+  const openArchiveFor = (artifactId: string) => {
+    setOpenArtifact(artifactId);
+    changeView("archive");
+  };
+
   const buttonKey = (code: string, down: boolean) => {
     gameRef.current.keys[code] = down;
     if (down && ["Space", "KeyW", "ArrowUp"].includes(code))
       gameRef.current.jumpEdge = true;
   };
+
+  const evidenceFragment = openEvidence
+    ? Object.values(ARTIFACT_BY_ID)
+        .flatMap((a) => a.evidence)
+        .find((e) => e.id === openEvidence)
+    : undefined;
+  const evidenceIndex = evidenceFragment
+    ? ARTIFACT_BY_ID[evidenceFragment.artifactId].evidence.findIndex(
+        (e) => e.id === evidenceFragment.id,
+      ) + 1
+    : 0;
+
   return (
     <div className="mars-shell" data-zone={mission.zone}>
       <canvas
@@ -666,6 +1034,9 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         aria-label="Mars platform simulation"
       />
       <div className="mars-grain" aria-hidden="true" />
+      <p className="mars-sr-only" aria-live="polite">
+        {livePrompt}
+      </p>
       <header className="mars-top">
         <div className="mars-mark">
           <span className="mars-mark-icon">M</span>
@@ -680,6 +1051,7 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
           RETURN TO VOYAGER <span>↗</span>
         </button>
       </header>
+
       <section
         className={`mars-panel ${view === "play" ? "mars-panel-playing" : ""}`}
         aria-live="polite"
@@ -693,6 +1065,7 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
               subtitle={mission.subtitle}
             />
             <p>{mission.briefing}</p>
+            <p className="mars-brief-purpose">{mission.purpose}</p>
             <div className="mars-help">
               <span>
                 <b>A / D</b> WALK
@@ -704,11 +1077,16 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
                 <b>SHIFT</b> SPRINT
               </span>
               <span>
-                <b>E</b> INTERACT
+                <b>E</b> INSPECT
               </span>
               <span>
                 <b>Q</b> RELAY PING
               </span>
+              {level >= 6 && (
+                <span>
+                  <b>H</b> FLIGHT MODE
+                </span>
+              )}
             </div>
             <button className="mars-primary" onClick={() => changeView("play")}>
               DROP INTO THE SIMULATION <span>→</span>
@@ -718,16 +1096,20 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         {view === "quiz" && (
           <>
             <p className="mars-eyebrow">
-              MISSION OBJECTIVE REACHED · ARCHIVE CHECK
+              KNOWLEDGE CHECK · {artifact?.name} · PROVE YOU UNDERSTOOD IT
             </p>
             <h1>{mission.target}</h1>
-            <h2>{mission.quiz}</h2>
+            <h2>{mission.check.question}</h2>
             <div className="mars-answers">
-              {mission.answers.map((answer, i) => (
+              {mission.check.answers.map((answer, i) => (
                 <button
                   key={answer}
                   onClick={() => {
-                    setQuizResult(i === mission.correct);
+                    const right = i === mission.check.correct;
+                    setQuizResult(right);
+                    completeCheck(`mission-${level}`);
+                    if (right && mission.archives)
+                      completeArtifact(mission.artifactId);
                     changeView("result");
                   }}
                 >
@@ -741,18 +1123,30 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
         {view === "result" && (
           <>
             <p className="mars-eyebrow">
-              {quizResult ? "ARCHIVE MATCH CONFIRMED" : "ARCHIVE NOTE"}
+              {quizResult ? "UNDERSTANDING CONFIRMED" : "FIELD NOTE"}
             </p>
-            <h1>{quizResult ? "MEMORY RECOVERED" : "FIELD NOTE"}</h1>
-            <p>{mission.fact}</p>
+            <h1>{quizResult ? "THE MACHINE MAKES SENSE" : "NOT QUITE — KEEP LOOKING"}</h1>
+            <p>{mission.check.explanation}</p>
+            {mission.archives && (
+              <p className="mars-archive-unlocked">
+                ARCHIVE ENTRY UNLOCKED · {artifact?.name} ·{" "}
+                {artifact?.era} · {artifact?.type}
+              </p>
+            )}
             <div className="mars-score">
-              MEMORIES RECOVERED <b>{collected} / 8</b>
+              EVIDENCE RECOVERED <b>{collected} / 6</b>
               <span> · </span> FALLS <b>{deaths}/3</b>
             </div>
             <button className="mars-primary" onClick={advance}>
               {level === MISSIONS.length - 1
-                ? "COMPLETE THE MISSION →"
+                ? "COMPLETE THE CHAPTER →"
                 : "NEXT MISSION →"}
+            </button>
+            <button
+              className="mars-secondary"
+              onClick={() => changeView("play")}
+            >
+              BACK TO THE TERRAIN
             </button>
           </>
         )}
@@ -801,31 +1195,51 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
           </>
         )}
         {view === "complete" && (
-          <>
-            <p className="mars-eyebrow">NINE MISSIONS · THREE WITNESSES</p>
-            <h1>THE RED PLANET REMEMBERS</h1>
-            <p>
-              You reached the archive. Viking, Pathfinder, Sojourner and
-              Ingenuity have left their stories in the dust.
-            </p>
-            <div className="mars-score">
-              MEMORIES RECOVERED <b>{collected} / 8</b>
-            </div>
-            <button className="mars-primary" onClick={onExit}>
-              RETURN TO VOYAGER
-            </button>
-            <button
-              className="mars-secondary"
-              onClick={() => {
-                resetMission(0);
-                changeView("brief");
-              }}
-            >
-              REPLAY THE SIMULATION ↻
-            </button>
-          </>
+          <MarsArchive
+            onExit={onExit}
+            onReplay={() => {
+              resetMission(0);
+              changeView("brief");
+            }}
+            onOpenArtifact={openArchiveFor}
+          />
         )}
       </section>
+
+      {view === "artifact" && openArtifact && (
+        <ArtifactPanel
+          artifactId={openArtifact}
+          onClose={() => {
+            setOpenArtifact("");
+            changeView("play");
+          }}
+          onOpenArchive={() => changeView("archive")}
+        />
+      )}
+
+      {view === "archive" && openArtifact && (
+        <ArchiveViewer
+          artifactId={openArtifact}
+          onOpenRecord={(recordId) => unlockArchive(recordId)}
+          onClose={() => {
+            setOpenArtifact("");
+            changeView("play");
+          }}
+        />
+      )}
+
+      {view === "evidence" && evidenceFragment && (
+        <EvidenceCard
+          fragment={evidenceFragment}
+          index={evidenceIndex}
+          total={ARTIFACT_BY_ID[evidenceFragment.artifactId].evidence.length}
+          onClose={() => {
+            setOpenEvidence("");
+            changeView("play");
+          }}
+        />
+      )}
+
       {view === "play" && (
         <div className="mars-touch" aria-label="Touch controls">
           <button
@@ -855,6 +1269,23 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
             onPointerUp={() => buttonKey("Space", false)}
           >
             JUMP
+          </button>
+          <button
+            className="mars-touch-inspect"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              buttonKey("KeyE", true);
+            }}
+            onPointerUp={() => buttonKey("KeyE", false)}
+            onClick={() => {
+              const canvas = canvasRef.current;
+              if (!canvas) return;
+              canvas.dispatchEvent(
+                new KeyboardEvent("keydown", { code: "KeyE" }),
+              );
+            }}
+          >
+            INSPECT
           </button>
         </div>
       )}
