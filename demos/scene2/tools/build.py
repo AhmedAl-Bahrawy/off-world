@@ -2,62 +2,37 @@
 """
 OFF-WORLD // SCENE 02 — MARS : "THE THREE WITNESSES"
 
-Builds the shippable single-file game from the authoring parts in src/.
+Bundles the readable project (index.html + css/style.css + js/*.js) into
+the shippable single file:
 
-    python3 tools/build.py
+    python3 tools/build.py   ->   scene2-mars.html
 
-Outputs:
-    scene2-mars.html      the whole game, one file, zero dependencies
-    assets/sprites/*.png  the pixel art, exported as real image files
-
-The pixel art lives in ONE place — the `offworldArt` JSON block inside
-scene2-mars.html — so editing the HTML is safe, and `build_sprites.py`
-can always re-export PNGs from it.
+The single file works offline, from file://, off a USB stick. The js/
+sources stay the readable, editable truth.
 """
-
-import json
-import os
-import re
-import shutil
-import subprocess
-import sys
+import os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-SRC = os.path.join(ROOT, "src")
-OUT = os.path.join(ROOT, "scene2-mars.html")
 
-def read(name):
-    with open(os.path.join(SRC, name), "r", encoding="utf-8") as fh:
+def read(*p):
+    with open(os.path.join(ROOT, *p), encoding='utf-8') as fh:
         return fh.read()
 
 def main():
-    part1 = read("part1.html")
-    art = json.load(open(os.path.join(SRC, "art.json"), "r", encoding="utf-8"))
-    part2 = read("part2.js")
-    part3 = read("part3.js")
-    part4 = read("part4.js")
-
-    art_json = json.dumps(art, indent=1, ensure_ascii=False)
-    art_json = art_json.replace("</", "<\\/")
-
-    html = part1.replace("__ART__", art_json)
-    html += part2 + "\n" + part3 + "\n" + part4 + "\n</script>\n</body>\n</html>\n"
-
-    with open(OUT, "w", encoding="utf-8") as fh:
+    html = read('index.html')
+    css = read('css', 'style.css')
+    html = html.replace(
+        '<link rel="stylesheet" href="css/style.css">',
+        '<style>\n' + css + '</style>')
+    def inline(m):
+        code = read(*m.group(1).split('/'))
+        return '<script>\n' + code + '</script>'
+    html, n = re.subn(r'<script src="(js/[^"]+)"></script>', inline, html)
+    out = os.path.join(ROOT, 'scene2-mars.html')
+    with open(out, 'w', encoding='utf-8') as fh:
         fh.write(html)
-    size = os.path.getsize(OUT)
-    print("built %s  (%.1f KB)" % (os.path.relpath(OUT, ROOT), size / 1024.0))
+    print(f'scene2-mars.html written ({n} scripts inlined, {len(html)} bytes)')
 
-    # export the sprite sheets from the built HTML (single source of truth)
-    r = subprocess.run(
-        [sys.executable, os.path.join(HERE, "build_sprites.py"), "--src", OUT],
-        cwd=ROOT,
-    )
-    if r.returncode != 0:
-        print("WARNING: sprite export failed", file=sys.stderr)
-        return 1
-    return 0
-
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    main()

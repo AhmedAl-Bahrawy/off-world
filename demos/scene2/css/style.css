@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OFF-WORLD // SCENE 02 — MARS: THE THREE WITNESSES</title>
-<style>
+/* ==================================================================
+   OFF-WORLD — SCENE 02 : MARS · "THE THREE WITNESSES"
+   Deep-space panels, cyan instruments, Martian rust accents.
+   Sections: tokens · shell · top bar · game frame · overlays ·
+   cards · banner · toast · bubble · quiz · touch · rails
+   ================================================================== */
 /* ============================================================
    OFF-WORLD — SCENE 02 : MARS
    "THE THREE WITNESSES"
@@ -375,126 +374,33 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   #leftRail{position:static}
 }
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
-</style>
-</head>
-<body>
-<div id="app">
 
-  <header id="topbar">
-    <div class="brand">
-      <b>OFF-WORLD</b>
-      <span>SCENE 02 · <em>MARS — THE THREE WITNESSES</em></span>
-    </div>
-    <div class="tb-btns">
-      <button id="btnCodex" title="Field Codex (Tab)">📖 CODEX</button>
-      <button id="btnAch" title="Achievements (V)">🏅 <span id="achCount">0</span></button>
-      <button id="btnSound" title="Toggle sound">🔊 SOUND</button>
-      <button id="btnPause" title="Pause (Esc)">⏸ PAUSE</button>
-      <button id="btnReset" title="Wipe save">🗑 RESET SAVE</button>
-      <button id="btnBack" title="Return to Scene 01">◀ SCENE 01</button>
-    </div>
-  </header>
+/* ==================================================================
+   WITNESS FILE — the annotated machine diagram overlay
+   ================================================================== */
+.witnessCard{ max-width:560px; text-align:center; }
+.wgView{
+  position:relative; width:max-content; margin:12px auto 8px;
+  padding:14px 16px; background:#0b0f24;
+  border:1px solid var(--line-soft, #252c6b); border-radius:10px;
+}
+.wgView canvas{ display:block; image-rendering:pixelated; }
+.wgDot{
+  position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px;
+  border-radius:50%; background:var(--rust, #ff7a45);
+  box-shadow:0 0 10px var(--rust, #ff7a45);
+  animation:wgPulse 1.6s ease-in-out infinite;
+}
+@keyframes wgPulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.35);} }
+.wgTip{
+  position:absolute; bottom:14px; left:-8px; white-space:nowrap;
+  font-size:10px; letter-spacing:.08em; color:#f3c67e;
+  background:#070a18ee; border:1px solid #3b47b855;
+  padding:3px 8px; border-radius:6px;
+}
+.wgDot.right .wgTip{ left:auto; right:-8px; }
 
-  <aside id="leftRail">
-    <section class="panel">
-      <h3>Three Witnesses <span class="count" id="zoneCount">0/3</span></h3>
-      <div id="zoneList"></div>
-    </section>
-    <section class="panel">
-      <h3>Mission Log <span class="count" id="missionCount">0/9</span></h3>
-      <div id="missionList"></div>
-    </section>
-    <section class="panel">
-      <h3>Field Kit</h3>
-      <div id="powerList" class="miniList">No tools recovered yet.<br>Find the machines. Learn what they did.</div>
-    </section>
-  </aside>
-
-  <main id="stageWrap">
-    <div id="screen">
-      <canvas id="game" width="480" height="270"></canvas>
-      <div class="screenFx" id="scanlines"></div>
-      <div class="screenFx" id="vignette"></div>
-      <div class="screenFx" id="flash"></div>
-
-      <div id="banner">
-        <div class="bKicker" id="bKicker">MISSION 01</div>
-        <div class="bTitle" id="bTitle">CHRYSE PLANITIA</div>
-        <div class="bSub" id="bSub">Wake the sleeper</div>
-        <div class="bBrief" id="bBrief"></div>
-      </div>
-
-      <div id="bubble"><span class="alien"></span><span class="en"></span></div>
-
-      <div id="toast">
-        <span class="tIcon">🏅</span>
-        <span class="tBody"><b></b><small></small></span>
-      </div>
-
-      <div id="touch">
-        <div class="pad">
-          <button data-t="left">◀</button>
-          <button data-t="right">▶</button>
-        </div>
-        <div class="pad right">
-          <button data-t="jump">▲</button>
-          <button data-t="run">RUN</button>
-          <button data-t="act">E</button>
-        </div>
-      </div>
-
-      <!-- ===== overlays ===== -->
-      <div class="ov" id="ovTitle"><div class="card titleCard" id="titleCard"></div></div>
-      <div class="ov" id="ovPause"><div class="card" id="pauseCard"></div></div>
-      <div class="ov" id="ovDiscover"><div class="card" id="discoverCard"></div></div>
-      <div class="ov" id="ovQuiz"><div class="card" id="quizCard"></div></div>
-      <div class="ov" id="ovCodex"><div class="card" id="codexCard"></div></div>
-      <div class="ov" id="ovAch"><div class="card" id="achCard"></div></div>
-      <div class="ov" id="ovOver"><div class="card" id="overCard"></div></div>
-      <div class="ov" id="ovEnd"><div class="card titleCard" id="endCard"></div></div>
-    </div>
-  </main>
-
-  <aside id="rightRail">
-    <section class="panel">
-      <h3>Field Codex <span class="count" id="codexCount">0/30</span></h3>
-      <div id="codexList"></div>
-    </section>
-    <section class="panel">
-      <h3>Survey Data</h3>
-      <div class="statRow"><span>Data bits</span><b id="stBits">0</b></div>
-      <div class="statRow"><span>Knowledge</span><b id="stKnow">0/30</b></div>
-      <div class="statRow"><span>Machines awake</span><b id="stTools">0</b></div>
-      <div class="statRow"><span>Curiosity</span><b id="stCur">0%</b></div>
-      <div class="achBar"><i id="curFill" style="width:0%"></i></div>
-      <div class="achBar"><i id="achFill" style="width:0%"></i></div>
-    </section>
-    <section class="panel">
-      <h3>Field Notes</h3>
-      <div class="miniList" id="fieldNotes">
-        Humans are gone. Their machines are still here, powered down, holding
-        records nobody has read in decades. You have a shovel and a very
-        expensive torch. <em>Get reading.</em>
-      </div>
-    </section>
-  </aside>
-
-  <footer id="foot">
-    <div id="objBar">
-      <span class="objLabel">Objective</span>
-      <span id="objText">—</span>
-      <div id="objChips"></div>
-    </div>
-    <div id="ticker">
-      <span class="tLabel">BEACON</span>
-      <span class="tText" id="tickText">All systems nominal. Suspiciously nominal.</span>
-    </div>
-    <div id="keys">
-      <kbd>A</kbd><kbd>D</kbd> move <kbd>Space</kbd> jump <kbd>E</kbd> interact
-      <kbd>Q</kbd> relay ping <kbd>Shift</kbd> sprint <kbd>Tab</kbd> codex <kbd>Esc</kbd> pause
-    </div>
-  </footer>
-</div>
-
-<script id="offworldArt" type="application/json">__ART__</script>
-<script>
+/* icon-choice quiz options */
+.opt{ flex-direction:column; min-width:78px; gap:3px; }
+.opt .ico{ display:block; font-size:20px; line-height:1; }
+.opt .lbl{ font-size:11px; letter-spacing:.04em; }

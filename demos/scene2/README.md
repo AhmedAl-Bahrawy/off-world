@@ -2,125 +2,101 @@
 ## *"The Three Witnesses"*
 
 A funny little pixel platformer about waking three dead machines on Mars and
-learning — genuinely, accurately — what they did.
+learning — genuinely, accurately — what they did. **Visually first:** every
+fact has a picture, a diagram, an icon-quiz or a one-liner attached. No walls
+of text.
 
-You are **CURI-7**, the newest rover on the Red Planet. Humans are gone. Their
-machines are still there: powered down, holding records nobody has read in
-decades. You have a shovel, a torch and a very expensive transmitter.
+You are **CURI-7**, the newest rover on the Red Planet. Three witnesses are
+waiting:
 
-**Nine missions. Three machines. Thirty real NASA facts, each with a joke
-attached.** The jokes are optional. The facts are the point.
+| Witness | The gimmick | What you learn |
+|---|---|---|
+| **Viking 1** (1976) | Dig for buried samples · the famous "maybe" life result | First landing, nuclear batteries, 97% of Mars mapped |
+| **Pathfinder + Sojourner** (1997) | Airbag-bounce gauntlet · escort a 30 cm rover | 15-bounce landing, first free rover, ancient floods |
+| **Ingenuity** (2021–24) | Fly the helicopter through 1% air | First flight on another planet, 5 flights → 72 |
+
+Each zone opens with a **WITNESS FILE**: the machine's real sprite, huge,
+with labelled callouts. Each mission ends with an **icon-choice quiz** —
+pick the picture, not the paragraph.
 
 ---
 
 ## Play it
 
-Open **`scene2-mars.html`** in any modern browser. That is the whole game —
-one file, no dependencies, no server, no internet. It works offline and
-straight off a USB stick.
+**`scene2-mars.html`** — the whole game in one file. Open in any browser.
+No server, no internet, no dependencies. Works from `file://` and a USB stick.
+
+Or open **`index.html`** — same game, as the readable project.
 
 ### Controls
 
 | Key | What it does |
 |---|---|
-| `A` / `D` (or `←` / `→`) | Walk |
+| `A` / `D` or `←` / `→` | Walk |
 | `Shift` | Sprint |
-| `Space` / `W` / `↑` | Jump — press **again in mid-air** once you have the airbag bounce |
-| `E` | Talk to machines · dig regolith · everything contextual |
-| `Q` | Orbital relay ping — reveals memories buried in the dust |
-| `H` | Rotorcraft (unlocked in Mission 07) |
-| `Tab` | Field Codex — everything you have learned so far |
-| `V` | Achievements |
-| `Esc` | Pause |
+| `Space` / `W` | Jump — press again mid-air for the **airbag bounce** |
+| `E` | Talk · dig · everything contextual |
+| `Q` | Orbital relay ping — reveals buried memories (rings on screen) |
+| `H` | Rotorcraft — hold to fly (unlocked in the Jezero zone) |
+| `Tab` / `V` | Field Codex / Achievements · `Esc` pause |
 
-Touch controls appear automatically on phones and tablets.
-
-### The loop
-
-1. **Explore** a zone and collect **memory shards** — each one is a real fact
-   plus a field note from a machine that has been alone for a very long time.
-2. **Talk** to the machine parked in the zone. It has opinions.
-3. **Reach the machine at the end** of the level. It boots, and then it
-   **asks you a question**. Answer it (or don't — it will forgive you, and
-   roast you).
-4. **Learn something**, unlock a new verb, and go deeper.
-
-Progress saves to `localStorage` automatically. *RESET SAVE* wipes it.
+Touch controls appear automatically on touch devices.
 
 ---
 
-## The three witnesses
+## Project structure
 
-| # | Machine | Where | What it teaches you |
-|---|---|---|---|
-| 1 | **Viking 1** (Orbiter + Lander) | Chryse Planitia | The first truly successful Mars landing, its radioisotope generators, the biology package that returned the most famous "maybe" in the history of science, and six years of daily weather reports |
-| 2 | **Mars Pathfinder + Sojourner** | Ares Vallis | The first airbag landing ever, fifteen bounces, a 10.6 kg rover named after Sojourner Truth, 2.3 billion bits of data, and the rocks that proved Mars was once warm and wet |
-| 3 | **Ingenuity** | Jezero Crater | The first powered flight on another planet, five flights planned and seventy-two flown, 128.8 minutes in a 1%-dense atmosphere, and the last flight on 18 January 2024 |
+```
+scene2/
+├── index.html            the page shell (markup only)
+├── css/style.css         all UI styling
+├── js/                   classic scripts, loaded in numbered order
+│   ├── 00-config.js      resolution, tile size, zone palettes
+│   ├── 01-utils.js       math + DOM helpers
+│   ├── 02-font.js        crisp 5×7 bitmap font
+│   ├── 03-audio.js       chiptune engine (square/triangle/noise)
+│   ├── 04-art.js         ★ every sprite, as palette-keyed strings
+│   ├── 05-sprites.js     sprite compiler + draw helpers
+│   ├── 06-data.js        tools, facts, icon quizzes, levels, cast
+│   ├── 07-state.js       save system, game/run/kit state
+│   ├── 08-world.js       procedural level builder (9 missions)
+│   ├── 09-physics.js     tile collision, one-way platforms
+│   ├── 10-entities.js    player, particles, enemies, world update
+│   ├── 11-render.js      parallax sky, terrain, entities, HUD
+│   ├── 12-ui.js          overlays, codex, achievements, rails
+│   ├── 13-flow.js        witness files, icon quizzes, level flow
+│   ├── 14-input.js       keyboard + touch + interact/ping
+│   └── 15-main.js        fixed-step loop, wiring, boot
+├── assets/sprites/contact-sheet.png   art preview (auto-generated)
+├── tools/build.py        bundles everything → scene2-mars.html
+├── tools/build_sprites.py re-exports the contact sheet from 04-art.js
+└── scene2-mars.html      the shippable single file
+```
 
-All thirty facts are drawn from NASA's own mission pages:
+Classic `<script>` tags (no ES modules) so `index.html` runs straight from
+`file://`. Scripts share top-level scope in load order; `04-art.js` is the
+single source of truth for all pixel art.
 
-- <https://science.nasa.gov/mission/viking/>
-- <https://science.nasa.gov/mission/mars-pathfinder/>
-- <https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/>
+### Editing the art
+
+Sprites are ASCII art: one letter per pixel, `.` is transparent, letters map
+to the palette at the top of `js/04-art.js`. After editing, regenerate the
+preview:
+
+```
+python3 tools/build_sprites.py     # → assets/sprites/contact-sheet.png
+python3 tools/build.py             # → rebuild scene2-mars.html
+```
+
+### Save data
+
+Progress lives in `localStorage` under `offworld.mars.scene2.v2`.
+`🗑 RESET SAVE` in the top bar wipes it.
 
 ---
 
-## Project layout
+## The facts
 
-```
-off-world-mars/
-├── scene2-mars.html          ← THE GAME. Single file, fully self-contained.
-├── README.md
-├── assets/
-│   └── sprites/              ← the pixel art, exported as real PNGs
-│       ├── sheet-player.png       CURI-7, the helicopter, the machines
-│       ├── sheet-guardians.png    VIGIL-1, SIEGFRIED, SOJOURNER, GUSTO-9
-│       ├── sheet-world.png        rocks, ice, signs, flags, pads
-│       ├── sheet-items.png        shards, bits, cells, sample tubes
-│       ├── sheet-enemies.png      dust mites, regolith wasps, boulders
-│       └── contact-sheet.png      everything, big, for art review
-├── src/                      ← authoring source (parts of the build)
-│   ├── part1.html                markup + all the CSS
-│   ├── part2.js                  utilities, font, audio, all game content
-│   ├── part3.js                  sprite factory, world builder, physics
-│   ├── part4.js                  renderer, UI, quiz, codex, game loop
-│   └── art.json                  the pixel art as data
-└── tools/
-    ├── build.py                  assembles src/ + art.json → scene2-mars.html
-    └── build_sprites.py          exports assets/sprites/*.png
-```
-
-### Rebuilding
-
-```bash
-python3 tools/build.py          # rebuild the HTML and re-export the PNGs
-python3 tools/build_sprites.py  # only re-export the PNG sheets
-```
-
-`tools/build.py` reads the sprite art out of the **built HTML** and renders
-the PNG sheets from it, so the artwork only ever lives in one place. Edit
-`scene2-mars.html` freely — it is the source of truth for the game — and
-re-run the sprite export whenever you want fresh PNGs.
-
-To work on the art itself, edit `src/art.json` (each sprite is a grid of
-characters mapped through a palette), rebuild, and the PNGs regenerate.
-
-### How the game is put together
-
-- **Rendering** — a 480×270 pixel canvas scaled up with nearest-neighbour
-  filtering, plus DOM panels around it for the codex, mission log and quiz.
-- **Font** — a hand-authored 5×7 bitmap font, pre-rendered and tinted through
-  a per-glyph cache, so text is crisp at any size.
-- **Physics** — tile-free AABB collision with coyote time, jump buffering,
-  variable jump height, squash-and-stretch and one-way platforms.
-- **Audio** — a small chiptune engine: square lead, triangle bass, filtered
-  noise percussion, and about twenty sound effects.
-- **Sprites** — every pixel is authored as text in `art.json`. Live "googly
-  eyes" are drawn on top at runtime so characters can look at things, and
-  blink.
-- **Save** — `localStorage`, versioned, with a one-click wipe.
-
----
-
-*Made for Scene 02 of the OFF-WORLD project. All mission facts courtesy of
-NASA.*
+All 30 machine facts in the game are real (Viking's "maybe" biology results,
+Pathfinder's 15 bounces and 5.8 m airbags, Ingenuity's 72 flights and 1% air).
+The jokes are optional. The facts are the point.

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OFF-WORLD // SCENE 02 — MARS: THE THREE WITNESSES</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">
+      <b>OFF-WORLD</b>
+      <span>SCENE 02 · <em>MARS — THE THREE WITNESSES</em></span>
+    </div>
+    <div class="tb-btns">
+      <button id="btnCodex" title="Field Codex (Tab)">📖 CODEX</button>
+      <button id="btnAch" title="Achievements (V)">🏅 <span id="achCount">0</span></button>
+      <button id="btnSound" title="Toggle sound">🔊 SOUND</button>
+      <button id="btnPause" title="Pause (Esc)">⏸ PAUSE</button>
+      <button id="btnReset" title="Wipe save">🗑 RESET SAVE</button>
+    </div>
+  </header>
+
+  <aside id="leftRail">
+    <section class="panel">
+      <h3>Three Witnesses <span class="count" id="zoneCount">0/3</span></h3>
+      <div id="zoneList"></div>
+    </section>
+    <section class="panel">
+      <h3>Mission Log <span class="count" id="missionCount">0/9</span></h3>
+      <div id="missionList"></div>
+    </section>
+    <section class="panel">
+      <h3>Field Kit</h3>
+      <div id="powerList" class="miniList">No tools recovered yet.<br>Find the machines. Learn what they did.</div>
+    </section>
+  </aside>
+
+  <main id="stageWrap">
+    <div id="screen">
+      <canvas id="game" width="480" height="270"></canvas>
+      <div class="screenFx" id="scanlines"></div>
+      <div class="screenFx" id="vignette"></div>
+      <div class="screenFx" id="flash"></div>
+
+      <div id="banner">
+        <div class="bKicker" id="bKicker">MISSION 01</div>
+        <div class="bTitle" id="bTitle">CHRYSE PLANITIA</div>
+        <div class="bSub" id="bSub">Wake the sleeper</div>
+        <div class="bBrief" id="bBrief"></div>
+      </div>
+
+      <div id="bubble"><span class="alien"></span><span class="en"></span></div>
+
+      <div id="toast">
+        <span class="tIcon">🏅</span>
+        <span class="tBody"><b></b><small></small></span>
+      </div>
+
+      <div id="touch">
+        <div class="pad">
+          <button data-t="left">◀</button>
+          <button data-t="right">▶</button>
+        </div>
+        <div class="pad right">
+          <button data-t="jump">▲</button>
+          <button data-t="run">RUN</button>
+          <button data-t="act">E</button>
+        </div>
+      </div>
+
+      <!-- ===== overlays ===== -->
+      <div class="ov" id="ovTitle"><div class="card titleCard" id="titleCard"></div></div>
+      <div class="ov" id="ovPause"><div class="card" id="pauseCard"></div></div>
+      <div class="ov" id="ovWitness"><div class="card witnessCard" id="witnessCard"></div></div>
+      <div class="ov" id="ovQuiz"><div class="card" id="quizCard"></div></div>
+      <div class="ov" id="ovCodex"><div class="card" id="codexCard"></div></div>
+      <div class="ov" id="ovAch"><div class="card" id="achCard"></div></div>
+      <div class="ov" id="ovOver"><div class="card" id="overCard"></div></div>
+      <div class="ov" id="ovEnd"><div class="card titleCard" id="endCard"></div></div>
+    </div>
+  </main>
+
+  <aside id="rightRail">
+    <section class="panel">
+      <h3>Field Codex <span class="count" id="codexCount">0/30</span></h3>
+      <div id="codexList"></div>
+    </section>
+    <section class="panel">
+      <h3>Survey Data</h3>
+      <div class="statRow"><span>Data bits</span><b id="stBits">0</b></div>
+      <div class="statRow"><span>Knowledge</span><b id="stKnow">0/30</b></div>
+      <div class="statRow"><span>Machines awake</span><b id="stTools">0</b></div>
+      <div class="statRow"><span>Curiosity</span><b id="stCur">0%</b></div>
+      <div class="achBar"><i id="curFill" style="width:0%"></i></div>
+      <div class="achBar"><i id="achFill" style="width:0%"></i></div>
+    </section>
+    <section class="panel">
+      <h3>Field Notes</h3>
+      <div class="miniList" id="fieldNotes">
+        Humans are gone. Their machines are still here, powered down, holding
+        records nobody has read in decades. You have a shovel and a very
+        expensive torch. <em>Get reading.</em>
+      </div>
+    </section>
+  </aside>
+
+  <footer id="foot">
+    <div id="objBar">
+      <span class="objLabel">Objective</span>
+      <span id="objText">—</span>
+      <div id="objChips"></div>
+    </div>
+    <div id="ticker">
+      <span class="tLabel">BEACON</span>
+      <span class="tText" id="tickText">All systems nominal. Suspiciously nominal.</span>
+    </div>
+    <div id="keys">
+      <kbd>A</kbd><kbd>D</kbd> move <kbd>Space</kbd> jump <kbd>E</kbd> interact
+      <kbd>Q</kbd> relay ping <kbd>Shift</kbd> sprint <kbd>Tab</kbd> codex <kbd>Esc</kbd> pause
+    </div>
+  </footer>
+</div>
+    <script src="js/00-config.js"></script>
+    <script src="js/01-utils.js"></script>
+    <script src="js/02-font.js"></script>
+    <script src="js/03-audio.js"></script>
+    <script src="js/04-art.js"></script>
+    <script src="js/05-sprites.js"></script>
+    <script src="js/06-data.js"></script>
+    <script src="js/07-state.js"></script>
+    <script src="js/08-world.js"></script>
+    <script src="js/09-physics.js"></script>
+    <script src="js/10-entities.js"></script>
+    <script src="js/11-render.js"></script>
+    <script src="js/12-ui.js"></script>
+    <script src="js/13-flow.js"></script>
+    <script src="js/14-input.js"></script>
+    <script src="js/15-main.js"></script>
+</body>
+</html>
