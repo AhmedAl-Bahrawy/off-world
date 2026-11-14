@@ -1,0 +1,999 @@
+/* ============================================================
+   Archive interfaces.
+   Two supplied design projects reproduced as in-world archives:
+   .mrec — the Twitter-style historical evidence viewer
+   .mroom — the Habbo-style interactive museum room
+   Both are fictionalised framing over verified NASA history.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. Twitter-style archive (visual language of twitter/)
+   ------------------------------------------------------------ */
+.mrec {
+  min-height: 100%;
+  padding: 7px 0 26px;
+  color: #45434a;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  background:
+    radial-gradient(ellipse at 12% 25%, rgba(255, 255, 255, 0.24) 0 11%, transparent 11.3%),
+    radial-gradient(ellipse at 26% 8%, rgba(255, 255, 255, 0.2) 0 10%, transparent 10.3%),
+    radial-gradient(ellipse at 80% 45%, rgba(255, 255, 255, 0.13) 0 12%, transparent 12.3%),
+    radial-gradient(ellipse at 60% 85%, rgba(255, 255, 255, 0.16) 0 14%, transparent 14.3%),
+    linear-gradient(115deg, #80d9e2, #a5e8e8 50%, #7dd6df);
+  background-attachment: fixed;
+}
+.mrec a {
+  color: #0000ee;
+  text-decoration: none;
+}
+.mrec a:hover {
+  text-decoration: underline;
+}
+.mrec button {
+  font: inherit;
+  cursor: pointer;
+}
+.mrec mark {
+  color: #26232b;
+  background: #fff000;
+  padding: 0 2px;
+}
+.mrec :focus-visible {
+  outline: 2px solid #45434a;
+  outline-offset: 1px;
+}
+.mrec-header {
+  position: relative;
+  min-height: 78px;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 4px 8px 0;
+}
+.mrec-wordmark {
+  margin: 0;
+  color: #f7ffff;
+  font-size: 40px;
+  line-height: 0.9;
+  font-weight: 900;
+  letter-spacing: -3px;
+  -webkit-text-stroke: 1px #e9ffff;
+  text-shadow:
+    2px 3px 0 rgba(73, 170, 190, 0.55),
+    -1px -1px 0 #fff;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+.mrec-tagline {
+  margin: 8px 0 0 9px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+  text-shadow: 1px 1px 0 rgba(73, 170, 190, 0.5);
+}
+.mrec-nav {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  padding: 4px 7px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #9bc44a;
+  font-size: 11px;
+  font-weight: bold;
+}
+.mrec-nav a {
+  margin-left: 8px;
+}
+.mrec-nav a:first-child {
+  margin-left: 0;
+}
+.mrec-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 11px;
+  align-items: start;
+}
+.mrec-main {
+  min-height: 560px;
+  padding: 14px 17px 28px;
+  background: linear-gradient(110deg, rgba(249, 248, 252, 0.98), rgba(255, 255, 255, 0.94));
+}
+.mrec-intro h2 {
+  margin: 0 0 8px;
+  max-width: 500px;
+  font-size: 20px;
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: -0.25px;
+  color: #2f333c;
+}
+.mrec-intro-sub {
+  margin: 0 0 16px;
+  max-width: 520px;
+  font-size: 12px;
+  color: #5c5a64;
+}
+.mrec-feature-frame {
+  border: 1px solid #9bc44a;
+  padding: 6px;
+  background: #fff;
+}
+.mrec-feature-art {
+  height: 193px;
+  overflow: hidden;
+  background: #b5edf0;
+}
+.mrec-feature-sky {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.75) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.55) 0 12%, transparent 12.5%),
+    linear-gradient(135deg, #b8e6eb, #d9f5f2 55%, #8ddce4);
+}
+.mrec-feature-sky[data-variant="viking"],
+.mrec-feature-sky[data-variant="viking-pano"],
+.mrec-feature-sky[data-variant="viking-arm"],
+.mrec-feature-sky[data-variant="viking-lab"],
+.mrec-feature-sky[data-variant="viking-rtg"] {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.75) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.55) 0 12%, transparent 12.5%),
+    linear-gradient(135deg, #eed9b8, #f5ecd9 55%, #d8b58b);
+}
+.mrec-feature-sky[data-variant="pathfinder-airbag"],
+.mrec-feature-sky[data-variant="pathfinder-ramp"],
+.mrec-feature-sky[data-variant="pathfinder-pebbles"],
+.mrec-feature-sky[data-variant="pathfinder-rover"],
+.mrec-feature-sky[data-variant="pathfinder-terrain"] {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.7) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.5) 0 12%, transparent 12.5%),
+    linear-gradient(135deg, #e9c2a0, #f6e6d3 55%, #cf9a72);
+}
+.mrec-feature-sky[data-variant="ingenuity-flight"],
+.mrec-feature-sky[data-variant="ingenuity-rotor"],
+.mrec-feature-sky[data-variant="ingenuity-solar"],
+.mrec-feature-sky[data-variant="ingenuity-scout"],
+.mrec-feature-sky[data-variant="ingenuity-final"],
+.mrec-feature-sky[data-variant="ingenuity-field"] {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.75) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.55) 0 12%, transparent 12.5%),
+    linear-gradient(135deg, #b7cfe8, #d6e6f5 55%, #8fb2d8);
+}
+.mrec-feature-sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 4px);
+}
+.mrec-planet {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  width: 110px;
+  height: 110px;
+  right: 40px;
+  top: 16px;
+  box-shadow: inset -16px -12px 0 rgba(72, 178, 193, 0.14);
+}
+.mrec-planet-two {
+  width: 38px;
+  height: 38px;
+  right: 170px;
+  top: 22px;
+}
+.mrec-signal {
+  position: absolute;
+  left: 18px;
+  bottom: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 38px;
+}
+.mrec-feature-caption {
+  position: absolute;
+  left: 18px;
+  top: 26px;
+  width: min(64%, 315px);
+  padding: 13px 15px;
+  background: rgba(255, 255, 255, 0.86);
+  transform: rotate(-1.1deg);
+  box-shadow: 0 2px 4px rgba(42, 114, 130, 0.12);
+}
+.mrec-eyebrow {
+  margin: 0;
+  color: #477c83;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.mrec-feature-caption h3 {
+  margin: 5px 0;
+  color: #353b43;
+  font-size: 20px;
+  line-height: 1.05;
+}
+.mrec-feature-caption p {
+  margin: 0 0 5px;
+  font-size: 12px;
+}
+.mrec-feature-stamp {
+  position: absolute;
+  right: 13px;
+  bottom: 13px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(220, 245, 151, 0.9);
+  color: #536b36;
+  font-size: 9px;
+  font-weight: bold;
+  line-height: 1.25;
+  text-align: center;
+  transform: rotate(3deg);
+  max-width: 45%;
+}
+.mrec-feature-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mrec-feature-controls p {
+  margin: 6px 0 0;
+  font-size: 11px;
+}
+.mrec-slide-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.mrec-slide-controls button {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid #9dbb76;
+  color: #647c45;
+  background: #e3f5c0;
+  font-weight: bold;
+}
+.mrec-slide-controls button:first-child {
+  background: #fff;
+}
+.mrec-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.6px;
+  border: 1px solid;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.mrec-badge-verified {
+  color: #2e6b2e;
+  border-color: #7fae5a;
+  background: #e9f8cf;
+}
+.mrec-badge-fiction {
+  color: #7a3b57;
+  border-color: #cf9ab6;
+  background: #f9e3ee;
+}
+.mrec-timeline-section,
+.mrec-updates-section {
+  margin-top: 14px;
+}
+.mrec-section-heading h2 {
+  margin: 0 0 9px;
+  color: #0000ee;
+  font-size: 16px;
+  font-weight: normal;
+}
+.mrec-timeline {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  display: flex;
+  gap: 4px;
+}
+.mrec-timeline-step {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.mrec-timeline-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 6px 7px;
+  border: 1px solid #a8d4a0;
+  background: #fff;
+}
+.mrec-timeline-numeral {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #879d87;
+}
+.mrec-timeline-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mrec-timeline-body strong {
+  font-size: 12px;
+  color: #0000ee;
+}
+.mrec-timeline-body em {
+  font-size: 10px;
+  color: #5c5a64;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mrec-topic-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+.mrec-topic-tab {
+  padding: 2px 8px;
+  border: 1px solid #9dbb76;
+  background: #f2fbdf;
+  color: #5c7042;
+  font-size: 10px;
+  font-weight: bold;
+}
+.mrec-topic-tab:hover {
+  background: #e3f5c0;
+}
+.mrec-topic-tab-on {
+  background: #c8ee79;
+  color: #3c4b24;
+}
+.mrec-feed-note {
+  margin: 0 10px 6px;
+  font-size: 10px;
+  color: #666;
+}
+.mrec-updates-list {
+  padding: 0 10px;
+  list-style: none;
+  margin: 0;
+}
+.mrec-update-row {
+  min-height: 60px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 6px 8px;
+}
+.mrec-update-row-alt {
+  background: rgba(226, 229, 250, 0.72);
+}
+.mrec-avatar {
+  flex: 0 0 49px;
+  width: 49px;
+  height: 49px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  text-shadow: 1px 1px #333;
+  border: 1px solid rgba(80, 80, 80, 0.35);
+  background: linear-gradient(135deg, #879d87, #d3a879 50%, #536e7c);
+}
+.mrec-avatar-2 {
+  background: linear-gradient(135deg, #c76e42, #e9b07a 48%, #754e35);
+}
+.mrec-avatar-3 {
+  background: linear-gradient(135deg, #4e6875, #c3a17b 50%, #473e3d);
+}
+.mrec-update-body {
+  min-width: 0;
+}
+.mrec-update-body p {
+  margin: 1px 0 2px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+.mrec-username {
+  font-weight: bold;
+}
+.mrec-update-source,
+.mrec-timestamp {
+  font-size: 11px;
+}
+.mrec-update-source {
+  color: #555;
+}
+.mrec-timestamp {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mrec-inline-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #0000ee;
+  font-size: 11px;
+  text-decoration: underline;
+}
+.mrec-reply {
+  margin: 6px 0 2px !important;
+  padding: 6px 8px;
+  border-left: 2px solid #cf9ab6;
+  background: rgba(249, 227, 238, 0.55);
+  font-size: 11.5px !important;
+  color: #5d4450;
+}
+.mrec-reply-handle {
+  color: #7a3b57;
+  font-weight: bold;
+}
+.mrec-reply-handle em {
+  color: #8a7a83;
+  font-weight: normal;
+  font-style: normal;
+}
+.mrec-empty-row {
+  color: #666;
+  font-style: italic;
+}
+.mrec-feed-more {
+  text-align: center;
+}
+.mrec-feed-more button {
+  padding: 3px 12px;
+  border: 1px solid #9d8b9b;
+  border-radius: 3px;
+  color: #333;
+  background: linear-gradient(#fff, #e5dce7);
+  font-weight: bold;
+  font-size: 11px;
+}
+.mrec-sidebar-card {
+  padding: 12px 9px 14px;
+  border: 1px solid #8eae3e;
+  background: linear-gradient(135deg, #e2f8a7, #c8ee79);
+}
+.mrec-signin-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 3px 0 10px;
+  font-size: 13px;
+  color: #2f333c;
+}
+.mrec-tiny-mascot {
+  color: #b64e76;
+  font-size: 20px;
+}
+.mrec-prototype-note {
+  margin: 0 0 10px;
+  padding: 5px 6px;
+  font-size: 10px;
+  line-height: 1.3;
+  border: 1px dashed #9dbb76;
+  background: rgba(255, 255, 255, 0.65);
+  color: #4a5a33;
+}
+.mrec-status-lines {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+.mrec-status-line {
+  margin: 2px 0;
+  font-size: 10px;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #3f4d28;
+}
+.mrec-status-dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b9b9b9;
+  border: 1px solid #8f8f8f;
+}
+.mrec-status-dot-live {
+  background: #7fc231;
+  border-color: #578a1a;
+}
+.mrec-status-dot-lime {
+  background: #b7da59;
+  border-color: #8eae3e;
+}
+.mrec-join-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  margin: 0 0 10px;
+  padding: 6px 5px;
+  border: 1px solid #b5c58e;
+  background: linear-gradient(110deg, #fff, #f0eff8);
+}
+.mrec-join-card strong {
+  font-size: 12px;
+}
+.mrec-join-card span {
+  font-size: 11px;
+  font-weight: bold;
+}
+.mrec-featured-card {
+  margin: 0 0 10px;
+  padding: 6px 5px;
+  border: 1px solid #b5c58e;
+  background: linear-gradient(110deg, #fff, #f0eff8);
+}
+.mrec-featured-card > strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+.mrec-featured-link {
+  display: block;
+  margin: 2px 0;
+  font-size: 11px;
+}
+.mrec-sidebar-foot {
+  margin: 8px 0 0;
+  font-size: 10px;
+  color: #4a5a33;
+}
+.mrec-pulse-panel {
+  margin-top: 14px;
+  padding: 9px 10px;
+  border: 1px solid #9bc44a;
+  background: linear-gradient(110deg, #fff, #f4f9e8);
+}
+.mrec-pulse-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: start;
+}
+.mrec-pulse-heading h2 {
+  margin: 2px 0 7px;
+  color: #2f333c;
+  font-size: 15px;
+}
+.mrec-pulse-total {
+  padding: 3px 5px;
+  color: #536b36;
+  border: 1px solid #9dbb76;
+  background: #e9f8cf;
+  font-size: 9px;
+  font-weight: bold;
+}
+.mrec-pulse-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 14px;
+}
+.mrec-pulse-chart {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.mrec-pulse-bar-row {
+  display: grid;
+  grid-template-columns: 82px 1fr 16px;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+}
+.mrec-pulse-bar-row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mrec-pulse-track {
+  height: 9px;
+  background: #e4eadc;
+  border: 1px solid #c3d2b1;
+}
+.mrec-pulse-track i {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  background: linear-gradient(90deg, #9dca63, #c8ee79);
+}
+.mrec-pulse-status {
+  padding-left: 9px;
+  border-left: 1px dotted #b5c58e;
+}
+.mrec-pulse-caption {
+  margin: 0 0 5px;
+  color: #7a8f5a;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.7px;
+}
+.mrec-pulse-status-row {
+  display: grid;
+  grid-template-columns: 8px 1fr;
+  gap: 5px;
+  align-items: start;
+  margin: 4px 0;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.mrec-pulse-footnote {
+  margin: 8px 0 0;
+  font-size: 9px;
+  color: #777;
+}
+
+/* ------------------------------------------------------------
+   2. Habbo-style archive room (visual language of habbo/)
+   ------------------------------------------------------------ */
+.mroom {
+  min-height: 100%;
+  padding: 0 10px 12px;
+  background-color: #477d21;
+  color: #101820;
+  font-family: Tahoma, Verdana, Arial, sans-serif;
+  font-size: 12px;
+}
+.mroom::selection {
+  background: #ffd000;
+  color: #102c3b;
+}
+.mroom-shell {
+  width: min(836px, 100%);
+  margin: 0 auto;
+  background: #4b849c;
+  border-left: 3px solid #1a2830;
+  border-right: 3px solid #1a2830;
+  box-shadow:
+    0 0 0 1px #d9e6e6,
+    0 0 0 4px rgba(0, 0, 0, 0.45);
+  padding: 8px 6px 18px;
+}
+.mroom-nav {
+  display: flex;
+  gap: 2px;
+  padding: 0 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.mroom-nav-tab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 9px 6px;
+  background: linear-gradient(#e78b1d, #bd4e0d);
+  color: white;
+  border: 1px solid #62350d;
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+  font-size: 9px;
+  font-weight: 900;
+  text-shadow: 1px 1px #703100;
+  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.4);
+}
+.mroom-nav-tab.is-active {
+  background: linear-gradient(#fff16b, #ffc600);
+  color: #152c32;
+  text-shadow: none;
+}
+.mroom-nav-icon {
+  font-size: 13px;
+}
+.mroom-heading {
+  margin: 6px 0 8px;
+  padding: 9px 12px;
+  background: var(--navy-deep, #052d45);
+  color: #eaf5f5;
+  border: 2px solid #101820;
+}
+.mroom-eyebrow {
+  display: block;
+  color: #c65b0c;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+.mroom-heading .mroom-eyebrow {
+  color: #ffd000;
+}
+.mroom-heading h2 {
+  margin: 4px 0 0;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+}
+.mroom-room {
+  position: relative;
+  height: 340px;
+  overflow: hidden;
+  border: 2px solid #101820;
+  background: #0b2437;
+}
+.mroom-wall {
+  position: absolute;
+  inset: 0 0 42% 0;
+  background:
+    radial-gradient(circle at 70% 30%, rgba(87, 167, 193, 0.55), transparent 26%),
+    radial-gradient(circle at 24% 62%, rgba(207, 151, 59, 0.28), transparent 22%),
+    linear-gradient(145deg, #0b2437, #164f66 60%, #081b2c);
+}
+.mroom-wall::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 4px, rgba(255, 255, 255, 0.035) 5px);
+  pointer-events: none;
+}
+.mroom-wall-art {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  right: 38px;
+  top: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 18px rgba(255, 255, 255, 0.04),
+    0 0 0 38px rgba(255, 255, 255, 0.03);
+}
+.mroom-floor {
+  position: absolute;
+  inset: 58% 0 0 0;
+  background: linear-gradient(#2d4a58, #17303c);
+  border-top: 3px solid #0a1b25;
+}
+.mroom-floor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 46px);
+}
+.mroom-exhibit {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.mroom-exhibit:hover .mroom-art,
+.mroom-exhibit.is-near .mroom-art {
+  border-color: #ffd000;
+}
+.mroom-art {
+  position: relative;
+  width: 74px;
+  height: 58px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 2px solid #061c28;
+  background:
+    radial-gradient(circle at 68% 34%, rgba(87, 167, 193, 0.6), transparent 26%),
+    linear-gradient(145deg, #0b2437, #164f66 60%, #081b2c);
+}
+.mroom-art-viking-arm,
+.mroom-art-viking-lab,
+.mroom-art-viking-rtg,
+.mroom-art-viking-pano {
+  background:
+    radial-gradient(circle at 30% 40%, rgba(207, 151, 59, 0.5), transparent 24%),
+    linear-gradient(145deg, #2a1c22, #5b3a33 60%, #1a1116);
+}
+.mroom-art-pathfinder-rover,
+.mroom-art-pathfinder-airbag,
+.mroom-art-pathfinder-pebbles,
+.mroom-art-pathfinder-terrain {
+  background:
+    radial-gradient(circle at 68% 34%, rgba(222, 118, 68, 0.55), transparent 26%),
+    linear-gradient(145deg, #2a1a18, #7a3d28 60%, #17100f);
+}
+.mroom-art-ingenuity-flight,
+.mroom-art-ingenuity-rotor,
+.mroom-art-ingenuity-solar,
+.mroom-art-ingenuity-final {
+  background:
+    radial-gradient(circle at 68% 34%, rgba(147, 178, 255, 0.5), transparent 26%),
+    linear-gradient(145deg, #14122b, #3f2a4d 60%, #0d0b1c);
+}
+.mroom-art-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 4px, rgba(255, 255, 255, 0.035) 5px);
+  pointer-events: none;
+}
+.mroom-art-label {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #dce9df;
+  font-size: 6px;
+  letter-spacing: 0.6px;
+}
+.mroom-exhibit-name {
+  padding: 2px 6px;
+  background: #ffd000;
+  color: #171b16;
+  border: 1px solid #a16c00;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+}
+.mroom-exhibit-prompt {
+  padding: 2px 6px;
+  background: #073b57;
+  color: #eaf5f5;
+  border: 1px solid #101820;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+}
+.mroom-player {
+  position: absolute;
+  z-index: 3;
+  image-rendering: pixelated;
+  transition: transform 0.06s linear;
+}
+.mroom-player img {
+  display: block;
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+}
+.mroom-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 10px 0;
+}
+.mroom-hint p {
+  margin: 0;
+  font-size: 10px;
+  color: #eaf5f5;
+}
+.mroom-hint b {
+  color: #ffd000;
+}
+.mroom-tiny-note {
+  font-size: 8px;
+  color: #c4dce4;
+  max-width: 58%;
+  text-align: right;
+}
+.mroom-panel {
+  margin: 10px 0 0;
+  background: #f7f7f3;
+  border: 2px solid #17252d;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.35);
+  animation: marsFadeIn 0.24s ease both;
+}
+.mroom-panel-heading {
+  min-height: 22px;
+  padding: 4px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  background: #ffd000;
+  border-bottom: 2px solid #a16c00;
+  color: #171b16;
+}
+.mroom-panel-heading h3 {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+}
+.mroom-panel-heading button {
+  border: 1px solid #a16c00;
+  background: rgba(255, 255, 255, 0.5);
+  color: #171b16;
+  font-size: 9px;
+  padding: 2px 6px;
+}
+.mroom-panel-body {
+  padding: 9px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.mroom-panel-body p {
+  margin: 0 0 8px;
+  color: #465b60;
+}
+.mroom-fact-line {
+  color: #15455e !important;
+  font-weight: bold;
+  font-size: 12px !important;
+}
+.mroom-source {
+  color: #c24d08;
+  font-size: 9px;
+  font-weight: 900;
+  text-decoration: underline;
+}
+
+@media (max-width: 860px) {
+  .mrec-page-grid {
+    grid-template-columns: 1fr;
+  }
+  .mrec-wordmark {
+    font-size: 30px;
+  }
+  .mrec-tagline {
+    display: none;
+  }
+  .mrec-nav {
+    position: static;
+    width: 100%;
+    margin-top: 4px;
+    text-align: center;
+  }
+  .mrec-timeline {
+    flex-wrap: wrap;
+  }
+  .mrec-timeline-step {
+    flex: 1 1 46%;
+  }
+  .mrec-pulse-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .mrec-pulse-status {
+    padding: 7px 0 0;
+    border-left: 0;
+    border-top: 1px dotted #b5c58e;
+  }
+  .mroom-shell {
+    border: 0;
+    box-shadow: none;
+  }
+  .mroom {
+    padding: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mroom-player {
+    transition: none;
+  }
+}
