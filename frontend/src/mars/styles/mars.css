@@ -180,6 +180,10 @@
 .mars-panel-playing .mars-eyebrow {
   margin-bottom: 8px;
 }
+.mars-panel-playing .scene-title-kicker,
+.mars-panel-playing .scene-title-subtitle {
+  display: none;
+}
 .mars-panel-playing h1 {
   font-size: clamp(18px, 3vw, 29px);
   margin: 0;

@@ -3,6 +3,7 @@ import "../styles/mars.css";
 import { MISSIONS } from "../story/missions";
 import { useMarsStore } from "../state/store";
 import type { MarsView } from "../state/store";
+import { SceneTitle } from "../../shared/SceneTitle";
 
 type Platform = {
   x: number;
@@ -210,6 +211,10 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
     },
     [changeView],
   );
+
+  useEffect(() => {
+    useMarsStore.getState().reset();
+  }, []);
 
   useEffect(() => {
     const imgs: Record<string, HTMLImageElement> = {};
@@ -681,9 +686,12 @@ export default function MarsScene({ onExit }: { onExit: () => void }) {
       >
         {view === "brief" && (
           <>
-            <p className="mars-eyebrow">{`MISSION ${String(level + 1).padStart(2, "0")} · ${mission.zone.toUpperCase()}`}</p>
-            <h1>{mission.title}</h1>
-            <h2>{mission.subtitle}</h2>
+            <SceneTitle
+              className="mars-mission-title"
+              kicker={`MISSION ${String(level + 1).padStart(2, "0")} · ${mission.zone.toUpperCase()}`}
+              title={mission.title}
+              subtitle={mission.subtitle}
+            />
             <p>{mission.briefing}</p>
             <div className="mars-help">
               <span>

@@ -1,0 +1,102 @@
+.scene-title {
+  margin: 0;
+}
+.scene-title-kicker {
+  margin: 0 0 14px;
+  color: #ffc66e;
+  font:
+    500 9px/1.3 "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.scene-title-heading {
+  margin: 0;
+  text-wrap: balance;
+}
+.scene-title-subtitle {
+  margin: 9px 0 0;
+  color: #d5c5bd;
+  font:
+    500 13px/1.6 "IBM Plex Mono",
+    monospace;
+}
+.mars-panel .scene-title-kicker {
+  margin-bottom: 16px;
+}
+.mars-panel .scene-title-heading {
+  font:
+    700 clamp(32px, 5.5vw, 59px) / 0.96 "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 0.005em;
+}
+.mars-panel .scene-title-subtitle {
+  color: #e9c6a1;
+  font:
+    500 16px/1.45 "IBM Plex Mono",
+    monospace;
+}
+.end-scene-title {
+  margin-bottom: 17px;
+}
+.end-scene-title .scene-title-kicker {
+  margin-bottom: 9px;
+  color: var(--cy, #8fb8ff);
+}
+.end-scene-title .scene-title-heading {
+  font:
+    700 clamp(24px, 4vw, 38px) / 1.02 "Barlow Condensed",
+    "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0.025em;
+}
+.end-scene-title .scene-title-subtitle {
+  color: #c2c8d3;
+  font-size: 11px;
+}
+.pixel-route-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  grid-template-rows: repeat(12, 1fr);
+  pointer-events: none;
+}
+.pixel-route-tile {
+  background: #100f1a;
+  opacity: 0;
+  transform: scale(0.04);
+  animation-duration: 0.2s;
+  animation-timing-function: steps(1, end);
+  animation-fill-mode: both;
+}
+.pixel-route-transition.is-cover .pixel-route-tile {
+  animation-name: pixel-tile-cover;
+  animation-delay: var(--tile-delay);
+}
+.pixel-route-transition.is-reveal .pixel-route-tile {
+  animation-name: pixel-tile-reveal;
+  animation-delay: var(--tile-delay);
+}
+@keyframes pixel-tile-cover {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pixel-tile-reveal {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-route-tile {
+    animation-duration: 0.01ms;
+  }
+}

@@ -16,6 +16,7 @@ type MarsState = {
   deaths: number;
   collected: number;
   quizResult: boolean;
+  reset: () => void;
   setView: (view: MarsView) => void;
   setLevel: (level: number) => void;
   setDeaths: (deaths: number) => void;
@@ -29,6 +30,14 @@ export const useMarsStore = create<MarsState>((set) => ({
   deaths: 0,
   collected: 0,
   quizResult: false,
+  reset: () =>
+    set({
+      view: "brief",
+      level: 0,
+      deaths: 0,
+      collected: 0,
+      quizResult: false,
+    }),
   setView: (view) => set({ view }),
   setLevel: (level) => set({ level }),
   setDeaths: (deaths) => set({ deaths }),

@@ -23,6 +23,8 @@ import { RM } from '../lib/motion'
 import { WIN_OPEN, WIN_CLOSE } from '../lib/anim'
 import { Bar } from './primitives'
 import { resetStory } from '../story/script'
+import { SceneTitle } from '../../shared/SceneTitle'
+import { navigateScene } from '../../shared/navigation'
 import { Icon } from './Icons'
 import {
   TilesInteraction,
@@ -296,27 +298,19 @@ function UplinkBody() {
   )
 }
 
-/** Final window — the Voyager archive opens the Mars field simulation. */
+/** Final Voyager window — the route bridge into the Mars simulation. */
 function EndBody() {
   return (
     <div className="end">
-      <p className="end-lead">
-        We have to reach Mars in a simulation. The surface mission is ready.
-      </p>
-      <ul className="end-list">
-        <li>
-          <span>RECOVERED</span> Voyager 1 · 6 components catalogued
-        </li>
-        <li>
-          <span>RECOVERED</span> Golden Record · 115 images · 55 sounds · 90 minutes
-        </li>
-        <li>
-          <span>LOGGED</span> Mars · Arcadia Planitia · ice &lt; 30 cm · unconfirmed
-        </li>
-      </ul>
+      <SceneTitle
+        className="end-scene-title"
+        kicker="MISSION CONTINUES"
+        title="DISCOVER MARS THROUGH SIMULATION"
+        subtitle="The surface mission is ready."
+      />
       <div className="row">
-        <button type="button" onClick={() => useVoyager.getState().setMarsActive(true)}>
-          REACH MARS IN SIMULATION
+        <button type="button" onClick={() => navigateScene('/mars')}>
+          BEGIN MARS SIMULATION
         </button>
         <button type="button" onClick={resetStory}>
           RETURN TO TITLE
