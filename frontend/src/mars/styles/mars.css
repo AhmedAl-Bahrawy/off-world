@@ -1,0 +1,500 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+.mars-shell {
+  --mars-amber: #ffc66e;
+  --mars-mint: #98e5c2;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow: hidden;
+  color: #f4efe9;
+  background: #17101c;
+  font-family: "IBM Plex Mono", monospace;
+  isolation: isolate;
+}
+.mars-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+.mars-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.09;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+}
+.mars-shell:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #090b1c66,
+    transparent 18%,
+    transparent 78%,
+    #0d0c18ad
+  );
+}
+.mars-top,
+.mars-bottom {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  left: 0;
+  right: 0;
+  padding: 20px 34px;
+}
+.mars-top {
+  top: 0;
+  border-bottom: 1px solid #ffffff1c;
+  background: linear-gradient(#110f20c7, transparent);
+}
+.mars-bottom {
+  bottom: 0;
+  color: #c2bdbe;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+}
+.mars-mark {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mars-mark small {
+  display: block;
+  color: #c1b5ae;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  margin-top: 4px;
+}
+.mars-mark-icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 1px solid var(--mars-amber);
+  color: var(--mars-amber);
+  font:
+    800 18px "Barlow Condensed",
+    sans-serif;
+  transform: rotate(45deg);
+}
+.mars-mark-icon::first-letter {
+  transform: rotate(-45deg);
+}
+.mars-top-status {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: #e7c59c;
+}
+.mars-top-status i,
+.mars-led {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #9ce6bd;
+  box-shadow: 0 0 12px #9ce6bd;
+}
+.mars-top-status b {
+  color: #847879;
+  margin: 0 8px;
+}
+.mars-shell button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.mars-exit {
+  border: 1px solid #ffffff42;
+  background: #15132185;
+  padding: 10px 13px;
+  font-size: 9px !important;
+  letter-spacing: 0.1em;
+  transition: 0.2s;
+}
+.mars-exit:hover,
+.mars-bottom button:hover {
+  border-color: var(--mars-amber);
+  color: var(--mars-amber);
+}
+.mars-exit span {
+  margin-left: 8px;
+  color: var(--mars-amber);
+}
+.mars-panel {
+  position: absolute;
+  z-index: 2;
+  left: 7vw;
+  top: 50%;
+  transform: translateY(-43%);
+  width: min(510px, 51vw);
+  padding: 34px 36px;
+  background: linear-gradient(135deg, #171321ed, #21151ced);
+  border: 1px solid #ffffff38;
+  box-shadow: 0 24px 80px #08051270;
+  backdrop-filter: blur(16px);
+  animation: marsPanelIn 0.48s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+.mars-panel:before,
+.mars-panel:after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--mars-amber);
+  border-style: solid;
+}
+.mars-panel:before {
+  left: -1px;
+  top: -1px;
+  border-width: 1px 0 0 1px;
+}
+.mars-panel:after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+.mars-panel-playing {
+  top: auto;
+  bottom: 50px;
+  left: 24px;
+  transform: none;
+  width: auto;
+  max-width: min(400px, 45vw);
+  padding: 18px 21px;
+  animation: marsPanelIn 0.3s ease both;
+}
+.mars-panel-playing .mars-eyebrow {
+  margin-bottom: 8px;
+}
+.mars-panel-playing h1 {
+  font-size: clamp(18px, 3vw, 29px);
+  margin: 0;
+}
+.mars-panel-playing h2,
+.mars-panel-playing > p:not(.mars-eyebrow),
+.mars-panel-playing .mars-help,
+.mars-panel-playing .mars-primary {
+  display: none;
+}
+.mars-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--mars-amber);
+  margin: 0 0 16px;
+  text-transform: uppercase;
+}
+.mars-panel h1 {
+  font:
+    700 clamp(32px, 5.5vw, 59px) / 0.96 "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 0.005em;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.mars-panel h2 {
+  font:
+    500 16px/1.45 "IBM Plex Mono",
+    monospace;
+  color: #e9c6a1;
+  margin: 0 0 16px;
+}
+.mars-panel > p:not(.mars-eyebrow) {
+  color: #d0c5c3;
+  font:
+    400 13px/1.75 "IBM Plex Mono",
+    monospace;
+  max-width: 62ch;
+}
+.mars-help {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 25px;
+}
+.mars-help span {
+  padding: 7px 9px;
+  border: 1px solid #ffffff25;
+  background: #ffffff08;
+  color: #bdb5b7;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+.mars-help b {
+  color: #fff;
+  margin-right: 4px;
+}
+.mars-primary,
+.mars-secondary {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--mars-amber);
+  background: #d08347;
+  color: #1d1219 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.11em;
+  transition:
+    transform 0.2s,
+    background 0.2s;
+}
+.mars-primary:hover {
+  background: #f3ae63;
+  transform: translateY(-2px);
+}
+.mars-primary span {
+  float: right;
+}
+.mars-secondary {
+  margin-top: 9px;
+  background: transparent;
+  color: #e6dfe1 !important;
+  border-color: #ffffff37;
+}
+.mars-secondary:hover {
+  border-color: #fff;
+}
+.mars-answers {
+  display: grid;
+  gap: 9px;
+  margin-top: 19px;
+}
+.mars-answers button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  border: 1px solid #ffffff33;
+  background: #ffffff09;
+  padding: 12px;
+  font-size: 11px;
+  transition: 0.2s;
+}
+.mars-answers button:hover {
+  border-color: var(--mars-amber);
+  background: #e4924b20;
+}
+.mars-answers button span {
+  color: var(--mars-amber);
+  font-size: 9px;
+}
+.mars-score {
+  border-top: 1px solid #ffffff29;
+  border-bottom: 1px solid #ffffff29;
+  padding: 12px 0;
+  margin: 17px 0;
+  color: #c7bbba;
+  font-size: 9px;
+  letter-spacing: 0.07em;
+}
+.mars-score b {
+  color: var(--mars-mint);
+}
+.mars-score span {
+  color: #777;
+}
+.mars-respawn {
+  text-align: center;
+  padding: 8px;
+}
+.mars-respawn p {
+  margin: 15px 0 7px;
+  color: var(--mars-mint);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+}
+.mars-respawn b {
+  font-size: 9px;
+  color: #c4b9b7;
+  letter-spacing: 0.12em;
+}
+.mars-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ffffff30;
+  border-top-color: var(--mars-mint);
+  border-radius: 50%;
+  animation: marsSpin 0.7s linear infinite;
+}
+.mars-bottom > span {
+  display: flex;
+  align-items: center;
+}
+.mars-bottom button {
+  border: 1px solid #ffffff35;
+  background: #15132185;
+  padding: 8px 11px;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+.mars-transition {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  background-color: #f1a25d;
+  background-image:
+    linear-gradient(#211529 1px, transparent 1px),
+    linear-gradient(90deg, #211529 1px, transparent 1px);
+  background-size: 16px 16px;
+  clip-path: inset(0 100% 0 0);
+  animation: marsPixelSweep 0.9s steps(8, end) both;
+}
+.mars-shell[data-zone="pathfinder"] {
+  --mars-amber: #ffd47e;
+}
+.mars-shell[data-zone="ingenuity"] {
+  --mars-amber: #d9c3ec;
+  --mars-mint: #b6e5ff;
+}
+.mars-touch {
+  display: none;
+  position: absolute;
+  z-index: 4;
+  bottom: 66px;
+  left: 22px;
+  right: 22px;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.mars-touch button {
+  pointer-events: auto;
+  width: 56px;
+  height: 52px;
+  border: 1px solid #fff6;
+  background: #14121cb5;
+  color: white;
+  font-weight: 700;
+  touch-action: none;
+}
+.mars-touch .mars-touch-jump {
+  width: 82px;
+  color: var(--mars-amber);
+  border-color: var(--mars-amber);
+  font-size: 10px;
+}
+.mars-shell:has(.mars-touch) .mars-touch {
+  display: flex;
+}
+.mars-shell:has(.mars-touch) .mars-panel-playing {
+  bottom: 130px;
+}
+.mars-shell button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+@keyframes marsPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-43% + 12px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-43%);
+  }
+}
+@keyframes marsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes marsPixelSweep {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  45% {
+    clip-path: inset(0 0 0 0);
+  }
+  68% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+}
+@media (max-width: 720px) {
+  .mars-top,
+  .mars-bottom {
+    padding: 13px 15px;
+  }
+  .mars-top-status {
+    display: none;
+  }
+  .mars-mark {
+    font-size: 10px;
+  }
+  .mars-exit {
+    font-size: 8px !important;
+    padding: 9px;
+  }
+  .mars-panel {
+    left: 5vw;
+    width: 90vw;
+    max-width: 500px;
+    top: 53%;
+    padding: 26px 24px;
+  }
+  .mars-panel h1 {
+    font-size: clamp(32px, 9vw, 48px);
+  }
+  .mars-panel h2 {
+    font-size: 13px;
+  }
+  .mars-panel > p:not(.mars-eyebrow) {
+    font-size: 11px;
+  }
+  .mars-help {
+    gap: 6px;
+    margin: 16px 0;
+  }
+  .mars-help span {
+    font-size: 7px;
+    padding: 6px;
+  }
+  .mars-panel-playing {
+    left: 12px;
+    bottom: 75px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+    padding: 12px 15px;
+  }
+  .mars-bottom {
+    font-size: 7px;
+  }
+  .mars-bottom > span:nth-child(2) {
+    display: none;
+  }
+  .mars-touch {
+    bottom: 56px;
+  }
+  .mars-shell:has(.mars-touch) .mars-panel-playing {
+    bottom: 117px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mars-panel,
+  .mars-transition,
+  .mars-spinner {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

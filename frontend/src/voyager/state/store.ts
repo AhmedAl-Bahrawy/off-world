@@ -88,6 +88,7 @@ export interface DirectiveState {
 const initial = {
   phase: 'gate' as 'gate' | 'playing',
   scene: 'collapse' as SceneName,
+  marsActive: false,
   chapter: '',
   /**
    * Index of the current story segment (0-6). Drives the HUD progress rail so
@@ -116,6 +117,7 @@ type Snapshot = typeof initial
 
 interface State extends Snapshot {
   startGame: () => void
+  setMarsActive: (active: boolean) => void
   setScene: (scene: SceneName) => void
   setChapter: (chapter: string) => void
   setStage: (stage: number) => void
@@ -147,6 +149,7 @@ export const useVoyager = create<State>()((set) => ({
   ...initial,
 
   startGame: () => set({ phase: 'playing', hudVisible: true }),
+  setMarsActive: (marsActive) => set({ marsActive }),
   setScene: (scene) => set({ scene }),
   setChapter: (chapter) => set({ chapter }),
   setStage: (stage) => set({ stage }),

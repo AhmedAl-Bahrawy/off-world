@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { useVoyager } from './state/store'
+import MarsExperience from '../mars/MarsExperience'
 import { runStory, resetStory } from './story/script'
 import { SceneCanvas } from './scene/SceneCanvas'
 import { IconDefs } from './ui/Icons'
@@ -21,6 +22,7 @@ export default function VoyagerExperience() {
   const scene = useVoyager((s) => s.scene)
   const accent = useVoyager((s) => s.accent)
   const generation = useVoyager((s) => s.generation)
+  const marsActive = useVoyager((s) => s.marsActive)
   const starting = useRef(false)
 
   useEffect(() => {
@@ -70,6 +72,7 @@ export default function VoyagerExperience() {
       <Directive />
       <Windows />
       {phase === 'gate' && <Gate key={'gate' + generation} onStart={start} />}
+      {marsActive && <MarsExperience onExit={() => useVoyager.getState().setMarsActive(false)} />}
     </div>
   )
 }

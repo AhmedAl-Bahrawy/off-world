@@ -22,7 +22,7 @@ import { blip } from '../lib/audio'
 import { RM } from '../lib/motion'
 import { WIN_OPEN, WIN_CLOSE } from '../lib/anim'
 import { Bar } from './primitives'
-import { resetStory, replayStory } from '../story/script'
+import { resetStory } from '../story/script'
 import { Icon } from './Icons'
 import {
   TilesInteraction,
@@ -296,13 +296,12 @@ function UplinkBody() {
   )
 }
 
-/** Final window — the archive summary, plus replay and return. */
+/** Final window — the Voyager archive opens the Mars field simulation. */
 function EndBody() {
   return (
     <div className="end">
       <p className="end-lead">
-        The archive is closed. Somewhere beyond the heliopause, the reply is still
-        travelling.
+        We have to reach Mars in a simulation. The surface mission is ready.
       </p>
       <ul className="end-list">
         <li>
@@ -316,8 +315,8 @@ function EndBody() {
         </li>
       </ul>
       <div className="row">
-        <button type="button" onClick={replayStory}>
-          REPLAY TRANSMISSION
+        <button type="button" onClick={() => useVoyager.getState().setMarsActive(true)}>
+          REACH MARS IN SIMULATION
         </button>
         <button type="button" onClick={resetStory}>
           RETURN TO TITLE
