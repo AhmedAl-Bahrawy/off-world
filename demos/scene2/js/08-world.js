@@ -10,7 +10,7 @@ const GROUND_Y = 208;
 const CHUNK_W = 250;
 const WORLD = {
   level:null, solids:[], blocks:[], pickups:[], shards:[], enemies:[], movers:[], pads:[],
-  winds:[], decor:[], signs:[], npcs:[], goal:null, length:0, spawn:{x:40,y:GROUND_Y-16},
+  winds:[], decor:[], signs:[], npcs:[], cells:[], checkpoints:[], goal:null, length:0, spawn:{x:40,y:GROUND_Y-16},
   bg1:[], bg2:[], bg3:[], chunkX:[], hidden:[]
 };
 
@@ -241,3 +241,42 @@ function buildLevel(idx){
   return w;
 }
 
+
+/* ======================================================================
+   CHECKPOINTS & REPAIR CELLS — placed on real ground after level build
+   ====================================================================== */
+'use strict';
+
+/* flags at 42% and 74% of the level, sitting on the topmost ground */
+function placeCheckpoints(){
+  WORLD.checkpoints = [];
+  const fr = [0.42, 0.74];
+  for(const f of fr){
+    const cx = Math.round(WORLD.length * f);
+    let gy = null;
+    for(const s of WORLD.solids){
+      if(cx >= s.x + 4 && cx <= s.x + s.w - 4 && (gy === null || s.y < gy)) gy = s.y;
+    }
+    if(gy === null || gy > GROUND_Y + 1) continue;
+    if(Math.abs(cx - WORLD.spawn.x) < 80) continue;
+    if(WORLD.goal && Math.abs(cx - WORLD.goal.x) < 80) continue;
+    WORLD.checkpoints.push({x:cx, y:gy, lit:false});
+  }
+}
+
+/* green repair cells on the tougher missions, floating above open ground */
+function placeRepairCells(L){
+  WORLD.cells = [];
+  const n = {storm:1, escort:1, wind:1, skywind:2, precision:1}[L.gimmick] || 0;
+  if(!n) return;
+  const spots = [];
+  for(const s of WORLD.solids){
+    if(s.oneway || s.w < 40) continue;
+    if(s.y >= GROUND_Y - 18) spots.push(s);
+  }
+  for(let i=0;i<n && spots.length;i++){
+    const j = Math.floor(hash2(i + 1, L.seed) * spots.length);
+    const s = spots.splice(j, 1)[0];
+    WORLD.cells.push({x: s.x + s.w/2 - 4, y: s.y - 26, got:false});
+  }
+}

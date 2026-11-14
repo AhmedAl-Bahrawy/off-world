@@ -88,6 +88,11 @@ function startLevel(idx){
   for(const s of WORLD.shards) if(s.y0 === undefined) s.y0 = s.y;
   resetPlayer(L);
   G.cam.x = 0;
+  G.camSnap = true; G.look = 26;
+  G.checkpoint = {x: WORLD.spawn.x, y: WORLD.spawn.y};
+  G.attempts = 1;
+  placeCheckpoints();
+  placeRepairCells(L);
   G.levelTime = 0;
   G.levelShards = 0;
   G.levelBits = 0;
@@ -156,6 +161,7 @@ function completeLevel(idx){
   add('MEMORIES', got + '/' + L.facts.length);
   add('DATA BITS', G.levelBits);
   add('TIME', Math.round(G.levelTime) + 's');
+  add('ATTEMPTS', G.attempts || 1);
   add('CURIOUSITY', curiosityPct() + '%');
   c.appendChild(sl);
   const row = el('div', 'btnRow');

@@ -216,6 +216,31 @@ function drawEntities(g, camX){
     if(x < -20 || x > W + 20) continue;
     drawSprite(g, 'bit', x, y, (pk.t*6)|0);
   }
+  /* checkpoint flags — dim until claimed */
+  for(let i=0;i<WORLD.checkpoints.length;i++){
+    const cp = WORLD.checkpoints[i];
+    const x = Math.round(cp.x - camX), y = Math.round(cp.y);
+    if(x < -20 || x > W + 20) continue;
+    if(!cp.lit) g.globalAlpha = 0.45;
+    drawSprite(g, 'flag', x - 6, y - 18, 0, false);
+    g.globalAlpha = 1;
+    if(cp.lit){
+      const pulse = 0.3 + 0.2*Math.sin(G.time*3 + i);
+      g.fillStyle = 'rgba(255,209,102,' + pulse.toFixed(2) + ')';
+      g.beginPath(); g.arc(x + 6, y - 10, 9, 0, Math.PI*2); g.fill();
+    }
+  }
+  /* repair cells */
+  for(let i=0;i<WORLD.cells.length;i++){
+    const c = WORLD.cells[i];
+    if(c.got) continue;
+    const x = Math.round(c.x - camX), y = Math.round(c.y + Math.sin(G.time*2.5 + i)*2);
+    if(x < -20 || x > W + 20) continue;
+    const pulse = 0.25 + 0.2*Math.sin(G.time*3 + i);
+    g.fillStyle = 'rgba(125,224,138,' + pulse.toFixed(2) + ')';
+    g.beginPath(); g.arc(x + 4, y + 4, 8, 0, Math.PI*2); g.fill();
+    drawSprite(g, 'cell', x, y, (G.time*4|0)%2, false);
+  }
   /* memory shards */
   for(let i=0;i<WORLD.shards.length;i++){
     const s = WORLD.shards[i];
@@ -309,9 +334,12 @@ function drawPlayer(g, camX){
   if(P.wobble > 0) g.rotate(Math.sin(P.wobble*4)*0.06);
   g.translate(-cx, -by);
   const fx = Math.round(cx - spr.w/2), fy = Math.round(by - spr.h);
+  /* i-frame blink */
+  if(P.invuln > 0) g.globalAlpha = (Math.floor(G.time * 12) % 2) ? 0.35 : 0.9;
   drawSprite(g, name, fx, fy, anim, false);
   const blink = (G.blink % 3.2) > 3.05 ? 1 : 0;
   drawEyes(g, spr, fx, fy, P.look.x, P.look.y, blink);
+  g.globalAlpha = 1;
   g.restore();
   /* flight rotor wash */
   if(P.flying){
@@ -329,6 +357,16 @@ function drawHUD(g){
   const total = L.facts.length;
   const got = countLevelShards();
   text(g, 'MEMORIES ' + got + '/' + total, 6, 6, {scale:1, color:'#e6e9ff', shadow:'#000'});
+  /* hull integrity pips */
+  for(let i=0;i<3;i++){
+    g.fillStyle = i < G.hull ? '#ff5d73' : 'rgba(230,233,255,.14)';
+    g.fillRect(6 + i*9, 16, 7, 5);
+  }
+  /* damage flash */
+  if(G.flash > 0){
+    g.fillStyle = 'rgba(255,93,115,' + Math.min(0.4, G.flash*0.5).toFixed(2) + ')';
+    g.fillRect(0, 0, W, H);
+  }
   /* battery */
   if(KIT.fly && (L.gimmick === 'flight' || L.gimmick === 'skywind' || L.gimmick === 'precision')){
     const bw = 34;

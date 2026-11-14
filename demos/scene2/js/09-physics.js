@@ -8,7 +8,7 @@
    ====================================================================== */
 const PHYS = {
   walk:92, run:142, accel:880, friction:1120, airControl:0.7,
-  gravity:940, jump:-352, fallMul:1.32, apexGravity:0.64, maxFall:560,
+  gravity:940, jump:-352, fallMul:1.32, apexGravity:0.64, jumpCut:1.9, maxFall:560,
   coyote:0.11, buffer:0.13,
   bounce:-392, flyUp:-196, flyFall:150, flyMax:-150, flyAccel:520, flyDrag:1.4
 };
@@ -54,7 +54,7 @@ function collideY(e, dy, prevBottom){
 function onSolid(e){
   for(let i=0;i<WORLD.solids.length;i++){
     const s = WORLD.solids[i];
-    if(s.oneway) continue;
+    /* one-way platforms count too — feet exactly on their surface is ground */
     if(e.x + e.w > s.x && e.x < s.x + s.w && Math.abs((e.y + e.h) - s.y) < 2) return true;
   }
   for(let i=0;i<WORLD.movers.length;i++){

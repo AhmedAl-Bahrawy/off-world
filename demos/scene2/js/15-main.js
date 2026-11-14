@@ -46,10 +46,11 @@ function frame(){
         checkGoal();
       }
     }
-    /* camera */
-    const look = P.face * 26;
-    const target = P.x + look - W * 0.42;
-    G.cam.x = lerp(G.cam.x, target, 1 - Math.pow(0.001, dt));
+    /* camera — eased look-ahead, snap on (re)spawn */
+    G.look = lerp(G.look, P.face * 26, 1 - Math.pow(0.02, dt));
+    const target = P.x + G.look - W * 0.42;
+    if(G.camSnap){ G.cam.x = target; G.camSnap = false; }
+    else G.cam.x = lerp(G.cam.x, target, 1 - Math.pow(0.004, dt));
     if(G.cam.x < 0) G.cam.x = 0;
     if(G.cam.x > WORLD.length - W) G.cam.x = Math.max(0, WORLD.length - W);
     /* bubble follows its speaker */

@@ -230,10 +230,9 @@ function showOver(how){
   b1.onclick = ()=>{
     hideOverlay('ovOver');
     G.mode = 'play';
-    const sp = spriteSize(WORLD.level.gimmick==='flight'||WORLD.level.gimmick==='skywind'||WORLD.level.gimmick==='precision' ? 'coper_idle' : 'curi_idle');
-    P.x = WORLD.spawn.x; P.y = WORLD.spawn.y;
-    P.vx = 0; P.vy = 0; P.invuln = 1.4;
-    G.hitStop = 0.05;
+    G.hull = 3;
+    G.attempts = (G.attempts || 1) + 1;
+    respawnAtCheckpoint();
   };
   const b2 = el('button', 'btn', '⏹ TITLE');
   b2.onclick = ()=>{ hideOverlay('ovOver'); buildTitle(); showOverlay('ovTitle'); G.mode = 'title'; musicStart('menu'); };

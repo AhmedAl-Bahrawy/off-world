@@ -35,7 +35,8 @@ function resetPlayer(level){
   P.face = 1; P.anim = 0; P.animT = 0; P.state = 'idle';
   P.coyote = 0; P.buffer = 0; P.bounced = false; P.flying = false;
   P.battery = 100; P.digT = 0; P.digTarget = null; P.invuln = 0; P.squash = 0; P.stretch = 0;
-  P.onMover = null; P.riding = null; P.wobble = 0;
+  P.onMover = null; P.riding = null; P.wobble = 0; P.kbT = 0;
+  G.hull = 3; G.flash = 0; G.camSnap = true; G.look = 26;
   P.w = Math.min(14, sp.w - 2);
   P.h = Math.min(14, sp.h - 2);
 }
@@ -83,17 +84,22 @@ function updatePlayer(dt){
   }
   if(!P.flying && P.battery < 100) P.battery = Math.min(100, P.battery + (flyingZone ? 9 : 40) * dt);
 
-  /* ---- horizontal movement ---- */
+  /* ---- horizontal movement (knockback overrides input) ---- */
   if(!P.flying){
-    const maxSpd = run ? PHYS.run : PHYS.walk;
-    const acc = P.onGround ? PHYS.accel : PHYS.accel * PHYS.airControl;
-    if(dx !== 0){
-      P.vx += dx * acc * dt;
-      if(P.vx > maxSpd) P.vx = approach(P.vx, maxSpd, PHYS.friction * dt);
-      if(P.vx < -maxSpd) P.vx = approach(P.vx, -maxSpd, PHYS.friction * dt);
-      P.face = dx;
+    if(P.kbT > 0){
+      P.kbT -= dt;
+      P.vx = approach(P.vx, 0, PHYS.friction * 0.6 * dt);
     } else {
-      P.vx = approach(P.vx, 0, (P.onGround ? PHYS.friction : PHYS.friction*0.35) * dt);
+      const maxSpd = run ? PHYS.run : PHYS.walk;
+      const acc = P.onGround ? PHYS.accel : PHYS.accel * PHYS.airControl;
+      if(dx !== 0){
+        P.vx += dx * acc * dt;
+        if(P.vx > maxSpd) P.vx = approach(P.vx, maxSpd, PHYS.friction * dt);
+        if(P.vx < -maxSpd) P.vx = approach(P.vx, -maxSpd, PHYS.friction * dt);
+        P.face = dx;
+      } else {
+        P.vx = approach(P.vx, 0, (P.onGround ? PHYS.friction : PHYS.friction*0.35) * dt);
+      }
     }
   }
 
@@ -121,10 +127,12 @@ function updatePlayer(dt){
   }
   if(P.onGround) P.bounced = false;
 
-  /* ---- gravity ---- */
+  /* ---- gravity (apex hang + variable jump height) ---- */
   if(!P.flying){
-    const g = PHYS.gravity * (P.vy < 0 && Math.abs(P.vy) < 90 ? PHYS.apexGravity : 1);
-    P.vy += g * (P.vy > 0 ? PHYS.fallMul : 1) * dt;
+    let gm = 1;
+    if(P.vy < 0 && Math.abs(P.vy) < 90) gm = PHYS.apexGravity;
+    if(P.vy < 0 && !P.jumpHeld) gm = PHYS.jumpCut;   /* released early = short hop */
+    P.vy += PHYS.gravity * gm * (P.vy > 0 ? PHYS.fallMul : 1) * dt;
     if(P.vy > PHYS.maxFall) P.vy = PHYS.maxFall;
   } else {
     P.vy += PHYS.flyFall * dt;
@@ -184,6 +192,11 @@ function updatePlayer(dt){
       P.y = H - 46; P.vy = -120; P.battery = Math.max(0, P.battery - 12);
       floatText(P.x, P.y - 6, 'RECALL!', '#8fd4ff');
       sfx('relay');
+    } else if(G.hull > 1){
+      /* one hull point for the fall, then back to the last checkpoint */
+      G.hull--; G.flash = 0.5;
+      sfx('hurt');
+      respawnAtCheckpoint();
     } else {
       killPlayer('fell');
     }
@@ -237,6 +250,7 @@ function updatePlayer(dt){
   }
   G.blink += dt;
   if(P.invuln > 0) P.invuln -= dt;
+  if(G.flash > 0) G.flash = Math.max(0, G.flash - dt*2);
   if(P.squash > 0) P.squash = Math.max(0, P.squash - dt*4.2);
   if(P.stretch > 0) P.stretch = Math.max(0, P.stretch - dt*3.4);
   if(P.digT > 0) P.digT -= dt;
@@ -287,7 +301,7 @@ function updateWorld(dt){
         floatText(e.x, e.y - 4, 'BONK', '#ffd166');
         RUN.bits += 5;
       } else {
-        killPlayer('mite');
+        damagePlayer('mite');
       }
     }
   }
@@ -336,6 +350,32 @@ function killPlayer(how){
   G.hitStop = 0.12;
   checkAch('scratch');
   showOver(how);
+}
+/* one hit = knockback, flash, i-frames. Hull 0 = the SCRAPPED screen. */
+function damagePlayer(how){
+  if(G.mode !== 'play' || P.invuln > 0) return;
+  G.hull--;
+  P.kbT = 0.22;
+  P.vx = -P.face * 130;
+  P.vy = -190;
+  sfx('hurt');
+  burst(P.x + P.w/2, P.y + P.h/2, 12, '#ff5d73', 100, 0.6);
+  G.shake = 5; G.hitStop = 0.06; G.flash = 0.6;
+  floatText(P.x, P.y - 12, 'HULL -1', '#ff5d73');
+  if(G.hull <= 0){ killPlayer(how); return; }
+  P.invuln = 1.3;
+}
+/* back to the last checkpoint (or spawn). Memories always kept. */
+function respawnAtCheckpoint(){
+  P.x = G.checkpoint ? G.checkpoint.x : WORLD.spawn.x;
+  P.y = (G.checkpoint ? G.checkpoint.y : WORLD.spawn.y) - P.h;
+  P.vx = 0; P.vy = 0;
+  P.invuln = 1.4; P.kbT = 0;
+  P.flying = false; P.onMover = null; P.bounced = false;
+  G.camSnap = true;
+  sfx('relay');
+  burst(P.x + P.w/2, P.y + P.h, 10, '#44e3b8', 70, 0.5);
+  floatText(P.x, P.y - 12, 'REASSEMBLED', '#44e3b8');
 }
 const PING = [];
 
@@ -391,6 +431,30 @@ function updatePickups(dt){
       sfx('bit');
       burst(pk.x + 3, pk.y + 3, 4, '#ffd166', 50, 0.3);
       refreshRails();
+    }
+  }
+  /* repair cells — only consumed when the hull is actually hurt */
+  for(let i=0;i<WORLD.cells.length;i++){
+    const c = WORLD.cells[i];
+    if(c.got) continue;
+    if(aabb(P, {x:c.x, y:c.y, w:8, h:9}) && G.hull < 3){
+      c.got = true;
+      G.hull++;
+      sfx('right');
+      burst(c.x + 4, c.y + 4, 8, '#7de08a', 60, 0.5);
+      floatText(c.x, c.y - 8, '+1 HULL', '#7de08a');
+    }
+  }
+  /* checkpoint flags */
+  for(let i=0;i<WORLD.checkpoints.length;i++){
+    const cp = WORLD.checkpoints[i];
+    if(cp.lit) continue;
+    if(Math.abs((cp.x + 6) - (P.x + P.w/2)) < 16 && Math.abs(cp.y - (P.y + P.h)) < 44){
+      cp.lit = true;
+      G.checkpoint = {x: cp.x, y: cp.y};
+      sfx('know');
+      burst(cp.x + 6, cp.y - 10, 10, '#ffd166', 70, 0.5);
+      floatText(cp.x - 6, cp.y - 24, 'CHECKPOINT', '#ffd166');
     }
   }
 }
