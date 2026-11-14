@@ -502,3 +502,560 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ============================================================
+   Mars archive discovery — field investigation, archive interfaces
+   ============================================================ */
+.mars-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.mars-brief-purpose {
+  color: var(--mars-mint) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.03em;
+  opacity: 0.9;
+}
+.mars-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 4vh 4vw;
+  background: #0a0713b8;
+  backdrop-filter: blur(4px);
+  animation: marsFadeIn 0.28s ease both;
+}
+.mars-overlay-archive {
+  padding: 2.5vh 2vw;
+  background: #0a0713e0;
+}
+.mars-overlay-record {
+  background: #0a0713d0;
+  z-index: 8;
+}
+.mars-panel-frame {
+  width: min(560px, 94vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(150deg, #191426f2, #251a2cf2);
+  border: 1px solid #ffffff3d;
+  box-shadow:
+    0 30px 90px #06040ea8,
+    inset 0 0 0 1px #ffffff0d;
+}
+.mars-panel-archive {
+  width: min(620px, 94vw);
+}
+.mars-panel-frame-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px 12px;
+  border-bottom: 1px solid #ffffff24;
+}
+.mars-panel-frame-head .mars-eyebrow {
+  margin: 0;
+}
+.mars-panel-close {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ffffff33;
+  background: #ffffff0d;
+  color: #e9e2e4 !important;
+  font-size: 12px !important;
+  line-height: 1;
+}
+.mars-panel-close:hover {
+  border-color: var(--mars-amber);
+  color: var(--mars-amber) !important;
+}
+.mars-panel-scroll {
+  overflow-y: auto;
+  padding: 18px 20px 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff33 transparent;
+}
+.mars-panel-frame-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid #ffffff24;
+}
+.mars-panel-frame-foot .mars-primary,
+.mars-panel-frame-foot .mars-secondary {
+  width: auto;
+  flex: 1 1 180px;
+  margin-top: 0;
+  text-align: center;
+}
+.mars-panel-frame-foot .mars-primary {
+  text-align: left;
+}
+.mars-primary:disabled {
+  background: #ffffff12;
+  border-color: #ffffff24;
+  color: #9b9195 !important;
+  cursor: not-allowed;
+  transform: none;
+}
+.mars-artifact-name {
+  font:
+    800 clamp(28px, 4.4vw, 46px) / 0.94 "Barlow Condensed",
+    sans-serif !important;
+  letter-spacing: 0.02em;
+  margin: 0 0 6px !important;
+}
+.mars-artifact-meta {
+  color: #c8b6ab;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  margin: 0 0 18px;
+}
+.mars-artifact-meta span {
+  color: var(--mars-amber);
+  margin: 0 4px;
+}
+.mars-panel-block {
+  margin: 0 0 20px;
+  padding-top: 15px;
+  border-top: 1px solid #ffffff1c;
+}
+.mars-panel-block h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 11px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--mars-amber);
+}
+.mars-panel-block h3 b {
+  margin-left: auto;
+  color: var(--mars-mint);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+.mars-panel-block p {
+  color: #d3c7c4;
+  font-size: 12px;
+  line-height: 1.65;
+  margin: 0 0 9px;
+}
+.mars-artifact-purpose {
+  color: #f0e6e0 !important;
+  font-size: 13px !important;
+}
+.mars-artifact-question {
+  color: var(--mars-mint) !important;
+  font-style: italic;
+  border-left: 2px solid var(--mars-mint);
+  padding-left: 11px;
+}
+.mars-artifact-legacy {
+  color: #a99c9b !important;
+  font-size: 11px !important;
+}
+.mars-component-list,
+.mars-evidence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mars-component {
+  border: 1px solid #ffffff1f;
+  background: #ffffff08;
+  margin-bottom: 7px;
+}
+.mars-component.is-known {
+  border-color: #ffffff33;
+  background: #ffffff0f;
+}
+.mars-component.is-open {
+  border-color: var(--mars-amber);
+}
+.mars-component button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: #cfc3c1 !important;
+  text-align: left;
+  font-size: 10px !important;
+  letter-spacing: 0.11em;
+}
+.mars-component.is-known button {
+  color: #fff !important;
+}
+.mars-component button:hover {
+  background: #ffffff0f;
+}
+.mars-component-index {
+  color: var(--mars-amber);
+  font-size: 9px;
+}
+.mars-component-name {
+  flex: 1;
+}
+.mars-component-mark {
+  color: var(--mars-amber);
+  font-size: 12px;
+}
+.mars-component-detail {
+  padding: 0 13px 13px 13px;
+  border-top: 1px dashed #ffffff2b;
+}
+.mars-component-detail p {
+  margin: 9px 0 0;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #cdc0be;
+}
+.mars-component-discovery {
+  color: #fff !important;
+  font-size: 12.5px !important;
+}
+.mars-component-learning {
+  border-left: 2px solid var(--mars-amber);
+  padding-left: 10px;
+  color: var(--mars-mint) !important;
+  font-size: 11px !important;
+}
+.mars-evidence-list li {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 3px 9px;
+  padding: 9px 0;
+  border-bottom: 1px dashed #ffffff1c;
+}
+.mars-evidence-dot {
+  grid-row: span 2;
+  color: #6b6165;
+}
+.mars-evidence-list li.is-got .mars-evidence-dot {
+  color: var(--mars-amber);
+}
+.mars-evidence-title {
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  color: #cfc3c1;
+}
+.mars-evidence-list li.is-got .mars-evidence-title {
+  color: #fff;
+}
+.mars-evidence-line {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #a99c9b;
+}
+.mars-evidence-list li.is-got .mars-evidence-line {
+  color: #ddd0cc;
+}
+.mars-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px;
+  border: 1px solid #ffffff33;
+  background: #ffffff0d;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #cfc3c1;
+  white-space: nowrap;
+}
+.mars-status i {
+  font-style: normal;
+  color: var(--mars-amber);
+}
+.mars-status-identified {
+  border-color: #98e5c277;
+  color: #bdf0da;
+}
+.mars-status-investigated {
+  border-color: #ffd9a066;
+  color: #ffdca8;
+}
+.mars-status-understood {
+  border-color: #b6e5ff66;
+  color: #bfe8ff;
+}
+.mars-status-archived {
+  border-color: var(--mars-amber);
+  background: #d0834733;
+  color: #ffe4b8;
+}
+.mars-evidence-card,
+.mars-record-card {
+  width: min(520px, 92vw);
+  padding: 30px 32px;
+  background: linear-gradient(150deg, #1b1526f7, #261b30f7);
+  border: 1px solid #ffffff3d;
+  box-shadow: 0 30px 90px #06040ea8;
+  animation: marsPanelIn 0.4s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+.mars-evidence-card h2,
+.mars-record-card h2 {
+  font:
+    700 clamp(24px, 3.6vw, 38px) / 1 "Barlow Condensed",
+    sans-serif !important;
+  margin: 0 0 16px !important;
+}
+.mars-evidence-line {
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 12px;
+}
+.mars-evidence-body,
+.mars-record-body {
+  color: #cfc3c1;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 14px;
+}
+.mars-evidence-source,
+.mars-record-source {
+  color: #8f8487;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  margin: 0 0 18px;
+}
+.mars-evidence-source a,
+.mars-record-source a {
+  color: var(--mars-mint);
+}
+.mars-archive-frame {
+  width: min(1080px, 96vw);
+  height: min(86vh, 860px);
+  display: flex;
+  flex-direction: column;
+  background: #0d0a16;
+  border: 1px solid #ffffff33;
+  box-shadow: 0 30px 100px #06040ecc;
+  animation: marsFadeIn 0.3s ease both;
+}
+.mars-archive-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ffffff26;
+  background: #100c1a;
+  flex-wrap: wrap;
+}
+.mars-archive-head .mars-eyebrow {
+  margin: 0;
+  font-size: 8px;
+}
+.mars-archive-tabs {
+  display: flex;
+  gap: 4px;
+}
+.mars-archive-tabs button {
+  padding: 8px 13px;
+  border: 1px solid #ffffff2b;
+  background: #ffffff08;
+  color: #c8bcba !important;
+  font-size: 9px !important;
+  letter-spacing: 0.12em;
+}
+.mars-archive-tabs button.is-on {
+  border-color: var(--mars-amber);
+  background: #d0834733;
+  color: #ffe4b8 !important;
+}
+.mars-archive-body {
+  flex: 1;
+  overflow: auto;
+}
+.mars-badge {
+  display: inline-block;
+  padding: 3px 7px;
+  border: 1px solid;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.mars-badge-verified {
+  color: #bdf0da;
+  border-color: #7fd6ae;
+  background: #1f3c31;
+}
+.mars-record-card .mars-record-fact {
+  border-left: 2px solid var(--mars-mint);
+  padding-left: 12px;
+  color: #ded2ce;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.mars-record-fact .mars-badge {
+  display: block;
+  width: fit-content;
+  margin-bottom: 8px;
+}
+.mars-record-handle {
+  color: var(--mars-amber);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  margin: 0 0 14px;
+}
+.mars-archive-unlocked {
+  color: var(--mars-amber) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.12em;
+  border: 1px dashed var(--mars-amber);
+  padding: 11px 13px;
+  margin-top: 16px !important;
+}
+
+/* ---- Final Mars archive collection ---- */
+.mars-archive-final {
+  max-height: 82vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.mars-final-title {
+  font:
+    800 clamp(30px, 5vw, 54px) / 0.94 "Barlow Condensed",
+    sans-serif !important;
+}
+.mars-final-lede {
+  color: #cfc3c1 !important;
+  font-size: 12px !important;
+}
+.mars-final-grid {
+  list-style: none;
+  margin: 22px 0 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.mars-final-card {
+  border: 1px solid #ffffff2b;
+  background: #ffffff08;
+}
+.mars-final-card button {
+  display: block;
+  width: 100%;
+  padding: 15px 15px 17px;
+  border: 0;
+  background: none;
+  color: inherit !important;
+  text-align: left;
+}
+.mars-final-card button:hover {
+  background: #ffffff0d;
+}
+.mars-final-archived {
+  border-color: var(--mars-amber);
+  background: #d0834722;
+}
+.mars-final-era {
+  color: var(--mars-amber);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  margin: 0 0 6px;
+}
+.mars-final-card h2 {
+  font:
+    700 clamp(19px, 2.4vw, 26px) / 1 "Barlow Condensed",
+    sans-serif !important;
+  margin: 0 0 4px !important;
+}
+.mars-final-type {
+  color: #a99c9b;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  margin: 0 0 11px;
+}
+.mars-final-stats {
+  color: #8f8487;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  margin: 10px 0 0;
+}
+.mars-final-open {
+  display: block;
+  margin-top: 11px;
+  color: var(--mars-mint);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+}
+.mars-final-summary {
+  color: var(--mars-mint) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.16em;
+  border-top: 1px solid #ffffff24;
+  border-bottom: 1px solid #ffffff24;
+  padding: 14px 0;
+}
+.mars-next-destination {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--mars-amber);
+  background: linear-gradient(135deg, #2a1c22e6, #1b1626e6);
+}
+.mars-next-destination h2 {
+  font:
+    800 clamp(24px, 3.4vw, 38px) / 1 "Barlow Condensed",
+    sans-serif !important;
+  margin: 0 0 10px !important;
+  color: var(--mars-amber);
+}
+.mars-next-destination p {
+  color: #cfc3c1;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+.mars-next-destination .mars-secondary {
+  margin-top: 9px;
+}
+.mars-touch .mars-touch-inspect {
+  color: var(--mars-mint);
+  border-color: var(--mars-mint);
+  font-size: 10px;
+}
+@keyframes marsFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 720px) {
+  .mars-overlay {
+    padding: 12px;
+  }
+  .mars-final-grid {
+    grid-template-columns: 1fr;
+  }
+  .mars-archive-frame {
+    height: 92vh;
+  }
+  .mars-archive-head {
+    gap: 8px;
+  }
+  .mars-archive-tabs button {
+    padding: 7px 9px;
+    font-size: 8px !important;
+  }
+}
