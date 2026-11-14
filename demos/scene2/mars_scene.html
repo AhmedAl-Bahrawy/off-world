@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mars — Steel Planet</title>
+<style>
+:root{
+  --bg:#080a1c; --panel:#0e1233; --line:#4b55c9; --text:#e6e9ff; --muted:#8e97d6;
+  --accent:#44e3b8; --warn:#ff5d73; --energy:#ffb347; --oxy:#6fa8ff; --signal:#b78bff;
+  --font-ui: "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
+  --font-pixel: "Courier New", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
+body{overflow-x:hidden;-webkit-user-select:none;user-select:none}
+button{font-family:inherit;cursor:pointer}
+#app{direction:ltr;display:grid;grid-template-columns:200px minmax(0,1fr) 240px;
+  grid-template-areas:"top top top" "hud stage tools" "story story story";
+  gap:10px;padding:10px;max-width:1500px;margin:0 auto;align-items:start}
+#app > *{direction:ltr}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:10px}
+.panel h3{margin:0 0 8px;font-size:14px;color:var(--accent)}
+#topbar{grid-area:top;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tb-btns{display:flex;gap:6px}
+.tb-btns button,.btn{background:#161b4a;color:var(--text);border:2px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px}
+.tb-btns button:hover,.btn:hover{background:#1f2766}
+.btn.primary{background:var(--accent);color:#04201a;border-color:var(--accent);font-weight:700}
+.btn.primary:hover{background:#6bf0cc}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.soon{opacity:.6;border-style:dashed}
+#stageLabel{color:var(--accent);font-weight:700}
+#sceneName{color:var(--muted);font-size:14px}
+#hudLeft{grid-area:hud;display:flex;flex-direction:column;gap:10px}
+#toolsPanel{grid-area:tools}
+#stageWrap{grid-area:stage;min-width:0}
+#storyBox{grid-area:story}
+.res{margin-bottom:9px}
+.res-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+.seg{display:flex;gap:2px;direction:ltr}
+.seg i{flex:1;height:10px;background:#1a1f4d;border:1px solid #2a3070;display:block}
+.seg.energy i.on{background:var(--energy)}
+.seg.oxygen i.on{background:var(--oxy)}
+.seg.signal i.on{background:var(--signal)}
+#dataCount{font-size:13px;border-top:1px dashed var(--line);padding-top:8px;margin-top:4px}
+#dataCount b{color:var(--accent)}
+.pad{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.pad button{background:#161b4a;color:var(--text);border:2px solid var(--line);border-radius:8px;padding:10px 0;font-size:15px;touch-action:none}
+.pad button:active{background:var(--accent);color:#04201a}
+#screen{position:relative;width:100%;aspect-ratio:16/9;background:#000;border:2px solid var(--line);border-radius:10px;overflow:hidden}
+#game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+#overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,6,20,.84);z-index:5;padding:8px;overflow:auto}
+#overlay.show{display:flex}
+#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s;z-index:7}
+#fade.on{opacity:1}
+#platformOverlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,6,20,.9);z-index:8;padding:8px}
+#platformOverlay[hidden]{display:none}
+#sysOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,6,20,.88);z-index:50;padding:12px}
+#sysOverlay[hidden]{display:none}
+.modal{background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:14px;max-width:580px;width:100%;max-height:100%;overflow:auto}
+.modal h2{margin:0 0 8px;font-size:18px;color:var(--accent)}
+.modal h3{margin:0 0 8px;color:var(--accent)}
+.muted{color:var(--muted);font-size:13px;line-height:1.7;margin:4px 0 10px}
+#infoBar{margin-top:8px;min-height:38px;background:var(--panel);border:2px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;line-height:1.6}
+#storyBox{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+#storyBox h3{margin:0 0 4px;color:var(--accent);font-size:16px}
+#storyBox p{margin:0;line-height:1.8;font-size:15px}
+#storyText{max-width:900px}
+.tool{border:1px solid #2a3070;border-radius:8px;padding:8px;margin-bottom:8px;background:#0b0f2b}
+.tool.target{border-color:var(--accent)}
+.tool-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;direction:ltr;flex-direction:row-reverse;justify-content:flex-end}
+.tool-n{background:var(--line);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.tool-state{font-size:12px;color:var(--muted);margin:4px 0}
+.chips{display:flex;gap:4px;direction:ltr;margin:4px 0}
+.chip{font-family:var(--font-pixel);background:#161b4a;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:14px}
+.hl .chip,.chips.hl .chip{background:var(--accent);color:#04201a;border-color:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.18)}}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 8px;border-bottom:1px dashed #2a3070;font-size:14px;line-height:1.6}
+.row .lab{color:var(--muted);white-space:nowrap}
+.row .val{text-align:right;direction:ltr;flex:1}
+.row.locked .val{font-family:var(--font-pixel);color:#6a72b8;letter-spacing:1px}
+.row.pop{animation:popin .5s}
+@keyframes popin{0%{background:var(--accent)}100%{background:transparent}}
+.note{background:#1a1f4d;border:1px solid var(--accent);border-radius:8px;padding:8px;margin:8px 0;font-size:13px;line-height:1.7}
+.cardtop{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.cardtop canvas{width:144px;height:96px;image-rendering:pixelated;background:#1a0f22;border:2px solid var(--line);border-radius:8px}
+.slots,.tiles{display:flex;flex-wrap:wrap;gap:12px;direction:ltr;justify-content:center;margin:10px 0}
+.wordgrp{display:flex;gap:4px}
+.slot,.tile{font-family:var(--font-pixel);font-size:20px;font-weight:700;width:34px;height:40px;border-radius:6px;color:var(--text)}
+.slot{background:#0b0f2b;border:2px dashed var(--line)}
+.slot.full{border-style:solid;background:#161b4a}
+.tile{background:#222a74;border:2px solid var(--line)}
+.tile.used{opacity:.2;cursor:default}
+.slots.ok .slot{background:var(--accent);color:#04201a;border-color:var(--accent)}
+.slots.shake .slot{border-color:var(--warn);background:#3a1020;animation:shake .5s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.btnrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.coordlist{margin:8px 0;padding:0;list-style:none}
+.coordlist li{padding:6px 8px;border-bottom:1px dashed #2a3070;font-size:14px}
+.coordlist code{font-family:var(--font-pixel);color:var(--accent);direction:ltr;display:inline-block}
+@media (max-width:900px){
+  #app{display:flex;flex-direction:column;padding:6px}
+  #hudLeft{display:contents}
+  #topbar{order:1}
+  #stageWrap{order:2}
+  #controlPad{order:3}
+  #storyBox{order:4}
+  #resources{order:5}
+  #toolsPanel{order:6}
+  #overlay{position:fixed;z-index:40}
+  .cardtop canvas{width:110px;height:73px}
+}
+
+body{touch-action:manipulation;-webkit-touch-callout:none}
+#screen{margin:0 auto}
+#overlay,#platformOverlay,#sysOverlay{align-items:flex-start}
+#overlay .modal,#platformOverlay .modal,#sysOverlay .modal{margin:auto}
+.pad small{font-size:11px;opacity:.8}
+.pad button.hot{background:var(--accent);color:#04201a;animation:pulse 1s infinite}
+@media (max-width:900px){
+  body{padding-bottom:96px}
+  #controlPad{position:fixed;left:0;right:0;bottom:0;z-index:30;background:transparent;border:0;padding:8px 10px calc(8px + env(safe-area-inset-bottom));pointer-events:none}
+  #controlPad h3{display:none}
+  .pad{display:flex;gap:10px;justify-content:flex-start}
+  .pad button{pointer-events:auto;width:68px;height:68px;border-radius:50%;font-size:22px;padding:0;background:rgba(22,27,74,.82)}
+  .pad button small{display:none}
+  .pad button:nth-child(2){margin-right:auto}
+  .pad button:nth-child(3){background:rgba(68,227,184,.25)}
+}
+@media (max-width:480px){.slot,.tile{width:27px;height:34px;font-size:17px}.slots,.tiles{gap:8px}.wordgrp{gap:3px}#topbar{font-size:13px}.tb-btns button{padding:5px 8px;font-size:12px}}
+@media (max-height:500px) and (orientation:landscape){#screen{width:min(100%,calc((100vh - 80px)*16/9))}body{padding-bottom:0}#infoBar{font-size:12px;min-height:30px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar" class="panel">
+    <div class="tb-btns">
+      <button id="btnSettings" type="button">⚙ Settings</button>
+      <button id="btnSound" type="button">🔊 Sound</button>
+      <button id="btnMenu" type="button">☰ Menu</button>
+    </div>
+    <div id="stageLabel">Stage 0/9</div>
+    <div id="sceneName">Scene 2: Mars</div>
+  </header>
+
+  <aside id="hudLeft">
+    <section id="resources" class="panel">
+      <h3>Resources</h3>
+      <div id="resList"></div>
+      <div id="dataCount">Data collected: <b id="dataNum">0/0</b></div>
+    </section>
+    <section id="controlPad" class="panel">
+      <h3>Controls</h3>
+      <div class="pad">
+        <button type="button" data-k="left">◀<small> Left</small></button>
+        <button type="button" data-k="right">▶<small> Right</small></button>
+        <button type="button" data-k="jump">⤒<small> Jump</small></button>
+        <button type="button" data-k="act">E<small> Interact</small></button>
+      </div>
+    </section>
+  </aside>
+
+  <main id="stageWrap">
+    <div id="screen">
+      <canvas id="game" width="480" height="270"></canvas>
+      <div id="overlay"></div>
+      <div id="fade"></div>
+      <div id="platformOverlay" hidden>
+        <div class="modal">
+          <h3 id="platformTitle"></h3>
+          <div id="platformMount"></div>
+          <p id="platformMsg" class="muted"></p>
+          <div class="btnrow"><button id="platformClose" class="btn" type="button">Close</button></div>
+        </div>
+      </div>
+    </div>
+    <div id="infoBar"></div>
+  </main>
+
+  <aside id="toolsPanel" class="panel">
+    <h3>Artifacts</h3>
+    <div id="toolsList"></div>
+  </aside>
+
+  <section id="storyBox" class="panel">
+    <div>
+      <h3 id="storyTitle"></h3>
+      <p id="storyText"></p>
+    </div>
+    <button id="storyBtn" class="btn primary" type="button" style="display:none">Continue</button>
+  </section>
+</div>
+
+<div id="sysOverlay" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   1) CONFIG / STORY / TOOLS_DATA / PLATFORMS  (edit here only)
+   ============================================================ */
+const CONFIG = {
+  W:480, H:270, worldWidth:5600, groundY:220,
+  gravity:600, jump:-230, walkSpeed:70, runSpeed:110, tiredFactor:0.5,
+  startX:90, interactRadius:40, camLead:240, camSmooth:6,
+  parallax:[0.2,0.5,0.85],
+  coords:'18.38° N , 77.58° E',
+  moonCoords:[
+    {name:'Tranquility Base — Apollo 11', c:'0.67° N , 23.47° E'},
+    {name:'Taurus-Littrow — Apollo 17', c:'20.19° N , 30.77° E'},
+    {name:"Von Kármán Crater — Chang'e 4", c:'45.46° S , 177.59° E'}
+  ],
+  zoomTime:3.6, landTime:3.2, unlockStep:300,
+  energyPerPx:1/600, energyRegenSec:3, oxygenDrainSec:60,
+  pickupEnergy:3, pickupOxygen:3,
+  puzzleWords:[
+    {word:'WELCOME TO MARS', fact:'The name Mars comes from the Roman god of war, named for its blood-red color.'},
+    {word:'STEEL PLANET', fact:'Mars is red because its soil is full of iron oxide (rust). A steel planet, rusted over!'}
+  ]
+};
+
+const STORY = [
+  {title:'Red Planet Ahead', text:'Sixteen years of darkness between the stars. Then a rust-red dot grows on the long-range scope: Mars, the last world before Earth. Our hails go unanswered. Coordinates locked.'},
+  {title:'Final Approach', text:'The vessel turns and descends. The red world swells until it fills all three of our eyes.'},
+  {title:'Landing and Signal Lock', text:'Touchdown. The hatch is sealed by our translation lock. Reassemble the scrambled human signal to open it.'},
+  {title:'Artifact 1: Mars Pathfinder Lander', text:'The hatch opens! Move with ← → (or A D), jump with Space, sprint with Shift. Reach the artifact under the blinking arrow and press E.'},
+  {title:'Too Little Data', text:'Almost nothing is readable, and we cannot identify this machine. Follow the blinking arrow to the next artifact.'},
+  {title:'Artifact 2: Viking 1', text:'Again, only a few readable lines and the rest sealed 🔒 We still cannot identify it.', after:'Nothing more here. Keep going to the third artifact.'},
+  {title:'Artifact 3: Ingenuity Mars Helicopter', text:'Wait... the same pattern appeared on the last two machines. Look at the artifact panel: the repeated symbols are glowing.', after:'This is no coincidence! Return to Pathfinder (walk, or press Travel in the artifact panel). It may break the seals.'},
+  {title:'Back at Pathfinder', text:'The pattern broke the seals! Everything is readable now. At last we understand this machine.', after:'Good. Now return to Viking 1 with the key.'},
+  {title:'Viking 1 Reveals a Secret', text:'The seals are open, and Viking 1 points to an old human communication network from 2005.', after:'Only Ingenuity remains. Go to it.'},
+  {title:'Ingenuity Reveals Habbo', text:'Ingenuity points to a virtual world called Habbo... and a hint of more human machines on the Moon!'}
+];
+
+const FINAL_STORY = {title:'Finale: The Moon Above Mars', text:'Look up. The Moon hangs in the Martian sky. More human machines wait there, and these are their coordinates.'};
+
+const TOOLS_DATA = [
+  { id:'pathfinder', name:'Mars Pathfinder Lander', order:1, x:1200,
+    fields:[
+      {label:'Type', value:'Lander + rover (Sojourner)', locked:false},
+      {label:'Year', value:'1997 (July 4)', locked:true},
+      {label:'Landing site', value:'Ares Vallis', locked:true},
+      {label:'Mission', value:'Test airbag landings and prove a small rover can drive on Mars', locked:true},
+      {label:'Achievement', value:'First rover to move across the surface of Mars', locked:true},
+      {label:'Did you know?', value:'Sojourner was about the size of a microwave oven (roughly 10.5 kg).', locked:true}
+    ],
+    pattern:['◆','◆','◇'], patternNote:'Pattern: each machine was a "first" of its kind on Mars.', platform:null },
+  { id:'viking1', name:'Viking 1', order:2, x:2400,
+    fields:[
+      {label:'Type', value:'Lander + Orbiter', locked:false},
+      {label:'Year', value:'1976 (July 20)', locked:true},
+      {label:'Landing site', value:'Chryse Planitia', locked:true},
+      {label:'Mission', value:'Photograph the surface and run experiments searching for life', locked:true},
+      {label:'Achievement', value:'First long-lived lander on Mars: about 6 years, until 1982', locked:true},
+      {label:'Did you know?', value:'It sent back some of the first clear photos of the Martian surface.', locked:true}
+    ],
+    pattern:['◆','◆','◇'], patternNote:'Pattern: the first time Mars was seen from the ground.', platform:'twitter' },
+  { id:'ingenuity', name:'Ingenuity Mars Helicopter', order:3, x:3600,
+    fields:[
+      {label:'Type', value:'Experimental helicopter (about 1.8 kg)', locked:false},
+      {label:'Year', value:'2021 (first flight April 19)', locked:true},
+      {label:'Landing site', value:'Jezero Crater (arrived with Perseverance)', locked:true},
+      {label:'Mission', value:'Prove powered flight is possible in the thin Martian air (about 1% of Earth air density)', locked:true},
+      {label:'Achievement', value:'First powered flight on another planet: 72 flights instead of the 5 planned, last flight January 2024', locked:true},
+      {label:'Did you know?', value:'Its rotors spin faster than 2,400 rpm because the air is so thin.', locked:true}
+    ],
+    pattern:['◆','◆','◇'], patternNote:'Pattern: the first time anything flew in the sky of another world.', platform:'habbo' }
+];
+
+// Platform hooks (next phase)
+const PLATFORMS = {
+  twitter:{label:'Twitter: an old communication network', year:2005, hook:'openTwitter'},
+  habbo:{label:'Habbo: a virtual world', hook:'openHabbo'}
+};
+
+// Map: rock platforms and harmless gaps
+const PLATFORMS_ROCK = [
+  {x:520,y:184,w:60},{x:600,y:150,w:60},{x:900,y:186,w:70},
+  {x:1500,y:184,w:50},{x:1580,y:152,w:60},{x:1670,y:190,w:110},
+  {x:2000,y:180,w:80},{x:2100,y:146,w:60},
+  {x:2700,y:184,w:70},{x:2790,y:150,w:70},{x:3020,y:186,w:70},
+  {x:3300,y:184,w:60},{x:3380,y:150,w:70},
+  {x:4000,y:184,w:80},{x:4100,y:148,w:60},{x:4450,y:186,w:90},
+  {x:4900,y:184,w:60},{x:4980,y:150,w:70}
+];
+const GAPS = [{x:1700,w:44},{x:3000,w:44},{x:4500,w:44}];
+
+const FACTS = [
+  'Did you know? A Martian day (sol) is about 37 minutes longer than an Earth day.',
+  'Mars has about 38% of Earth gravity, which is why your jumps go higher.',
+  'Mars is red because of iron oxide (rust) in its soil.',
+  'Olympus Mons on Mars is the tallest volcano in the Solar System, about 22 km high.',
+  'The Martian atmosphere is very thin (about 1% of Earth density) and mostly carbon dioxide.',
+  'Mars has two small moons: Phobos and Deimos.',
+  'A year on Mars lasts about 687 Earth days.',
+  'Martian daytime skies look butterscotch, but sunsets turn blue!',
+  'The average temperature on Mars is about -60 C. Very cold.',
+  'Something faint pulses under the sand…',
+  'The ground here sounds hollow.',
+  'We are not the first to listen to this planet.'
+];
+const SECRETS = [
+  {id:'s1', x:760,  alien:'Ee-thuun va korr…', en:'The ground remembers.', text:'"…half a key is no key…"'},
+  {id:'s2', x:1960, alien:'Nal-ko sha dreem.', en:'It was buried on purpose.', text:'"…they stopped making things…"'},
+  {id:'s3', x:3180, alien:'Voth… kel-ar ma?', en:'Why does it still call?', text:'"…no one answers…"'},
+  {id:'s4', x:4720, alien:'Zha-un tor velk!', en:'A message. Old. Angry.', text:'"…the signal was ten years late…"'}
+];
+// Kalamithian speech: [alien, english translation shown after it]
+const SAY = {
+  start:[['Zhe ka-lo… Mahrs.','We made it… Mars.']],
+  idle:[['Ur-ek sha ma… nol.','So quiet… too quiet.'],['Kesh ta-run vell?','Is anyone still here?'],['Thoom… ka-ni sa vor.','The sand hums softly.']],
+  jump:[['Hii-ya!','Hup!'],['Zhu-vek!','Whee!']],
+  solar:[['Ohm-sa tuu!','Power!']],
+  oxy:[['Vii-sa kel.','Fresh air.']],
+  fall:[['Aaee-ko!','Whoa!']],
+  sense:[['Thrr! Un-vek nal.','Something is here… close.']],
+  tool:[['Kal-thun… ven-ra?','A machine… do you feel it?']]
+};
+
+/* ============================================================
+   2) Helpers
+   ============================================================ */
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function easeOut(t){ return 1-(1-t)*(1-t); }
+function easeIn(t){ return t*t; }
+function $(id){ return document.getElementById(id); }
+function on(el,ev,fn){ if(el) el.addEventListener(ev,fn); }
+function h(tag,cls,text){
+  const e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(text!==undefined && text!==null) e.textContent=text;
+  return e;
+}
+function clearNode(n){ if(!n) return; while(n.firstChild) n.removeChild(n.firstChild); }
+function srand(seed){ let s=seed; return function(){ s=(s*16807)%2147483647; return (s-1)/2147483646; }; }
+function toolById(id){ for(let i=0;i<TOOLS_DATA.length;i++){ if(TOOLS_DATA[i].id===id) return TOOLS_DATA[i]; } return null; }
+
+/* ============================================================
+   3) Sprites
+   ============================================================ */
+function makeSprite(rows,pal,scale){
+  let w=0; rows.forEach(function(r){ if(r.length>w) w=r.length; });
+  const c=document.createElement('canvas');
+  c.width=w*scale; c.height=rows.length*scale;
+  const g=c.getContext('2d');
+  for(let y=0;y<rows.length;y++){
+    const r=rows[y];
+    for(let x=0;x<w;x++){
+      const col=pal[r.charAt(x)];
+      if(col){ g.fillStyle=col; g.fillRect(x*scale,y*scale,scale,scale); }
+    }
+  }
+  return c;
+}
+const SPR = {};
+function buildSprites(){
+  const pp={p:'#b06be0',P:'#7d3fae',e:'#fff06a',s:'#273071',t:'#44e3b8',g:'#3a3f6e'};
+  const top=['.p.........p.','.p..ppppp..p.','.pppppeppppp.','.pppepppeppp.','..ppppppppp..','....PpppP....',
+    '.ssstttttsss.','.sssssssssss.','.sssstttssss.','psssssssssssp','p.ttttttttt.p'];
+  SPR.pStand=makeSprite(top.concat(['...sss.sss...','...sss.sss...','...sss.sss...','..gggg.gggg..','..gggg.gggg..']),pp,1);
+  SPR.pWalk=makeSprite(top.concat(['...ss...ss...','...ss...ss...','...ss...ss...','..ggg...ggg..','..ggg...ggg..']),pp,1);
+  SPR.pathfinder=makeSprite([
+    '..........ss............','.........ssss...........','........ssSSss..........','.......ssSSSSss.........',
+    '......sssSSSSsss........','.....ssssSSSSssss.......','....sssssSSSSsssss......','...ssssssSSSSssssss.....',
+    '..yyyyyyyyyyyyyyyyyy....','.yyyyyyyyyyyyyyyyyyyy...','yyddddddddddddddddddyy..','yd..................dy..',
+    'd....rr..........rr...d.','....rrrr........rrrr....','....rrrr........rrrr....','........................'],
+    {s:'#c8cbe0',S:'#8c91b3',y:'#e6b84a',d:'#8a6a2a',r:'#4a4f7a'},2);
+  SPR.viking1=makeSprite([
+    '..............ww........','..............ww..w.....','.............wwwwww.....','..ssssssssss..ww........',
+    '.ssSSSSSSSSss..ww.......','.ssSSssssSSss...........','.ssSSSSSSSSss...........','.ssssssssssss...........',
+    '..llssssssll............','..l..ssss..l............','.l...l..l...l...........','.l...l..l...l...........',
+    'll...l..l...ll..........','ff..ff..ff..ff..........','........................','........................'],
+    {w:'#e6e9ff',s:'#c8cbe0',S:'#8c91b3',l:'#6a6f96',f:'#4a4f7a'},2);
+  SPR.ingenuity=makeSprite([
+    '........................','..........mm............','........................','..........mm............',
+    '.......pppppppp.........','.......pPPPPPPp.........','.......pppppppp.........','........bbbbbb..........',
+    '.......bbBBBBbb.........','.......bbBBBBbb.........','........bbbbbb..........','.......l..ll..l.........',
+    '......l...ll...l........','.....l....ll....l.......','........................','........................'],
+    {m:'#8c91b3',p:'#4b7bd6',P:'#2f4f9a',b:'#e6e9ff',B:'#c8cbe0',l:'#6a6f96'},2);
+}
+
+/* ============================================================
+   4) Audio (optional)
+   ============================================================ */
+const audio={ctx:null,on:true};
+function initAudio(){
+  if(audio.ctx) return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(AC) audio.ctx=new AC();
+  }catch(e){ audio.ctx=null; }
+}
+function beep(f,d,type,vol,slide){
+  if(!audio.on||!audio.ctx) return;
+  try{
+    const c=audio.ctx, o=c.createOscillator(), g=c.createGain();
+    o.type=type||'square';
+    o.frequency.setValueAtTime(f,c.currentTime);
+    if(slide) o.frequency.exponentialRampToValueAtTime(slide,c.currentTime+d);
+    g.gain.setValueAtTime(vol||0.05,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime+d+0.02);
+  }catch(e){}
+}
+function sfx(n){
+  switch(n){
+    case 'jump': beep(280,0.16,'square',0.04,640); break;
+    case 'pick': beep(660,0.08,'triangle',0.06,990); setTimeout(function(){ beep(990,0.1,'triangle',0.05); },70); break;
+    case 'ok': beep(523,0.1,'triangle',0.06); setTimeout(function(){ beep(659,0.1,'triangle',0.06); },110); setTimeout(function(){ beep(784,0.18,'triangle',0.06); },220); break;
+    case 'err': beep(160,0.25,'sawtooth',0.05,90); break;
+    case 'tile': beep(420,0.05,'square',0.03); break;
+    case 'interact': beep(440,0.1,'triangle',0.06,880); break;
+    case 'unlock': beep(800,0.12,'triangle',0.06,1200); break;
+    default: break;
+  }
+}
+
+/* ============================================================
+   5) Input
+   ============================================================ */
+const keys={}; const touch={};
+let actQueued=false;
+const GAME_KEYS=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyA','KeyD','KeyW','KeyE','Enter'];
+function dirX(){
+  const r=keys.ArrowRight||keys.KeyD||touch.right;
+  const l=keys.ArrowLeft||keys.KeyA||touch.left;
+  return (r?1:0)-(l?1:0);
+}
+function jumpHeld(){ return !!(keys.Space||keys.KeyW||keys.ArrowUp||touch.jump); }
+function overlayOpen(){
+  const ov=$('overlay'), po=$('platformOverlay'), so=$('sysOverlay');
+  return (ov&&ov.classList.contains('show'))||(po&&!po.hidden)||(so&&!so.hidden);
+}
+function onKeyDown(e){
+  initAudio();
+  const code=e.code;
+  if(GAME_KEYS.indexOf(code)>=0 && state.mode==='play' && !overlayOpen()) e.preventDefault();
+  keys[code]=true;
+  if((code==='KeyE'||code==='Enter') && !e.repeat) actQueued=true;
+  if(code==='Escape') closeTop();
+}
+function onKeyUp(e){ keys[e.code]=false; }
+function bindTouch(){
+  const pad=$('controlPad'); if(!pad) return;
+  const btns=pad.querySelectorAll('button[data-k]');
+  for(let i=0;i<btns.length;i++){
+    const b=btns[i], k=b.getAttribute('data-k');
+    b.addEventListener('pointerdown',function(e){ e.preventDefault(); initAudio(); touch[k]=true; if(k==='act') actQueued=true; });
+    const up=function(e){ touch[k]=false; };
+    b.addEventListener('pointerup',up);
+    b.addEventListener('pointerleave',up);
+    b.addEventListener('pointercancel',up);
+    b.addEventListener('contextmenu',function(e){ e.preventDefault(); });
+  }
+}
+
+/* ============================================================
+   State
+   ============================================================ */
+let state=null;
+const cam={x:0};
+const p={x:0,y:0,w:8,h:16,vx:0,vy:0,face:1,onGround:false,anim:0,coyote:0,buf:0,jumpHeld:false,safeX:90,safeY:204,jumps:0,sq:0,puffT:0};
+let canvas=null, ctx=null;
+let SOLIDS=[], DECOR=[], PICKS=[], DUST=[], STARS=[], PUFFS=[], actBtn=null;
+let storyCb=null;
+
+function newState(){
+  return {
+    stage:-1, mode:'cine0', t:0, zt:0, lt:0,
+    inputLocked:true, playerVisible:false,
+    energy:10, oxygen:10, signal:0, signalBoost:0,
+    visited:{}, unlocked:{}, open:{}, patternHL:false,
+    flash:'', flashT:0, warnE:false, warnO:false,
+    veilA:1, veilCol:'#000', moonAlpha:0, puzzleStarted:false, lastInfo:'', hudKey:'', bubble:null, found:{}, sensed:{}, secretsFound:0, sense:0, pingT:0, idleT:0, hot:false
+  };
+}
+
+/* ============================================================
+   6) World
+   ============================================================ */
+function inGap(x,pad){
+  for(let i=0;i<GAPS.length;i++){ if(x>GAPS[i].x-pad && x<GAPS[i].x+GAPS[i].w+pad) return true; }
+  return false;
+}
+function buildWorld(){
+  SOLIDS=[];
+  const gaps=GAPS.slice().sort(function(a,b){ return a.x-b.x; });
+  let x=0;
+  gaps.forEach(function(g){ SOLIDS.push({x:x,y:CONFIG.groundY,w:g.x-x,h:60,ground:true}); x=g.x+g.w; });
+  SOLIDS.push({x:x,y:CONFIG.groundY,w:CONFIG.worldWidth-x,h:60,ground:true});
+  PLATFORMS_ROCK.forEach(function(pl){ SOLIDS.push({x:pl.x,y:pl.y,w:pl.w,h:8}); });
+  // decor
+  DECOR=[];
+  const r=srand(7);
+  for(let dx=40;dx<CONFIG.worldWidth;dx+=60+Math.floor(r()*90)){
+    if(inGap(dx,50)) continue;
+    let near=false;
+    TOOLS_DATA.forEach(function(t){ if(Math.abs(t.x-dx)<60) near=true; });
+    if(Math.abs(CONFIG.startX-dx)<50) near=true;
+    if(near) continue;
+    const k=r();
+    DECOR.push({type:k<0.55?'rock':(k<0.85?'crater':'dune'),x:dx,s:1+Math.floor(r()*3)});
+  }
+  // stars
+  STARS=[];
+  for(let i=0;i<110;i++){ STARS.push({x:Math.floor(r()*CONFIG.W*3),y:Math.floor(r()*190),s:r()<0.2?2:1,tw:r()*6}); }
+  // dust
+  DUST=[];
+  for(let j=0;j<36;j++){ DUST.push({x:r()*CONFIG.W,y:r()*CONFIG.H,vx:30+r()*50,s:1+Math.floor(r()*3),a:0.1+r()*0.2}); }
+}
+function buildPickups(){
+  PICKS=[];
+  PLATFORMS_ROCK.forEach(function(pl,i){
+    if(i%3===1) PICKS.push({type:'solar',x:pl.x+pl.w/2,y:pl.y-14,got:false});
+    else if(i%3===2) PICKS.push({type:'oxy',x:pl.x+pl.w/2,y:pl.y-14,got:false});
+  });
+  [320,820,1800,2900,3750,4300,5200].forEach(function(x,i){
+    PICKS.push({type:i%2?'oxy':'solar',x:x,y:CONFIG.groundY-14,got:false});
+  });
+}
+function resetPlayer(){
+  p.x=CONFIG.startX+36; p.y=CONFIG.groundY-p.h; p.vx=0; p.vy=0; p.face=1; p.onGround=true;
+  p.anim=0; p.coyote=0; p.buf=0; p.jumpHeld=false; p.safeX=p.x; p.safeY=p.y;
+}
+
+/* ============================================================
+   7) Player
+   ============================================================ */
+function overlap(a,s){ return a.x<s.x+s.w && a.x+a.w>s.x && a.y<s.y+s.h && a.y+a.h>s.y; }
+function updatePlayer(dt){
+  const locked=state.inputLocked;
+  let dir=0, wantJump=false, run=false;
+  if(!locked){ dir=dirX(); wantJump=jumpHeld(); run=!!(keys.ShiftLeft||keys.ShiftRight); }
+  let speed=run?CONFIG.runSpeed:CONFIG.walkSpeed;
+  if(state.energy<=0) speed*=CONFIG.tiredFactor;
+  p.vx=dir*speed;
+  if(dir!==0) p.face=dir;
+
+  p.coyote=p.onGround?0.1:p.coyote-dt;
+  if(wantJump && !p.jumpHeld) p.buf=0.1;
+  p.jumpHeld=wantJump;
+  p.buf-=dt;
+  if(p.buf>0 && p.coyote>0){ p.vy=CONFIG.jump; p.buf=0; p.coyote=0; p.onGround=false; p.jumps=0; sfx('jump'); puff(p.x+4,p.y+16,4,40); if(Math.random()<0.12) sayKey('jump'); }
+  else if(p.buf>0 && !p.onGround && p.jumps<1){ p.vy=CONFIG.jump*0.88; p.buf=0; p.jumps++; sfx('jump'); puff(p.x+4,p.y+16,6,60); }
+  if(!wantJump && p.vy<-70) p.vy+=CONFIG.gravity*dt*2.2;
+
+  const x0=p.x;
+  p.x+=p.vx*dt;
+  let i, s;
+  for(i=0;i<SOLIDS.length;i++){
+    s=SOLIDS[i];
+    if(overlap(p,s)){ if(p.vx>0) p.x=s.x-p.w; else if(p.vx<0) p.x=s.x+s.w; }
+  }
+  p.x=clamp(p.x,0,CONFIG.worldWidth-p.w);
+  const moved=Math.abs(p.x-x0);
+
+  p.vy+=CONFIG.gravity*dt;
+  if(p.vy>420) p.vy=420;
+  p.y+=p.vy*dt;
+  const wasG=p.onGround, vyB=p.vy;
+  p.onGround=false;
+  for(i=0;i<SOLIDS.length;i++){
+    s=SOLIDS[i];
+    if(overlap(p,s)){
+      if(p.vy>0){ p.y=s.y-p.h; p.vy=0; p.onGround=true; }
+      else if(p.vy<0){ p.y=s.y+s.h; p.vy=0; }
+    }
+  }
+  if(p.onGround && !wasG && vyB>120) landFx(vyB);
+  if(p.onGround) p.jumps=0;
+  if(p.onGround){
+    const cx=p.x+p.w/2;
+    if(!inGap(cx,30)){ p.safeX=p.x; p.safeY=p.y; }
+  }
+  if(p.y>CONFIG.H+50){
+    p.x=p.safeX; p.y=p.safeY; p.vy=0; p.vx=0; sayKey('fall');
+    flash('Back at the last safe spot. Nothing lost 🙂',2.5);
+  }
+  if(dir!==0 && p.onGround) p.anim+=dt*8; else if(dir===0) p.anim=0;
+
+  if(!locked){
+    state.energy-=moved*CONFIG.energyPerPx;
+    if(dir===0 && p.onGround) state.energy+=dt/CONFIG.energyRegenSec;
+    state.energy=clamp(state.energy,0,10);
+    state.oxygen=clamp(state.oxygen-dt/CONFIG.oxygenDrainSec,0,10);
+    if(state.energy<=0 && !state.warnE){ state.warnE=true; flash('⚡ Energy depleted. You will move slower until you find a solar panel',3.5); }
+    if(state.energy>=2) state.warnE=false;
+    if(state.oxygen<=2 && !state.warnO){ state.warnO=true; flash('⚠ Oxygen low. Find an oxygen canister or interact with an artifact',3.5); }
+    if(state.oxygen>3) state.warnO=false;
+  }
+}
+function updatePickups(){
+  const cx=p.x+p.w/2, cy=p.y+p.h/2;
+  for(let i=0;i<PICKS.length;i++){
+    const k=PICKS[i];
+    if(k.got) continue;
+    if(Math.abs(cx-k.x)<10 && Math.abs(cy-k.y)<14){
+      k.got=true; sfx('pick'); sayKey(k.type==='solar'?'solar':'oxy');
+      if(k.type==='solar'){ state.energy=clamp(state.energy+CONFIG.pickupEnergy,0,10); flash('⚡ Solar panel: +'+CONFIG.pickupEnergy+' energy',2.5); }
+      else { state.oxygen=clamp(state.oxygen+CONFIG.pickupOxygen,0,10); flash('🫧 Oxygen canister: +'+CONFIG.pickupOxygen,2.5); }
+    }
+  }
+}
+
+/* ============================================================
+   8) Stations + Cards
+   ============================================================ */
+const FLOW={
+  3:{tool:'pathfinder',to:3,then:4},
+  4:{tool:'viking1',to:5,then:null},
+  5:{tool:'ingenuity',to:6,then:null},
+  6:{tool:'pathfinder',to:7,then:null,unlock:true},
+  7:{tool:'viking1',to:8,then:null,unlock:true},
+  8:{tool:'ingenuity',to:9,then:null,unlock:true,final:true}
+};
+function targetToolId(){ const f=FLOW[state.stage]; return f?f.tool:null; }
+function isActive(t){ return !!state.visited[t.id] || t.id===targetToolId(); }
+function nearTool(){
+  const cx=p.x+p.w/2;
+  for(let i=0;i<TOOLS_DATA.length;i++){
+    if(Math.abs(cx-TOOLS_DATA[i].x)<=CONFIG.interactRadius) return TOOLS_DATA[i];
+  }
+  return null;
+}
+function tryInteract(){
+  if(state.mode!=='play' || state.inputLocked) return;
+  const sc=nearSecret(30); if(sc){ digSecret(sc); return; }
+  const t=nearTool(); if(!t) return;
+  if(!isActive(t)){ flash('🔒 That artifact is not available yet. Follow the blinking arrow',2.5); sfx('err'); return; }
+  const flow=FLOW[state.stage];
+  const adv=(flow && flow.tool===t.id)?flow:null;
+  state.signalBoost=3;
+  state.oxygen=clamp(state.oxygen+2,0,10);
+  sfx('interact');
+  if(adv && adv.to!==state.stage) goToStage(adv.to);
+  state.visited[t.id]=true;
+  renderTools();
+  openCard(t,adv);
+}
+function fieldOpen(t,i){
+  return !t.fields[i].locked || !!state.unlocked[t.id] || !!(state.open[t.id] && state.open[t.id][i]);
+}
+function collectedCount(){
+  let n=0;
+  TOOLS_DATA.forEach(function(t){ if(!state.visited[t.id]) return; t.fields.forEach(function(f,i){ if(fieldOpen(t,i)) n++; }); });
+  return n;
+}
+function totalFields(){ let n=0; TOOLS_DATA.forEach(function(t){ n+=t.fields.length; }); return n; }
+
+const card={t:null,adv:null,timers:[],unlocking:false};
+function openCard(t,adv){
+  state.inputLocked=true;
+  card.t=t; card.adv=adv; card.timers=[]; card.unlocking=false;
+  paintCard();
+  const ov=$('overlay'); if(ov) ov.classList.add('show');
+  if(adv && adv.unlock && !state.unlocked[t.id]) startUnlock(t);
+  renderHud(true);
+}
+function paintCard(){
+  const ov=$('overlay'); const t=card.t;
+  if(!ov||!t) return;
+  clearNode(ov);
+  const m=h('div','modal');
+  m.appendChild(h('h2','',t.order+'. '+t.name));
+  const top=h('div','cardtop');
+  const cv=document.createElement('canvas');
+  cv.width=96; cv.height=64;
+  const g=cv.getContext('2d');
+  if(g && SPR[t.id]){ g.imageSmoothingEnabled=false; g.drawImage(SPR[t.id],24,16,48,32); }
+  top.appendChild(cv);
+  top.appendChild(h('div','muted',state.unlocked[t.id]?'✔ All data unlocked.':'Partial data. The rest is locked 🔒'));
+  m.appendChild(top);
+  t.fields.forEach(function(f,i){
+    const open=fieldOpen(t,i);
+    const row=h('div','row'+(open?'':' locked'));
+    row.appendChild(h('span','lab',f.label));
+    row.appendChild(h('span','val',open?(f.locked?'🔓 ':'')+f.value:'██████ 🔒'));
+    m.appendChild(row);
+  });
+  if(t.pattern){
+    const pr=h('div','row');
+    pr.appendChild(h('span','lab','Pattern'));
+    const chips=h('span','chips'+(state.patternHL?' hl':''));
+    t.pattern.forEach(function(c){ chips.appendChild(h('span','chip',c)); });
+    pr.appendChild(chips);
+    m.appendChild(pr);
+    if(state.stage===6 && t.id==='ingenuity') m.appendChild(h('div','note','👀 We noticed something repeating… the same pattern appeared on Pathfinder and Viking 1!'));
+    if(state.unlocked[t.id] && t.patternNote) m.appendChild(h('div','note',t.patternNote));
+  }
+  if(state.unlocked[t.id] && t.platform && PLATFORMS[t.platform]){
+    const pf=PLATFORMS[t.platform];
+    const row=h('div','row');
+    row.appendChild(h('span','lab','Platform found'));
+    const val=h('span','val',pf.label+(pf.year?' ('+pf.year+')':'')+'  ');
+    const b=h('button','btn soon','Soon'); b.type='button';
+    b.addEventListener('click',function(){
+      const hk=window.SCENE_HOOKS; if(hk && typeof hk[pf.hook]==='function') hk[pf.hook]();
+    });
+    val.appendChild(b);
+    row.appendChild(val);
+    m.appendChild(row);
+  }
+  const br=h('div','btnrow');
+  const cb=h('button','btn primary','Close'); cb.type='button';
+  cb.addEventListener('click',closeCard);
+  br.appendChild(cb);
+  m.appendChild(br);
+  ov.appendChild(m);
+}
+function startUnlock(t){
+  const idxs=[];
+  t.fields.forEach(function(f,i){ if(f.locked && !fieldOpen(t,i)) idxs.push(i); });
+  state.open[t.id]=state.open[t.id]||{};
+  card.unlocking=true;
+  if(!idxs.length){ finishUnlock(t); return; }
+  idxs.forEach(function(idx,k){
+    const id=setTimeout(function(){
+      state.open[t.id][idx]=true; sfx('unlock'); renderHud(true);
+      if(k===idxs.length-1) finishUnlock(t); else if(card.t===t) paintCard();
+    },600+k*CONFIG.unlockStep);
+    card.timers.push(id);
+  });
+}
+function finishUnlock(t){
+  state.unlocked[t.id]=true; card.unlocking=false;
+  renderHud(true); renderTools();
+  if(card.t===t) paintCard();
+}
+function clearCardTimers(){ card.timers.forEach(function(id){ clearTimeout(id); }); card.timers=[]; }
+function closeCard(){
+  if(!card.t) return;
+  const t=card.t, adv=card.adv;
+  clearCardTimers();
+  if(card.unlocking){ card.t=null; finishUnlock(t); }
+  card.t=null; card.adv=null; card.unlocking=false;
+  const ov=$('overlay'); if(ov){ ov.classList.remove('show'); clearNode(ov); }
+  state.inputLocked=false;
+  if(adv){
+    if(adv.final){ showEnding(); }
+    else if(adv.then!==null && adv.then!==undefined){ goToStage(adv.then); }
+    else { const s=STORY[state.stage]; if(s && s.after) renderStory(s.title,s.after); }
+  }
+  renderTools(); renderHud(true);
+}
+
+/* ============================================================
+   9) UI / HUD
+   ============================================================ */
+const RES=[{k:'energy',label:'⚡ Energy'},{k:'oxygen',label:'🫧 Oxygen'},{k:'signal',label:'📡 Signal'}];
+function buildHud(){
+  const box=$('resList'); if(!box) return;
+  clearNode(box);
+  RES.forEach(function(r){
+    const w=h('div','res');
+    const top=h('div','res-top');
+    top.appendChild(h('span','',r.label));
+    const v=h('span',''); v.id='val-'+r.k; v.textContent='0/10';
+    top.appendChild(v);
+    w.appendChild(top);
+    const seg=h('div','seg '+r.k); seg.id='seg-'+r.k;
+    for(let i=0;i<10;i++) seg.appendChild(document.createElement('i'));
+    w.appendChild(seg);
+    box.appendChild(w);
+  });
+}
+function renderHud(force){
+  const e=Math.round(state.energy), o=Math.round(state.oxygen), s=Math.round(state.signal), c=collectedCount();
+  const key=e+'|'+o+'|'+s+'|'+c+'|'+state.secretsFound;
+  if(!force && key===state.hudKey) return;
+  state.hudKey=key;
+  const vals={energy:e,oxygen:o,signal:s};
+  RES.forEach(function(r){
+    const v=$('val-'+r.k), seg=$('seg-'+r.k);
+    if(v) v.textContent=vals[r.k]+'/10';
+    if(seg){ const it=seg.children; for(let i=0;i<it.length;i++){ it[i].className=(i<vals[r.k])?'on':''; } }
+  });
+  const dn=$('dataNum'); if(dn) dn.textContent=c+'/'+totalFields()+'  | secrets '+state.secretsFound+'/'+SECRETS.length;
+}
+function renderTools(){
+  const box=$('toolsList'); if(!box) return;
+  clearNode(box);
+  const tid=(state.mode==='play')?targetToolId():null;
+  TOOLS_DATA.forEach(function(t){
+    const seen=!!state.visited[t.id];
+    const row=h('div','tool'+(t.id===tid?' target':''));
+    const head=h('div','tool-head');
+    head.appendChild(h('span','tool-name',t.name));
+    head.appendChild(h('span','tool-n',String(t.order)));
+    row.appendChild(head);
+    row.appendChild(h('div','tool-state',seen?(state.unlocked[t.id]?'✔ Fully unlocked':'◐ Partial data'):'🔒 Not yet found'));
+    if(seen && t.pattern){
+      const ch=h('div','chips'+(state.patternHL?' hl':''));
+      t.pattern.forEach(function(c){ ch.appendChild(h('span','chip',c)); });
+      row.appendChild(ch);
+    }
+    if(seen){
+      const b=h('button','btn','Travel'); b.type='button';
+      b.addEventListener('click',function(){ travelTo(t); });
+      row.appendChild(b);
+    }
+    box.appendChild(row);
+  });
+}
+function renderStory(title,text,btnLabel,cb){
+  const a=$('storyTitle'), b=$('storyText'), btn=$('storyBtn');
+  if(a) a.textContent=title;
+  if(b) b.textContent=text;
+  if(btn){
+    if(btnLabel){ btn.textContent=btnLabel; btn.style.display=''; storyCb=cb||null; }
+    else { btn.style.display='none'; storyCb=null; }
+  }
+}
+function setInfo(txt){
+  if(txt===state.lastInfo) return;
+  state.lastInfo=txt;
+  const el=$('infoBar'); if(el) el.textContent=txt;
+}
+function flash(txt,sec){ state.flash=txt; state.flashT=sec||2.5; }
+function updateInfo(){
+  let txt='';
+  if(state.flashT>0) txt=state.flash;
+  else if(state.mode==='cine0') txt='📡 Coordinates: '+CONFIG.coords;
+  else if(state.mode==='zoom') txt='🚀 Approaching the red planet…';
+  else if(state.mode==='landing') txt='🛬 Landing in progress…';
+  else if(state.mode==='play' && !state.inputLocked){
+    const t=nearTool();
+    if(t) txt=(isActive(t)?'⌨ Press E to interact with ':'🔒 Not available yet: ')+t.name;
+    else if(nearSecret(30)) txt='⌨ Press E to dig: something is buried here…';
+    else if(state.sense>0.15) txt='📡 A faint pulse is close… keep searching.';
+    else txt=FACTS[Math.floor(state.t/9)%FACTS.length];
+  } else txt=FACTS[Math.floor(state.t/9)%FACTS.length];
+  setInfo(txt);
+}
+function travelTo(t){
+  if(state.mode!=='play' || state.inputLocked) return;
+  const f=$('fade'); if(!f) return;
+  state.inputLocked=true; f.classList.add('on');
+  setTimeout(function(){
+    p.x=t.x-30; p.y=CONFIG.groundY-p.h; p.vx=0; p.vy=0; p.face=1; p.safeX=p.x; p.safeY=p.y;
+    cam.x=clamp(p.x-CONFIG.camLead,0,CONFIG.worldWidth-CONFIG.W);
+    f.classList.remove('on');
+    state.inputLocked=false;
+  },280);
+}
+
+/* System modals: settings / menu / platforms */
+function openSys(kind){
+  const so=$('sysOverlay'); if(!so) return;
+  clearNode(so);
+  const m=h('div','modal');
+  if(kind==='settings'){
+    m.appendChild(h('h2','','⚙ Settings and Controls'));
+    ['← → or A D : move','Space or W or ↑ : jump (press again in the air to double-jump)','Shift : sprint','E or Enter : interact','On mobile: use the on-screen control buttons'].forEach(function(s){ m.appendChild(h('div','row',s)); });
+    const sb=h('button','btn',audio.on?'🔊 Sound on (click to mute)':'🔇 Sound muted (click to unmute)'); sb.type='button';
+    sb.addEventListener('click',function(){ toggleSound(); sb.textContent=audio.on?'🔊 Sound on (click to mute)':'🔇 Sound muted (click to unmute)'; });
+    const br=h('div','btnrow'); br.appendChild(sb); m.appendChild(br);
+  } else {
+    m.appendChild(h('h2','','☰ Menu'));
+    m.appendChild(h('p','muted','You are a Kalamithian explorer: three eyes, purple tough skin, long ears, six fingers on each hand. There is no Game Over here. The goal is to explore and understand.'));
+    const rb=h('button','btn','↺ Replay scene'); rb.type='button';
+    rb.addEventListener('click',function(){ so.hidden=true; resetGame(); });
+    const br=h('div','btnrow'); br.appendChild(rb); m.appendChild(br);
+  }
+  const cb=h('button','btn primary','Close'); cb.type='button';
+  cb.addEventListener('click',function(){ so.hidden=true; });
+  const br2=h('div','btnrow'); br2.appendChild(cb); m.appendChild(br2);
+  so.appendChild(m);
+  so.hidden=false;
+}
+function toggleSound(){
+  audio.on=!audio.on;
+  const b=$('btnSound'); if(b) b.textContent=audio.on?'🔊 Sound':'🔇 Sound';
+}
+function closeTop(){
+  const so=$('sysOverlay'), po=$('platformOverlay');
+  if(so && !so.hidden){ so.hidden=true; return; }
+  if(po && !po.hidden){ po.hidden=true; return; }
+  if(card.t) closeCard();
+}
+function openPlatformOverlay(id){
+  const po=$('platformOverlay'); if(!po) return;
+  const pf=PLATFORMS[id]; if(!pf) return;
+  const t=$('platformTitle'), msg=$('platformMsg');
+  if(t) t.textContent=pf.label;
+  if(msg) msg.textContent='Under development: '+id;
+  po.hidden=false;
+}
+window.SCENE_HOOKS={
+  openTwitter:function(){ openPlatformOverlay('twitter'); },
+  openHabbo:function(){ openPlatformOverlay('habbo'); }
+};
+
+/* ============================================================
+   10) Puzzle
+   ============================================================ */
+const puz={round:0,tiles:[],slots:[],words:[],sol:'',solved:false,locked:false,shake:false};
+function startPuzzle(){
+  state.puzzleStarted=true;
+  state.inputLocked=true;
+  puz.round=0;
+  setupRound();
+  const ov=$('overlay'); if(ov) ov.classList.add('show');
+}
+function setupRound(){
+  const word=CONFIG.puzzleWords[puz.round].word.toUpperCase();
+  puz.words=word.split(' ');
+  puz.sol=puz.words.join('');
+  puz.solved=false; puz.locked=false; puz.shake=false;
+  resetPuzzleTiles();
+  renderPuzzle();
+}
+function resetPuzzleTiles(){
+  const letters=puz.sol.split('');
+  let tries=0, shuffled;
+  do{
+    shuffled=letters.slice();
+    for(let i=shuffled.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const tmp=shuffled[i]; shuffled[i]=shuffled[j]; shuffled[j]=tmp; }
+    tries++;
+  } while(shuffled.join('')===puz.sol && tries<20);
+  puz.tiles=shuffled.map(function(ch){ return {ch:ch,used:false}; });
+  puz.slots=[];
+  for(let k=0;k<puz.sol.length;k++) puz.slots.push(-1);
+}
+function puzTile(i){
+  if(puz.solved||puz.locked) return;
+  if(puz.tiles[i].used) return;
+  const s=puz.slots.indexOf(-1); if(s<0) return;
+  puz.slots[s]=i; puz.tiles[i].used=true; sfx('tile');
+  renderPuzzle();
+  if(puz.slots.indexOf(-1)<0) checkPuzzle();
+}
+function puzSlot(s){
+  if(puz.solved||puz.locked) return;
+  const i=puz.slots[s]; if(i<0) return;
+  puz.tiles[i].used=false; puz.slots[s]=-1; sfx('tile');
+  renderPuzzle();
+}
+function puzHint(){
+  if(puz.solved||puz.locked) return;
+  let target=-1;
+  for(let k=0;k<puz.sol.length;k++){
+    const ti=puz.slots[k];
+    if(ti<0 || puz.tiles[ti].ch!==puz.sol.charAt(k)){ target=k; break; }
+  }
+  if(target<0) return;
+  if(puz.slots[target]>=0){ puz.tiles[puz.slots[target]].used=false; puz.slots[target]=-1; }
+  const ch=puz.sol.charAt(target);
+  let free=-1, i;
+  for(i=0;i<puz.tiles.length;i++){ if(!puz.tiles[i].used && puz.tiles[i].ch===ch){ free=i; break; } }
+  if(free<0){
+    for(let j=0;j<puz.slots.length;j++){
+      const ti=puz.slots[j];
+      if(ti>=0 && puz.tiles[ti].ch===ch && puz.sol.charAt(j)!==ch){ puz.tiles[ti].used=false; puz.slots[j]=-1; free=ti; break; }
+    }
+  }
+  if(free<0) return;
+  puz.slots[target]=free; puz.tiles[free].used=true; sfx('tile');
+  renderPuzzle();
+  if(puz.slots.indexOf(-1)<0) checkPuzzle();
+}
+function checkPuzzle(){
+  let str='';
+  for(let k=0;k<puz.slots.length;k++) str+=puz.tiles[puz.slots[k]].ch;
+  if(str===puz.sol){ puz.solved=true; sfx('ok'); renderPuzzle(); }
+  else {
+    puz.locked=true; puz.shake=true; sfx('err'); renderPuzzle();
+    setTimeout(function(){ puz.shake=false; puz.locked=false; resetPuzzleTiles(); renderPuzzle(); },700);
+  }
+}
+function renderPuzzle(){
+  const ov=$('overlay'); if(!ov) return;
+  clearNode(ov);
+  const total=CONFIG.puzzleWords.length;
+  const m=h('div','modal');
+  m.appendChild(h('h2','','🔐 Letter Puzzle: Round '+(puz.round+1)+'/'+total));
+  m.appendChild(h('p','muted',puz.solved?'✔ Correct! The code is right.':'Arrange the letters to form the phrase. Click a letter to place it in the first empty slot; click a slot to return it.'));
+  const sb=h('div','slots'+(puz.solved?' ok':'')+(puz.shake?' shake':''));
+  let k=0;
+  puz.words.forEach(function(w){
+    const grp=h('div','wordgrp');
+    for(let j=0;j<w.length;j++){
+      const idx=k;
+      const b=h('button','slot'+(puz.slots[idx]>=0?' full':''));
+      b.type='button';
+      b.textContent=puz.slots[idx]>=0?puz.tiles[puz.slots[idx]].ch:'';
+      b.addEventListener('click',function(){ puzSlot(idx); });
+      grp.appendChild(b); k++;
+    }
+    sb.appendChild(grp);
+  });
+  m.appendChild(sb);
+  const tb=h('div','tiles');
+  puz.tiles.forEach(function(t,i){
+    const b=h('button','tile'+(t.used?' used':''),t.ch);
+    b.type='button';
+    b.addEventListener('click',function(){ puzTile(i); });
+    tb.appendChild(b);
+  });
+  m.appendChild(tb);
+  if(puz.solved){
+    m.appendChild(h('div','note','💡 '+CONFIG.puzzleWords[puz.round].fact));
+    const br=h('div','btnrow');
+    const nb=h('button','btn primary','Continue'); nb.type='button';
+    nb.addEventListener('click',function(){
+      if(puz.round<total-1){ puz.round++; setupRound(); }
+      else finishPuzzle();
+    });
+    br.appendChild(nb); m.appendChild(br);
+  } else {
+    const br=h('div','btnrow');
+    const hb=h('button','btn','💡 Hint'); hb.type='button';
+    hb.addEventListener('click',puzHint);
+    br.appendChild(hb); m.appendChild(br);
+  }
+  ov.appendChild(m);
+}
+function finishPuzzle(){
+  const ov=$('overlay'); if(ov){ ov.classList.remove('show'); clearNode(ov); }
+  goToStage(3);
+}
+
+/* ============================================================
+   11) STAGES + goToStage
+   ============================================================ */
+const STAGES=[
+  {title:STORY[0].title,text:STORY[0].text,btn:'Continue',
+   onEnter:function(){ state.mode='cine0'; state.t=0; state.inputLocked=true; state.playerVisible=false; state.veilA=1; state.veilCol='#000'; }},
+  {title:STORY[1].title,text:STORY[1].text,
+   onEnter:function(){ state.mode='zoom'; state.zt=0; state.inputLocked=true; }},
+  {title:STORY[2].title,text:STORY[2].text,
+   onEnter:function(){ state.mode='landing'; state.lt=0; state.puzzleStarted=false; state.inputLocked=true; state.veilA=1; state.veilCol='#8a3c2e'; cam.x=0; }},
+  {title:STORY[3].title,text:STORY[3].text,
+   onEnter:function(){ state.mode='play'; state.inputLocked=false; state.playerVisible=true; resetPlayer(); sayKey('start'); }},
+  {title:STORY[4].title,text:STORY[4].text},
+  {title:STORY[5].title,text:STORY[5].text},
+  {title:STORY[6].title,text:STORY[6].text,onEnter:function(){ state.patternHL=true; }},
+  {title:STORY[7].title,text:STORY[7].text},
+  {title:STORY[8].title,text:STORY[8].text},
+  {title:STORY[9].title,text:STORY[9].text}
+];
+function goToStage(n){
+  const prev=STAGES[state.stage];
+  if(prev && prev.onExit) prev.onExit();
+  state.stage=n;
+  const s=STAGES[n]; if(!s) return;
+  renderStory(s.title,s.text,s.btn,function(){ if(n===0) goToStage(1); });
+  const sl=$('stageLabel'); if(sl) sl.textContent='Stage '+n+'/9';
+  if(s.onEnter) s.onEnter();
+  renderTools();
+}
+function showEnding(){
+  state.mode='end'; state.inputLocked=true; state.moonAlpha=0.01;
+  renderStory(FINAL_STORY.title,FINAL_STORY.text);
+  const ov=$('overlay'); if(!ov) return;
+  clearNode(ov);
+  const m=h('div','modal');
+  m.appendChild(h('h2','','🌙 More Artifacts on the Moon'));
+  m.appendChild(h('p','muted','More artifacts are waiting there… these are the coordinates:'));
+  const ul=h('ul','coordlist');
+  CONFIG.moonCoords.forEach(function(c){
+    const li=h('li','',c.name+' — ');
+    const code=h('code','',c.c);
+    li.appendChild(code);
+    ul.appendChild(li);
+  });
+  m.appendChild(ul);
+  m.appendChild(h('div','note','📚 You collected '+collectedCount()+' data fields out of '+totalFields()+'. Every artifact was a "first" of its kind.'));
+  const br=h('div','btnrow');
+  const rb=h('button','btn primary','↺ Replay scene'); rb.type='button';
+  rb.addEventListener('click',resetGame);
+  br.appendChild(rb); m.appendChild(br);
+  ov.appendChild(m);
+  ov.classList.add('show');
+  sfx('ok');
+}
+function resetGame(){
+  clearCardTimers();
+  card.t=null; card.adv=null; card.unlocking=false;
+  const ov=$('overlay'); if(ov){ ov.classList.remove('show'); clearNode(ov); }
+  const po=$('platformOverlay'); if(po) po.hidden=true;
+  state=newState();
+  resetPlayer();
+  buildPickups();
+  cam.x=0;
+  renderHud(true);
+  goToStage(0);
+}
+
+/* ============================================================
+   Extras: speech, senses, secrets, puffs
+   ============================================================ */
+function say(a,e){ state.bubble={a:a,e:e,age:0,dur:a.length/28+0.65+2.6}; }
+function sayKey(k){
+  const L=SAY[k]; if(!L) return;
+  if(state.bubble && (k==='jump'||k==='idle')) return;
+  const m=L[Math.floor(Math.random()*L.length)]; say(m[0],m[1]);
+}
+function puff(x,y,n,spd){
+  for(let i=0;i<n;i++) PUFFS.push({x:x+(Math.random()-0.5)*6,y:y-1,vx:(Math.random()-0.5)*spd,vy:-Math.random()*18,l:0.4+Math.random()*0.3,s:1+Math.floor(Math.random()*2)});
+}
+function landFx(v){ p.sq=clamp(v/420,0.15,0.5); puff(p.x+4,p.y+16,Math.min(8,Math.round(v/50)),70); }
+function nearSecret(r){
+  const cx=p.x+p.w/2;
+  for(let i=0;i<SECRETS.length;i++){ const sc=SECRETS[i]; if(!state.found[sc.id] && Math.abs(cx-sc.x)<=r) return sc; }
+  return null;
+}
+function digSecret(sc){
+  state.found[sc.id]=true; state.secretsFound++;
+  sfx('unlock'); puff(sc.x,CONFIG.groundY,10,60);
+  state.energy=clamp(state.energy+2,0,10);
+  say(sc.alien,sc.en);
+  flash('📜 Fragment decoded: '+sc.text,6);
+  renderHud(true);
+}
+function updateExtras(dt){
+  if(state.bubble){ state.bubble.age+=dt; if(state.bubble.age>state.bubble.dur) state.bubble=null; }
+  for(let i=PUFFS.length-1;i>=0;i--){ const q=PUFFS[i]; q.x+=q.vx*dt; q.y+=q.vy*dt; q.l-=dt; if(q.l<=0) PUFFS.splice(i,1); }
+  p.sq=Math.max(0,p.sq-dt*3);
+  if(state.inputLocked) return;
+  const cx=p.x+p.w/2;
+  let best=999, near=null;
+  SECRETS.forEach(function(sc){ if(state.found[sc.id]) return; const d=Math.abs(cx-sc.x); if(d<best){ best=d; near=sc; } });
+  state.sense=near?clamp(1-(best-24)/110,0,1):0;
+  if(near && best<110 && !state.sensed[near.id]){ state.sensed[near.id]=true; sayKey('sense'); }
+  if(state.sense>0){ state.pingT-=dt; if(state.pingT<=0){ state.pingT=1.3-state.sense; beep(300+state.sense*500,0.08,'sine',0.04); } }
+  TOOLS_DATA.forEach(function(t){ if(!state.sensed[t.id] && Math.abs(cx-t.x)<150){ state.sensed[t.id]=true; sayKey('tool'); } });
+  if(p.vx===0 && p.onGround){ if(!state.bubble){ state.idleT+=dt; if(state.idleT>7){ state.idleT=0; sayKey('idle'); } } } else state.idleT=0;
+  if(p.onGround && Math.abs(p.vx)>1){ p.puffT-=dt; if(p.puffT<=0){ p.puffT=Math.abs(p.vx)>90?0.09:0.22; puff(p.x+4-p.face*3,p.y+16,1,16); } }
+  const nt=nearTool(), hot=!!(nearSecret(30)||(nt&&isActive(nt)));
+  if(actBtn && hot!==state.hot){ state.hot=hot; actBtn.classList.toggle('hot',hot); }
+}
+function drawSecrets(){
+  const GY=CONFIG.groundY, cx=p.x+p.w/2;
+  SECRETS.forEach(function(sc){
+    if(state.found[sc.id]){ ctx.fillStyle='#3a2a5e'; ctx.fillRect(sc.x-4,GY-2,8,2); return; }
+    const k=clamp(1-(Math.abs(cx-sc.x)-24)/130,0,1);
+    const tw=0.5+0.5*Math.sin(state.t*2.5+sc.x), bob=Math.round(tw*2);
+    ctx.globalAlpha=0.12+0.2*tw+0.7*k;
+    ctx.fillStyle='#b78bff'; ctx.fillRect(sc.x-1,GY-4-bob,2,2);
+    if(k>0.05){
+      ctx.strokeStyle='#b78bff';
+      for(let r=0;r<2;r++){ const ph=(state.t*0.9+r*0.5)%1; ctx.globalAlpha=(1-ph)*0.6*k; ctx.beginPath(); ctx.ellipse(sc.x,GY,6+ph*28,2+ph*7,0,0,Math.PI*2); ctx.stroke(); }
+      ctx.globalAlpha=k; ctx.fillStyle='#44e3b8'; ctx.fillRect(sc.x-1,GY-18-bob,2,7); ctx.fillRect(sc.x-1,GY-9-bob,2,2);
+    }
+    ctx.globalAlpha=1;
+  });
+}
+function drawPuffs(){
+  ctx.fillStyle='#d2784f';
+  PUFFS.forEach(function(q){ ctx.globalAlpha=clamp(q.l*2.5,0,0.6); ctx.fillRect(Math.round(q.x),Math.round(q.y),q.s,q.s); });
+  ctx.globalAlpha=1;
+}
+function drawVignette(){
+  const W=CONFIG.W,H=CONFIG.H;
+  const g=ctx.createRadialGradient(W/2,H/2,H*0.32,W/2,H/2,H);
+  g.addColorStop(0,'rgba(10,0,25,0)'); g.addColorStop(1,'rgba(10,0,25,'+(0.5+0.15*state.sense)+')');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  if(state.sense>0.05){ ctx.fillStyle='rgba(183,139,255,'+(0.06*state.sense*(0.6+0.4*Math.sin(state.t*6)))+')'; ctx.fillRect(0,0,W,H); }
+}
+function drawBubble(){
+  const b=state.bubble; if(!b||!state.playerVisible) return;
+  const n=Math.min(b.a.length,Math.floor(b.age*28));
+  const tr=(n>=b.a.length)?clamp((b.age-b.a.length/28-0.3)*3,0,1):0;
+  ctx.font='bold 9px "Courier New", monospace';
+  const wa=ctx.measureText(b.a).width;
+  ctx.font='8px "Courier New", monospace';
+  const we=ctx.measureText('= '+b.e).width;
+  const bw=Math.ceil(Math.max(wa,we))+12, bh=28;
+  const px=Math.round(p.x+p.w/2-cam.x);
+  const bx=clamp(px-Math.round(bw/2),3,CONFIG.W-bw-3);
+  const by=Math.max(3,Math.round(p.y)-bh-12-Math.round(Math.sin(state.t*4)*1.5));
+  const fade=clamp((b.dur-b.age)*3,0,1);
+  ctx.globalAlpha=fade;
+  ctx.fillStyle='#0e1233'; ctx.fillRect(bx,by,bw,bh);
+  ctx.strokeStyle='#44e3b8'; ctx.lineWidth=1; ctx.strokeRect(bx+0.5,by+0.5,bw-1,bh-1);
+  const tx=clamp(px,bx+6,bx+bw-6);
+  ctx.fillStyle='#44e3b8'; ctx.fillRect(tx-3,by+bh,6,1); ctx.fillRect(tx-2,by+bh+1,4,1); ctx.fillRect(tx-1,by+bh+2,2,1);
+  ctx.font='bold 9px "Courier New", monospace'; ctx.fillStyle='#44e3b8';
+  ctx.fillText(b.a.substring(0,n),bx+6,by+11);
+  ctx.font='8px "Courier New", monospace'; ctx.globalAlpha=fade*tr; ctx.fillStyle='#c9d0ff';
+  ctx.fillText('= '+b.e,bx+6,by+23);
+  ctx.globalAlpha=1;
+}
+
+
+/* ============================================================
+   Drawing
+   ============================================================ */
+function drawPlanet(cx,cy,r,alpha){
+  if(r<1) return;
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  const glow=ctx.createRadialGradient(cx,cy,r*0.9,cx,cy,r*1.35);
+  glow.addColorStop(0,'rgba(255,120,80,0.35)'); glow.addColorStop(1,'rgba(255,120,80,0)');
+  ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(cx,cy,r*1.35,0,Math.PI*2); ctx.fill();
+  const body=ctx.createRadialGradient(cx-r*0.35,cy-r*0.35,r*0.1,cx,cy,r);
+  body.addColorStop(0,'#f09a68'); body.addColorStop(0.55,'#b8472f'); body.addColorStop(1,'#2a0d12');
+  ctx.fillStyle=body; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.clip();
+  ctx.fillStyle='rgba(60,15,20,0.35)';
+  ctx.beginPath(); ctx.ellipse(cx-r*0.2,cy+r*0.15,r*0.35,r*0.12,0.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+r*0.3,cy-r*0.2,r*0.22,r*0.09,-0.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+r*0.1,cy+r*0.5,r*0.25,r*0.08,0.1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.beginPath(); ctx.ellipse(cx,cy-r*0.95,r*0.35,r*0.12,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+function drawSpaceBG(zoomDim){
+  ctx.fillStyle='#03040e'; ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
+  for(let i=0;i<STARS.length;i++){
+    const s=STARS[i];
+    const sx=s.x%CONFIG.W;
+    ctx.globalAlpha=(0.4+0.6*Math.abs(Math.sin(state.t*1.5+s.tw)))*(1-zoomDim);
+    ctx.fillStyle='#fff';
+    ctx.fillRect(sx,s.y+(s.x%60),s.s,s.s);
+  }
+  ctx.globalAlpha=1;
+}
+function drawSky(){
+  const GY=CONFIG.groundY;
+  const g=ctx.createLinearGradient(0,0,0,GY);
+  g.addColorStop(0,'#05061a'); g.addColorStop(0.55,'#2b1740'); g.addColorStop(1,'#8a3c2e');
+  ctx.fillStyle=g; ctx.fillRect(0,0,CONFIG.W,GY+2);
+  const off=cam.x*CONFIG.parallax[0];
+  for(let i=0;i<STARS.length;i++){
+    const s=STARS[i];
+    const sx=(((s.x-off)%CONFIG.W)+CONFIG.W)%CONFIG.W;
+    ctx.globalAlpha=0.4+0.6*Math.abs(Math.sin(state.t*1.5+s.tw));
+    ctx.fillStyle='#fff';
+    ctx.fillRect(Math.floor(sx),s.y,s.s,s.s);
+  }
+  ctx.globalAlpha=1;
+  if(state.moonAlpha>0){
+    ctx.save(); ctx.globalAlpha=Math.min(1,state.moonAlpha);
+    ctx.fillStyle='#d8dbe8'; ctx.beginPath(); ctx.arc(380,70,34,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#aeb2c6';
+    ctx.beginPath(); ctx.arc(368,60,7,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(392,82,9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(384,52,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+function drawRidge(par,base,amp,col,step){
+  ctx.fillStyle=col;
+  const off=cam.x*par, GY=CONFIG.groundY;
+  for(let sx=0;sx<CONFIG.W;sx+=step){
+    const wx=sx+off;
+    const hy=Math.floor(base-(Math.sin(wx*0.011)*amp+Math.sin(wx*0.027+1.3)*amp*0.5+Math.sin(wx*0.005)*amp*1.4));
+    ctx.fillRect(sx,hy,step,GY+4-hy);
+  }
+}
+function drawLander(x,y,flame){
+  ctx.fillStyle='#7b55b8'; ctx.fillRect(x-14,y,28,14);
+  ctx.fillStyle='#4a3478'; ctx.fillRect(x-14,y+10,28,4);
+  ctx.fillStyle='#44e3b8'; ctx.fillRect(x-4,y+3,8,5);
+  ctx.fillStyle='#3a2a5e';
+  ctx.fillRect(x-18,y+14,4,8); ctx.fillRect(x+14,y+14,4,8);
+  ctx.fillRect(x-20,y+22,8,2); ctx.fillRect(x+12,y+22,8,2);
+  if(flame){
+    ctx.fillStyle='#ffd24a'; ctx.fillRect(x-5,y+22,10,6+Math.random()*8);
+    ctx.fillStyle='#ff7a30'; ctx.fillRect(x-3,y+22,6,4+Math.random()*6);
+  }
+}
+function drawDecor(cx){
+  const GY=CONFIG.groundY;
+  DECOR.forEach(function(d){
+    if(d.x<cx-60||d.x>cx+CONFIG.W+60) return;
+    if(d.type==='rock'){
+      ctx.fillStyle='#6e2f27'; ctx.fillRect(d.x,GY-3*d.s,5*d.s,3*d.s);
+      ctx.fillStyle='#8f4533'; ctx.fillRect(d.x+d.s,GY-3*d.s,3*d.s,d.s);
+    } else if(d.type==='crater'){
+      ctx.fillStyle='#7d3326'; ctx.beginPath(); ctx.ellipse(d.x+7*d.s,GY+3,7*d.s,2.5,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#c4623f'; ctx.fillRect(d.x,GY,14*d.s,1);
+    } else {
+      ctx.fillStyle='#b5573a'; ctx.beginPath(); ctx.ellipse(d.x,GY,16*d.s,4*d.s,0,Math.PI,Math.PI*2); ctx.fill();
+    }
+  });
+}
+function drawPickups(){
+  PICKS.forEach(function(k){
+    if(k.got) return;
+    const by=Math.sin(state.t*3+k.x)*2;
+    const x=Math.round(k.x), y=Math.round(k.y+by);
+    if(k.type==='solar'){
+      ctx.fillStyle='#2f4f9a'; ctx.fillRect(x-6,y-4,12,7);
+      ctx.fillStyle='#6fa8ff'; ctx.fillRect(x-5,y-3,4,2); ctx.fillRect(x+1,y-3,4,2); ctx.fillRect(x-5,y,4,2); ctx.fillRect(x+1,y,4,2);
+      ctx.fillStyle='#8c91b3'; ctx.fillRect(x-1,y+3,2,4);
+    } else {
+      ctx.fillStyle='#c8e3ff'; ctx.fillRect(x-3,y-6,6,12);
+      ctx.fillStyle='#6fa8ff'; ctx.fillRect(x-3,y-1,6,3);
+      ctx.fillStyle='#8c91b3'; ctx.fillRect(x-1,y-8,2,2);
+    }
+  });
+}
+function drawStations(){
+  const GY=CONFIG.groundY;
+  TOOLS_DATA.forEach(function(t){
+    const spr=SPR[t.id]; if(!spr) return;
+    const x=Math.round(t.x-spr.width/2);
+    let y=GY-spr.height;
+    ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(t.x,GY+2,spr.width/2,3,0,0,Math.PI*2); ctx.fill();
+    if(t.id==='ingenuity'){
+      y-=8+Math.round(Math.sin(state.t*3)*2);
+      ctx.drawImage(spr,x,y);
+      const rw=40+Math.sin(state.t*40)*6;
+      ctx.fillStyle='#8c91b3';
+      ctx.fillRect(Math.round(t.x-rw/2),y+2,rw,2);
+      ctx.fillRect(Math.round(t.x-rw/2),y+6,rw,2);
+    } else ctx.drawImage(spr,x,y);
+  });
+}
+function drawArrow(){
+  if(state.mode!=='play') return;
+  const id=targetToolId(); if(!id) return;
+  const t=toolById(id); if(!t) return;
+  const x=t.x, y=CONFIG.groundY-58+Math.sin(state.t*5)*3;
+  ctx.fillStyle=(Math.floor(state.t*3)%2)?'#44e3b8':'#e6e9ff';
+  ctx.beginPath(); ctx.moveTo(x-7,y-9); ctx.lineTo(x+7,y-9); ctx.lineTo(x,y); ctx.closePath(); ctx.fill();
+}
+function drawPlayer(){
+  if(!state.playerVisible) return;
+  const air=!p.onGround, moving=p.onGround&&Math.abs(p.vx)>1;
+  const img=(moving&&(Math.floor(p.anim)%2===1))||air?SPR.pWalk:SPR.pStand;
+  const w=img.width, h=img.height;
+  let sx=1, sy=1, bob=0;
+  if(air){ const st=clamp(-p.vy/600,-0.18,0.22); sy=1+st; sx=1-st*0.6; }
+  else if(moving){ bob=-Math.abs(Math.sin(p.anim*Math.PI))*1.5; }
+  else sy=1+0.03*Math.sin(state.t*3.2);
+  sy-=p.sq*0.5; sx+=p.sq*0.4;
+  ctx.save();
+  ctx.translate(Math.round(p.x+p.w/2),Math.round(p.y)+16+bob);
+  ctx.rotate(moving?p.face*0.06:0);
+  ctx.scale(p.face<0?-sx:sx,sy);
+  ctx.drawImage(img,-w/2,-h);
+  const blink=(state.t%3.6)<0.12;
+  [[6,2],[4,3],[8,3]].forEach(function(e){
+    const ex=-w/2+e[0], ey=-h+e[1];
+    if(blink){ ctx.fillStyle='#7d3fae'; ctx.fillRect(ex,ey,1,1); }
+    else if(state.sense>0.05){ ctx.fillStyle='rgba(255,240,106,'+(0.25+0.35*(0.5+0.5*Math.sin(state.t*10)))+')'; ctx.fillRect(ex-1,ey-1,3,3); }
+  });
+  ctx.restore();
+}
+function drawWorld(){
+  const GY=CONFIG.groundY, W=CONFIG.W, H=CONFIG.H;
+  drawSky();
+  drawRidge(CONFIG.parallax[1],176,16,'#4a2236',4);
+  drawRidge(CONFIG.parallax[2],204,9,'#6e2f2c',4);
+  const cx=Math.floor(cam.x);
+  ctx.save(); ctx.translate(-cx,0);
+  GAPS.forEach(function(g){ if(g.x+g.w>cx && g.x<cx+W){ ctx.fillStyle='#0b0612'; ctx.fillRect(g.x,GY,g.w,H-GY); } });
+  SOLIDS.forEach(function(s){
+    if(s.x+s.w<cx||s.x>cx+W) return;
+    if(s.ground){
+      ctx.fillStyle='#9a4130'; ctx.fillRect(s.x,s.y,s.w,s.h);
+      ctx.fillStyle='#c4623f'; ctx.fillRect(s.x,s.y,s.w,3);
+      ctx.fillStyle='#7d3326';
+      const x0=Math.floor(Math.max(s.x,cx)/20)*20, x1=Math.min(s.x+s.w,cx+W);
+      for(let x=x0;x<x1;x+=20){ const hs=(x*7919)%13; ctx.fillRect(x+hs,s.y+8+(hs%5)*6,3,2); }
+    } else {
+      ctx.fillStyle='#8a3a2c'; ctx.fillRect(s.x,s.y,s.w,s.h);
+      ctx.fillStyle='#c4623f'; ctx.fillRect(s.x,s.y,s.w,2);
+      ctx.fillStyle='#5a2219'; ctx.fillRect(s.x,s.y+s.h-2,s.w,2);
+    }
+  });
+  drawDecor(cx);
+  drawPickups();
+  drawSecrets();
+  drawLander(CONFIG.startX,GY-24,false);
+  drawStations();
+  drawArrow();
+  drawPuffs();
+  drawPlayer();
+  ctx.restore();
+}
+function drawDust(){
+  ctx.fillStyle='#d2784f';
+  DUST.forEach(function(d){
+    ctx.globalAlpha=d.a;
+    ctx.fillRect(Math.floor(d.x),Math.floor(d.y),d.s*3,d.s);
+  });
+  ctx.globalAlpha=1;
+}
+function draw(){
+  if(!ctx) return;
+  ctx.imageSmoothingEnabled=false;
+  const W=CONFIG.W, H=CONFIG.H;
+  if(state.mode==='cine0'){
+    drawSpaceBG(0);
+    const a=clamp(state.t/2.5,0,1);
+    drawPlanet(W/2,H/2,34+state.t*2,a);
+    ctx.font='11px "Courier New", monospace';
+    ctx.fillStyle='#44e3b8';
+    const full='COORDS  '+CONFIG.coords;
+    const n=Math.min(full.length,Math.floor(Math.max(0,state.t-1.5)*14));
+    ctx.fillText(full.substring(0,n),14,H-14);
+  } else if(state.mode==='zoom'){
+    const pz=clamp(state.zt,0,1);
+    drawSpaceBG(pz);
+    drawPlanet(W/2,H/2,lerp(40,620,easeIn(pz)),1);
+    if(pz>0.85){ ctx.fillStyle='#8a3c2e'; ctx.globalAlpha=(pz-0.85)/0.15; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+  } else if(state.mode==='landing'){
+    drawWorld();
+    const pl=clamp(state.lt/CONFIG.landTime,0,1);
+    const ly=lerp(-50,CONFIG.groundY-24,easeOut(pl));
+    ctx.fillStyle='#8a3c2e'; // cover the static pod while descending
+    ctx.fillStyle='#000';
+    // repaint sky over the static pod while it descends
+    if(pl<1){
+      ctx.save();
+      ctx.beginPath(); ctx.rect(CONFIG.startX-30,CONFIG.groundY-30,60,30); ctx.clip();
+      drawSkyPatch();
+      ctx.restore();
+      drawLander(CONFIG.startX,ly,true);
+    }
+    drawDust2();
+  } else {
+    drawWorld();
+    drawDust2();
+  }
+  if(state.mode==='play'){ drawVignette(); drawBubble(); }
+  if(state.veilA>0){ ctx.globalAlpha=state.veilA; ctx.fillStyle=state.veilCol; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+}
+function drawSkyPatch(){
+  const GY=CONFIG.groundY;
+  const g=ctx.createLinearGradient(0,0,0,GY);
+  g.addColorStop(0,'#05061a'); g.addColorStop(0.55,'#2b1740'); g.addColorStop(1,'#8a3c2e');
+  ctx.fillStyle=g; ctx.fillRect(0,0,CONFIG.W,GY);
+  ctx.fillStyle='#6e2f2c'; ctx.fillRect(CONFIG.startX-40,GY-12,80,12);
+}
+function drawDust2(){ drawDust(); }
+
+/* ============================================================
+   Update + Main loop
+   ============================================================ */
+function updateDust(dt){
+  DUST.forEach(function(d){
+    d.x+=d.vx*dt;
+    if(d.x>CONFIG.W){ d.x=-6; d.y=Math.random()*CONFIG.H; }
+  });
+}
+function nearestSignal(){
+  if(state.signalBoost>0) return 10;
+  const cx=p.x+p.w/2;
+  let best=0;
+  TOOLS_DATA.forEach(function(t){
+    if(!isActive(t)) return;
+    const d=Math.abs(cx-t.x);
+    const v=10*clamp(1-(d-CONFIG.interactRadius)/260,0,1);
+    if(v>best) best=v;
+  });
+  SECRETS.forEach(function(sc){ if(state.found[sc.id]) return; const v=10*clamp(1-(Math.abs(cx-sc.x)-24)/140,0,1); if(v>best) best=v; });
+  return best;
+}
+function update(dt){
+  state.t+=dt;
+  if(state.flashT>0) state.flashT-=dt;
+  if(state.signalBoost>0) state.signalBoost-=dt;
+  updateDust(dt);
+  if(state.veilA>0 && state.mode!=='zoom'){
+    state.veilA=Math.max(0,state.veilA-dt/1.2);
+  }
+  if(state.mode==='zoom'){
+    state.zt+=dt/CONFIG.zoomTime;
+    if(state.zt>=1) goToStage(2);
+  } else if(state.mode==='landing'){
+    state.lt+=dt;
+    if(state.lt>=CONFIG.landTime && !state.puzzleStarted) startPuzzle();
+  } else if(state.mode==='play'){
+    updatePlayer(dt);
+    if(!state.inputLocked) updatePickups();
+    state.signal=nearestSignal(); updateExtras(dt);
+    if(actQueued) tryInteract();
+  } else if(state.mode==='end'){
+    state.moonAlpha=Math.min(1,state.moonAlpha+dt*0.5);
+  }
+  actQueued=false;
+  if(state.mode==='play'||state.mode==='end'){
+    const target=clamp(p.x-CONFIG.camLead,0,CONFIG.worldWidth-CONFIG.W);
+    cam.x+=(target-cam.x)*Math.min(1,dt*CONFIG.camSmooth);
+  }
+  renderHud(false);
+  updateInfo();
+}
+let lastTs=0;
+function loop(ts){
+  if(!lastTs) lastTs=ts;
+  const dt=Math.min((ts-lastTs)/1000,0.05);
+  lastTs=ts;
+  try{ update(dt); draw(); }catch(e){ if(window.console) console.error(e); }
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   13) init
+   ============================================================ */
+function init(){
+  canvas=$('game');
+  if(canvas) ctx=canvas.getContext('2d');
+  buildSprites();
+  state=newState();
+  buildWorld();
+  buildPickups();
+  resetPlayer();
+  buildHud();
+  bindTouch();
+  actBtn=document.querySelector('#controlPad [data-k="act"]');
+  document.addEventListener('keydown',onKeyDown);
+  document.addEventListener('keyup',onKeyUp);
+  window.addEventListener('blur',function(){ for(const k in keys) keys[k]=false; for(const k2 in touch) touch[k2]=false; });
+  on($('storyBtn'),'click',function(){ initAudio(); if(storyCb) storyCb(); });
+  on($('btnSound'),'click',function(){ initAudio(); toggleSound(); });
+  on($('btnSettings'),'click',function(){ openSys('settings'); });
+  on($('btnMenu'),'click',function(){ openSys('menu'); });
+  on($('platformClose'),'click',function(){ const po=$('platformOverlay'); if(po) po.hidden=true; });
+  document.addEventListener('pointerdown',initAudio);
+  renderHud(true);
+  goToStage(0);
+  requestAnimationFrame(loop);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+else init();
+
+})();
+</script>
+</body>
+</html>
