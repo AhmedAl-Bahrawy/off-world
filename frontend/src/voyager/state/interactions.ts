@@ -74,6 +74,8 @@ export function finishAct(result: unknown = undefined, delay = 300) {
   if (!resolver) return
   const resolve = resolver
   resolver = null
+  // The step is done: the mission directive has served its purpose.
+  useVoyager.getState().hideDirective()
   useVoyager.getState().closeWindow('act')
   setTimeout(() => {
     useVoyager.setState({ interaction: null })
@@ -91,5 +93,6 @@ export function cancelAct() {
   if (!resolve) return
   resolver = null
   useVoyager.setState({ interaction: null })
+  useVoyager.getState().hideDirective()
   resolve(ACT_CANCELLED)
 }

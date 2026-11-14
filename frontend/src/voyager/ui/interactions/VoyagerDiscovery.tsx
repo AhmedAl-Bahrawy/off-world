@@ -10,6 +10,7 @@ import { Ico, Slot } from './voyager/Ico'
 import { IMAGES } from './voyager/assets'
 import { SpaceBackdrop, Chip } from '../primitives'
 import { PARTS, RECORD_CHIPS, makeCtl, type Mode, type PartId, type SceneApi } from './voyager/parts'
+import { DIRECTIVES } from '../../story/dialogue'
 
 const MARS_CHIPS = [
   { id: 'ice', icon: 'snowflake', label: 'ICE < 30 cm' },
@@ -118,6 +119,15 @@ export function VoyagerDiscovery() {
       setMode('mars')
       setChapter('TARGET // MARS')
       blip(660, 0.05)
+      // Mission directive for the Mars phase. Splash-only: the full-screen
+      // scene owns the whole viewport, so a lingering banner would sit on
+      // top of its own title. It auto-hides (or a click dismisses it early).
+      const { kicker, title, why } = DIRECTIVES.mars
+      useVoyager.getState().showDirective({ kicker, title, why, mode: 'splash' })
+      window.setTimeout(
+        () => useVoyager.getState().hideDirective(),
+        RM ? 1200 : 2600,
+      )
     })
   }
 

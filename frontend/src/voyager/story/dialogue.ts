@@ -80,6 +80,97 @@ export const STAGES = [
   'MARS',
 ] as const
 
+/* ------------------------------------------------------------------ */
+/* Mission directives — the guidance layer                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One entry per player-facing step. Shown by `brief()` in `script.ts`
+ * before the matching interaction opens: the big title says WHAT to do,
+ * `why` says WHY (with a wink). Steps flagged `splash` get a full-screen
+ * splash first — reserved for the moments that shape the story.
+ * Steps flagged `banner: false` are splash-only (used when a lingering
+ * banner would collide with a full-screen scene, like the Voyager UI).
+ */
+export interface DirectiveDef {
+  kicker: string
+  title: string
+  why: string
+  splash?: boolean
+  banner?: boolean
+}
+
+export const DIRECTIVES = {
+  repair: {
+    kicker: 'DIRECTIVE 01 · EARTH, 2231',
+    title: 'FIX THE UNFIXABLE',
+    why: 'The grid is dying and nobody is left who knows how it works. Try a repair — watch history politely decline.',
+  },
+  replyWest: {
+    kicker: 'DIRECTIVE 02 · COMMS',
+    title: 'PICK A SIDE',
+    why: 'Two blocs, one transmitter. Earth’s last phone call goes out tonight — your words are the message.',
+    splash: true,
+  },
+  eastKey: {
+    kicker: 'DIRECTIVE 03 · EASTERN BLOC',
+    title: 'THE EAST HAS A KEY',
+    why: 'They’ll hand it over… or you borrow it. Legally speaking, history won’t check.',
+    splash: true,
+  },
+  vault: {
+    kicker: 'DIRECTIVE 03½ · HEIST',
+    title: 'STEAL THE LAUNCH KEY',
+    why: 'The guard rotates every few seconds. Watch. Memorize. Repeat. Try not to sweat on the keypad.',
+  },
+  keys: {
+    kicker: 'DIRECTIVE 04 · LAUNCH CONTROL',
+    title: 'ARM THE TRANSMITTER',
+    why: 'Two keys. Three seconds. One very nervous planet.',
+  },
+  message: {
+    kicker: 'DIRECTIVE 05 · OPEN CHANNEL',
+    title: 'CALL FOR HELP',
+    why: 'No encryption, no protocol, no shame. Plain English, straight into the void.',
+  },
+  decode: {
+    kicker: 'DIRECTIVE 06 · KALAMITH ARRAY',
+    title: 'PROVE THE SIGNAL',
+    why: 'Something out there answered. Tap the words until they stop being noise.',
+  },
+  charge: {
+    kicker: 'DIRECTIVE 07 · DRIVE ROOM',
+    title: 'CATCH THE SHIP',
+    why: 'Mash to spin the drive up before it winds down. Physics is the only one arguing with you.',
+  },
+  scan: {
+    kicker: 'DIRECTIVE 08 · ORBITAL SURVEY',
+    title: 'LOOK FOR LIFE',
+    why: 'Earth went dark fifty years ago. Scan anyway. Someone has to check.',
+  },
+  archive: {
+    kicker: 'DIRECTIVE 09 · ARCHIVE-9',
+    title: 'INTERROGATE THE MACHINE',
+    why: 'The last librarian survived everything. Two questions — choose well. Machines remember.',
+  },
+  voyager: {
+    kicker: 'DIRECTIVE 10 · DEEP FIELD',
+    title: 'MEET THE RELIC',
+    why: 'A 1977 probe, still humming after all this time. Hold to wake it up — it has one message left to deliver.',
+    splash: true,
+    banner: false, // the full-screen scene has its own title; a banner would sit on top of it
+  },
+  mars: {
+    kicker: 'DIRECTIVE 11 · ARCADIA PLANITIA',
+    title: 'CONFIRM THE ICE',
+    why: 'The record was a portrait. The map is a promise. Scan the ice — finish what Voyager started.',
+    splash: true,
+    banner: false,
+  },
+} satisfies Record<string, DirectiveDef>
+
+export type DirectiveKey = keyof typeof DIRECTIVES
+
 /* ---- Chapter 1 — The Collapse ------------------------------------ */
 
 export const SYSTEM_ROWS = [

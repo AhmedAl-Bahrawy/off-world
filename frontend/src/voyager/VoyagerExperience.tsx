@@ -9,6 +9,7 @@ import { Starfield2D } from './ui/Starfield2D'
 import { Gate } from './ui/Gate'
 import { Hud } from './ui/Hud'
 import { ChapterCard } from './ui/ChapterCard'
+import { Directive } from './ui/Directive'
 import { Windows } from './ui/Windows'
 import { SiteHeader } from './ui/SiteHeader'
 import { startAudio, blip, stopAudio, stopAmbience } from './lib/audio'
@@ -66,6 +67,7 @@ export default function VoyagerExperience() {
       <SiteHeader phase={phase} onStart={start} onHome={home} />
       <Hud />
       <ChapterCard />
+      <Directive />
       <Windows />
       {phase === 'gate' && <Gate key={'gate' + generation} onStart={start} />}
     </div>

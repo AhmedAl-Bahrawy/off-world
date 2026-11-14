@@ -5,6 +5,7 @@
    base         root shell, canvases, icons, buttons
    hud          header, HUD bar, gate, chapter card
    windows      HUD window frames, slots, log/comms feeds
+   directive    mission guidance layer (splash + banner)
    interactions action rows, tiles, decoder, prompts, bars
    discovery    the full-screen Voyager 1 scene UI (.vy)
    ==================================================================== */
@@ -14,5 +15,6 @@
 @import './styles/base.css';
 @import './styles/hud.css';
 @import './styles/windows.css';
+@import './styles/directive.css';
 @import './styles/interactions.css';
 @import './styles/discovery.css';

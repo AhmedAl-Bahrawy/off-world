@@ -66,6 +66,21 @@ export interface CardState {
   on: boolean
 }
 
+/**
+ * The "MISSION DIRECTIVE" guidance layer: a big WHAT-to-do + WHY title shown
+ * before and during each major player step. `mode` picks the presentation —
+ * a brief full-screen splash for story-shaping moments, then (or directly)
+ * the persistent banner that sits above the act window.
+ */
+export interface DirectiveState {
+  key: number
+  kicker: string
+  title: string
+  why: string
+  mode: 'banner' | 'splash'
+  on: boolean
+}
+
 /* ------------------------------------------------------------------ */
 /* Store                                                               */
 /* ------------------------------------------------------------------ */
@@ -88,6 +103,7 @@ const initial = {
   /** True once the 3D scene has finished its first render. */
   ready: false,
   card: null as CardState | null,
+  directive: null as DirectiveState | null,
   windows: [] as WinState[],
   log: [] as LogLine[],
   chat: [] as ChatMsg[],
@@ -109,6 +125,8 @@ interface State extends Snapshot {
   setNarration: (narration: boolean) => void
   showCard: (subtitle: string, title: string) => void
   hideCard: () => void
+  showDirective: (d: Omit<DirectiveState, 'key' | 'on'>) => void
+  hideDirective: () => void
   openWindow: (win: Omit<WinState, 'closing'>) => void
   closeWindow: (id: string) => void
   dropWindow: (id: string, seq?: number) => void
@@ -140,6 +158,13 @@ export const useVoyager = create<State>()((set) => ({
     set({ card: { key: ++uid, subtitle, title, on: true } }),
   hideCard: () =>
     set((s) => (s.card ? { card: { ...s.card, on: false } } : {})),
+
+  /** Replace the directive with a fresh (keyed) one and fade it in. */
+  showDirective: (d) =>
+    set({ directive: { key: ++uid, on: true, ...d } }),
+  /** Fade the directive out; it stays unmounted-invisible until replaced. */
+  hideDirective: () =>
+    set((s) => (s.directive ? { directive: { ...s.directive, on: false } } : {})),
 
   /**
    * Opens (or replaces) a window. Replacing an existing id is instant, and the
